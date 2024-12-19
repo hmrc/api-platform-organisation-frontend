@@ -1,7 +1,7 @@
 
-# api-platform-organisation-frontend
+# API Platform Organisation Frontend
 
-This is a placeholder README.md for a new repository
+This is the frontend for the api platform organisations
 
 ### License
 
