@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformorganisationfrontend.config
+package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
-import com.google.inject.AbstractModule
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
-class Module extends AbstractModule {
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.models._
+import uk.gov.hmrc.http.HeaderCarrier
 
-  override def configure(): Unit = {
+@Singleton
+class OrganisationService @Inject() (organisationConnector: OrganisationConnector) {
 
-    bind(classOf[AppConfig]).asEagerSingleton()
+  def createOrganisation(organisation: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[Organisation] = {
+    organisationConnector.createOrganisation(organisation)
   }
 }

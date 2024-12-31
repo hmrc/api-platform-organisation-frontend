@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
+package uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.HelloWorldPage
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
-@Singleton
-class HelloWorldController @Inject() (
-    mcc: MessagesControllerComponents,
-    helloWorldPage: HelloWorldPage
-  ) extends FrontendController(mcc) {
+import uk.gov.hmrc.apiplatformorganisationfrontend.models._
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 
-  val helloWorld: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(helloWorldPage()))
+trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
+
+  object OrganisationServiceMock {
+    val aMock = mock[OrganisationService]
+
+    object CreateOrganisation {
+      def willReturn(org: Organisation) = when(aMock.createOrganisation(*)(*)).thenReturn(Future.successful(org))
+    }
   }
-
 }

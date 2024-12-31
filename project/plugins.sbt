@@ -10,7 +10,7 @@ addSbtPlugin("com.typesafe.sbt"   % "sbt-gzip"           % "1.0.2")
 addSbtPlugin("io.github.irundaia" % "sbt-sassify"        % "1.5.2")
 
 addSbtPlugin("org.scalastyle"    % "scalastyle-sbt-plugin" % "1.0.0")
-addSbtPlugin("ch.epfl.scala"     % "sbt-bloop"             % "1.6.0")
+addSbtPlugin("ch.epfl.scala"     % "sbt-bloop"             % "2.0.6")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"          % "2.5.2")
 addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"          % "0.12.1")
 
