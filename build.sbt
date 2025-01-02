@@ -18,8 +18,21 @@ lazy val microservice = Project("api-platform-organisation-frontend", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
     scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:cat=unused&src=views/.*\\.scala:s",
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     pipelineStages := Seq(gzip),
+  )
+  .settings(
+    Test / unmanagedSourceDirectories += baseDirectory.value / "test-utils",
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT")
+  )
+  .settings(
+    TwirlKeys.templateImports ++= Seq(
+      "uk.gov.hmrc.hmrcfrontend.views.html.components._",
+      "uk.gov.hmrc.hmrcfrontend.views.html.helpers._",
+      "uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig",
+      "uk.gov.hmrc.apiplatformorganisationfrontend.controllers"
+    )
   )
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
@@ -30,7 +43,6 @@ lazy val it = (project in file("it"))
   .settings(DefaultBuildSettings.itSettings())
   .settings(
     name := "integration-tests",
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),
   )
 
 commands ++= Seq(
