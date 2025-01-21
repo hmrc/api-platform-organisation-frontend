@@ -38,8 +38,9 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite with 
   override def fakeApplication(): Application = new GuiceApplicationBuilder().build()
   private val mcc                             = app.injector.instanceOf[MessagesControllerComponents]
   private val createPage                      = app.injector.instanceOf[CreateOrganisationPage]
+  private val landingPage                     = app.injector.instanceOf[OrganisationLandingPage]
   private val successPage                     = app.injector.instanceOf[CreateOrganisationSuccessPage]
-  private val controller                      = new OrganisationController(mcc, createPage, successPage, OrganisationServiceMock.aMock)
+  private val controller                      = new OrganisationController(mcc, createPage, successPage, landingPage, OrganisationServiceMock.aMock)
 
   "GET /create" should {
     val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/"))
@@ -80,4 +81,21 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite with 
       charset(result) shouldBe Some("utf-8")
     }
   }
+
+  "GET /landing" should {
+    val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing"))
+
+    "return 200" in {
+      val result = controller.organisationLandingView(fakeRequest)
+      status(result) shouldBe Status.OK
+    }
+
+    "return HTML" in {
+      val result = controller.organisationLandingView(fakeRequest)
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Get verified on the Developer Hub")
+    }
+  }
+
 }

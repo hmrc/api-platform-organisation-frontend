@@ -46,6 +46,7 @@ class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
     createPage: CreateOrganisationPage,
     successPage: CreateOrganisationSuccessPage,
+    landingPage: OrganisationLandingPage,
     service: OrganisationService
   )(implicit ec: ExecutionContext
   ) extends FrontendController(mcc) {
@@ -66,4 +67,7 @@ class OrganisationController @Inject() (
     CreateOrganisationForm.form.bindFromRequest().fold(handleInvalidForm, handleValidForm)
   }
 
+  val organisationLandingView: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok(landingPage()))
+  }
 }
