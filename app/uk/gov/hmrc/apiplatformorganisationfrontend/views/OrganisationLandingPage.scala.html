@@ -1,0 +1,57 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.{CreateOrganisationForm, routes}
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(layout: Layout,
+        govukButton: GovukButton)
+
+@()(implicit request: RequestHeader, messages: Messages)
+
+@layout(pageTitle = Some("Get verified on the Developer Hub  - HMRC Developer Hub")) {
+
+    <h1 class="govuk-heading-l">Get verified on the Developer Hub </h1>
+
+    <p class="govuk-body-l">
+
+        To use our APIs in production, you need to verify the individual or organisation responsible for the software you are building.
+    </p>
+
+    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+    <h2 class="govuk-heading-m" id="who-should-register">Before you start</h2>
+
+
+    <p class="govuk-body">You’ll need:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>Your business type</li>
+        <li>company registration number (you can <a href="https://www.gov.uk/get-information-about-a-company" target="_blank">look up the company number (opens in new tab)</a>), or your National Insurance number if you are a sole trader</li>
+        <li>Unique Taxpayer Reference</li>
+        <li>Contact details of a responsible individual that will ensure your software complies with our terms of use</li>
+    </ul>
+
+
+    <p class="govuk-body">
+        Our team will check the information you provide and may contact you with more questions. We aim to complete the checking process in 10 days.
+    </p>
+
+    @govukButton(Button(
+        href = Some("#"),
+        isStartButton = true,
+        content = Text("Start now")
+    ))
+}
