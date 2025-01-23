@@ -1,5 +1,5 @@
-@*
- * Copyright 2024 HM Revenue & Customs
+/*
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,16 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationName
+package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 
-@this(layout: Layout,
-govukPanel: GovukPanel)
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
-@(organisationName: OrganisationName)(implicit request: RequestHeader, messages: Messages)
+case class Crumb(name: String, url: String = "", dataAttribute: Option[String] = None)
 
-@layout(pageTitle = "HMRC Developer Hub") {
- @govukPanel(Panel(title=Text("Organisation Created"),content=Text(s"$organisationName created successfully")))
+object Crumb {
+
+  def home(implicit appConfig: AppConfig) =
+    Crumb("Home", s"${appConfig.apiDocumentationFrontendUrl}/api-documentation", Some("data-breadcrumb-home"))
+
 }

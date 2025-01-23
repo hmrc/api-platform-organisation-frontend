@@ -21,12 +21,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CreateOrganisationForm.toRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.models._
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 final case class CreateOrganisationForm(organisationName: String)
 
@@ -47,9 +49,13 @@ class OrganisationController @Inject() (
     createPage: CreateOrganisationPage,
     successPage: CreateOrganisationSuccessPage,
     landingPage: OrganisationLandingPage,
-    service: OrganisationService
-  )(implicit ec: ExecutionContext
-  ) extends FrontendController(mcc) {
+    service: OrganisationService,
+    val cookieSigner: CookieSigner,
+    val errorHandler: ErrorHandler,
+    val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+  )(implicit val ec: ExecutionContext,
+    val appConfig: AppConfig
+  ) extends BaseController(mcc) {
 
   val createOrganisationView: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(createPage(CreateOrganisationForm.form)))
@@ -67,7 +73,7 @@ class OrganisationController @Inject() (
     CreateOrganisationForm.form.bindFromRequest().fold(handleInvalidForm, handleValidForm)
   }
 
-  val organisationLandingView: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(landingPage()))
+  val organisationLandingView: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(landingPage(Some(request.userSession))))
   }
 }

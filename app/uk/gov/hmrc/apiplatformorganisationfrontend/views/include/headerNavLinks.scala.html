@@ -1,5 +1,5 @@
 @*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationName
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.NavLink
+@(navLinks: Seq[NavLink], anchorClass: Option[String] = None)
 
-@this(layout: Layout,
-govukPanel: GovukPanel)
-
-@(organisationName: OrganisationName)(implicit request: RequestHeader, messages: Messages)
-
-@layout(pageTitle = "HMRC Developer Hub") {
- @govukPanel(Panel(title=Text("Organisation Created"),content=Text(s"$organisationName created successfully")))
+@for(link <- navLinks) {
+  <li>
+    <a class="govuk-link govuk-link--no-visited-state govuk-!-font-size-16 @{if(link.isSensitive) "hmrc-redacted" else ""}" href="@{link.href}" @if(link.openInNewWindow){target="_blank"}>
+      @{link.label}
+    </a>
+  </li>
 }

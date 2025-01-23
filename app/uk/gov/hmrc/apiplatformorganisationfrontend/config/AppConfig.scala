@@ -16,12 +16,35 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
+import java.time.Duration
 import javax.inject.{Inject, Singleton}
 
-import play.api.Configuration
+import play.api.{ConfigLoader, Configuration}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
-  val welshLanguageSupportEnabled: Boolean = config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
+class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) {
+  val thirdPartyDeveloperUrl: String = baseUrl("third-party-developer")
+
+  val serviceName = "HMRC Developer Hub"
+
+  val feedbackSurveyUrl = getString("feedbackBanner.generic.surveyUrl")
+
+  private val platformFrontendHost: Option[String] = config.getOptional[String]("platform.frontend.host")
+  lazy val accessibilityStatementUrl               = platformFrontendHost.getOrElse("http://localhost:12346")
+
+  private val internalPlatformHost: Option[String] = config.getOptional[String]("internal.platform.host")
+  lazy val apiDocumentationFrontendUrl: String     = internalPlatformHost.getOrElse("http://localhost:9680")
+  lazy val thirdPartyDeveloperFrontendUrl: String  = internalPlatformHost.getOrElse("http://localhost:9685")
+  lazy val reportProblemHost: String               = internalPlatformHost.getOrElse("http://localhost:9250")
+  val securedCookie: Boolean                       = getConfigDefaulted("cookie.secure", true)
+
+  lazy val keepAliveUrl: String = s"$thirdPartyDeveloperFrontendUrl/developer/keep-alive"
+  lazy val logOutUrl: String    = s"$thirdPartyDeveloperFrontendUrl/developer/logout"
+  lazy val logInUrl: String     = s"$thirdPartyDeveloperFrontendUrl/developer/login"
+
+  val sessionTimeout: Duration                                                                       = config.underlying.getDuration("session.timeout")
+  val sessionCountdown: Duration                                                                     = config.underlying.getDuration("session.countdown")
+  private def getConfigDefaulted[A](key: String, default: => A)(implicit loader: ConfigLoader[A]): A = config.getOptional[A](key)(loader).getOrElse(default)
 
 }

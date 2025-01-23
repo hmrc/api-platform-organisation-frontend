@@ -1,0 +1,11 @@
+$govuk-assets-path: "/api-platform-organisation/assets/lib/govuk-frontend/dist/govuk/assets/";
+$hmrc-assets-path: "/api-platform-organisation/assets/lib/hmrc-frontend/hmrc/";
+
+// Partials
+
+// Import FE Styles
+@import "lib/govuk-frontend/dist/govuk/all";
+@import "lib/hmrc-frontend/hmrc/all";
+
+// Ad-hoc fixes
+@import "ad-hoc";
