@@ -24,8 +24,8 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.{AsyncHmrcSpec, OrganisationF
 class OrganisationServiceSpec extends AsyncHmrcSpec with OrganisationConnectorMockModule {
 
   trait Setup extends OrganisationFixtures {
-    implicit val hc = HeaderCarrier()
-    val underTest   = new OrganisationService(OrganisationConnectorMock.aMock)
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val underTest                  = new OrganisationService(OrganisationConnectorMock.aMock)
 
   }
 
