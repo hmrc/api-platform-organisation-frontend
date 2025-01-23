@@ -16,13 +16,19 @@
 
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.{CreateOrganisationForm, routes}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 
 @this(layout: Layout,
         govukButton: GovukButton)
 
-@()(implicit request: RequestHeader, messages: Messages)
+@(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Get verified on the Developer Hub  - HMRC Developer Hub")) {
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = "Get verified on the Developer Hub  - HMRC Developer Hub",
+    loggedInSession = loggedInSession
+) {
 
     <h1 class="govuk-heading-l">Get verified on the Developer Hub </h1>
 

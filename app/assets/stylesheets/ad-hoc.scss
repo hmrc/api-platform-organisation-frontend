@@ -1,0 +1,31 @@
+.before-content-banner {
+  display: flex;
+}
+
+.subnav {
+  display: flex;
+  &-auth {
+    display: none;
+  }
+  &-margins {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+@media (min-width: 40.0625em) {
+  .subnav {
+    &-auth {
+      display: flex;
+      align-items: center;
+      margin-left: auto !important;
+      &-links {
+        display: flex;
+        margin: 10px 0px !important;
+        & > *:first-child {
+          padding-right: 15px;
+        }
+      }
+    }
+  }
+}

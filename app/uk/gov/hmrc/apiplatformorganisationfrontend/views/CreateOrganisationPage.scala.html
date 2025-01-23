@@ -24,14 +24,9 @@
 
 @(form: Form[CreateOrganisationForm])(implicit request: RequestHeader, messages: Messages)
 
-@layout(pageTitle = Some("HMRC Developer Hub")) {
+@layout(pageTitle = "HMRC Developer Hub", form = Some(form)) {
     <h1 class="govuk-heading-xl">Create An Organisation</h1>
-    @if(form.hasErrors) {
-        @govukErrorSummary(ErrorSummary(
-            errorList = form.errors.map(err => ErrorLink(href = Some(s"#${err.key}"), content = Text(messages(err.message)))),
-            title = Text("There is a problem")
-        ))
-    }
+
     @helper.form(action = routes.OrganisationController.createOrganisationAction) {
         @govukInput(Input(
             id = "organisation-name",

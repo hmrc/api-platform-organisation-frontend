@@ -14,23 +14,159 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukLayout
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukBackLink
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukExitThisPage
+@import uk.gov.hmrc.govukfrontend.views.html.components.TwoThirdsMainContent
+@import uk.gov.hmrc.govukfrontend.views.html.components.FixedWidthPageLayout
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
+
+@import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcHeader
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcTrackingConsentSnippet
+
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardPage
-@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage.HmrcStandardPageParams
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include.{breadcrumbs, errorSummary, headerNavLinks}
 
 @this(
   appConfig: AppConfig,
-  hmrcStandardPage: HmrcStandardPage
+  govukLayout: GovukLayout,
+  hmrcHeader: HmrcHeader,
+  hmrcFooter: HmrcFooter,
+  hmrcLanguageSelectHelper: HmrcLanguageSelectHelper,
+  hmrcScripts: HmrcScripts,
+  govukBackLink: GovukBackLink,
+  govukExitThisPage: GovukExitThisPage,
+  defaultMainContent: TwoThirdsMainContent,
+  fixedWidthPageLayout: FixedWidthPageLayout,
+  hmrcTimeoutDialog: HmrcTimeoutDialog,
+  hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet
 )
 
-@(pageTitle: Option[String] = None)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages)
+@(
+  pageTitle: String,
+  backLink: Option[BackLink] = None,
+  crumbs: Seq[Crumb] = Seq.empty,
+  loggedInSession: Option[UserSession] = None,
+  form: Option[Form[_]] = None,
+)(
+  contentBlock: Html
+)(implicit request: RequestHeader, messages: Messages)
 
-@hmrcStandardPage(
-  HmrcStandardPageParams(
-    pageTitle = pageTitle
-  )
-)(contentBlock)
-
-@{
-    //$COVERAGE-OFF$
+@timeoutBlock = {
+  @hmrcTimeoutDialog(
+    TimeoutDialog(
+      timeout = Some(appConfig.sessionTimeout.getSeconds().toInt),
+      countdown = Some(appConfig.sessionCountdown.getSeconds().toInt),
+      keepAliveUrl = Some(appConfig.keepAliveUrl),
+      signOutUrl = Some(appConfig.logOutUrl),
+      language = Some("en")
+    )
+  ) 
 }
+
+@headBlock = {
+  <link href='@routes.Assets.versioned("stylesheets/main.css")' media="screen" rel="stylesheet" type="text/css" />
+  @hmrcTrackingConsentSnippet()
+  @timeoutBlock
+}
+
+@navigation = @{
+    StaticNavItems(appConfig.apiDocumentationFrontendUrl, appConfig.thirdPartyDeveloperFrontendUrl)
+}
+
+@headerBlock = {
+  @hmrcHeader(Header(
+    homepageUrl = messages("header.govuk.url"),
+    serviceName = Some(appConfig.serviceName),
+    navigation = Some(navigation),
+    serviceUrl = "/api-documentation",
+    signOutHref = None,
+    language = En,
+    assetsPath = uk.gov.hmrc.hmrcfrontend.controllers.routes.Assets.at("govuk/images").url,
+    displayHmrcBanner = false,
+    containerClasses = "govuk-width-container"
+  ))
+}
+
+@feedbackBannerBlock = {
+  <div id="feedback-banner" class="govuk-phase-banner">
+    <p id="feedback-title" class="govuk-phase-banner__content">
+      <span class="govuk-phase-banner__text">
+        Your <a class="govuk-link" href="@{appConfig.feedbackSurveyUrl}" target="_blank">feedback (opens in new tab)</a> will help us to improve this service.
+      </span>
+    </p>
+  </div>
+}
+
+@buildABackLink(link: Option[BackLink]) = {
+  @if(link.isDefined) {
+    @govukBackLink(link.get)
+  } else {}
+}
+
+@userBanner = {
+  <div class="subnav-auth">
+    <ul id="proposition-links" class="govuk-list subnav-auth-links">
+      @headerNavLinks(UserNavLinks(appConfig, loggedInSession.map(_.developer.displayedName)))
+    </ul>
+  </div>
+}
+
+@beforeContentBlock = {
+  @feedbackBannerBlock
+  <div class="before-content-banner">
+    @breadcrumbs(crumbs: _*)
+    @buildABackLink(backLink)
+    @userBanner
+  </div>
+}
+
+@formErrorSummary(form: Option[Form[_]]) = {
+  @if(form.isDefined) {
+    @errorSummary(form.get.errors)
+  } else {}
+}
+
+@mainContentBlock = {
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      @formErrorSummary(form)
+      @contentBlock 
+    </div>
+  </div>
+  <br />
+  <br />
+  <a href="@{appConfig.reportProblemHost}/contact/problem_reports_nonjs?newTab=false&service=third-party-developer&referrerUrl=@{helper.urlEncode(request.uri)}" class="govuk-link govuk-link--no-visited-state">
+    Is this page not working properly?
+  </a>
+}
+
+@footerBlock = {
+  @hmrcFooter(new Footer(meta = Some(
+    Meta(
+      items = Some(
+        Seq(
+          FooterItem(text = Some("Cookies"), href = Some(s"${appConfig.apiDocumentationFrontendUrl}/api-documentation/docs/help/cookies")),
+          FooterItem(text = Some("Accessibility statement"), href = Some(s"${appConfig.accessibilityStatementUrl}/accessibility-statement/hmrc-developer-hub?referrerUrl=${helper.urlEncode(request.uri)}")),
+          FooterItem(text = Some("Privacy Policy"), href = Some(s"${appConfig.apiDocumentationFrontendUrl}/api-documentation/docs/help/privacy")),
+          FooterItem(text = Some("Terms and conditions"), href = Some(s"${appConfig.apiDocumentationFrontendUrl}/api-documentation/docs/help/terms-and-conditions")),
+          FooterItem(text = Some("Help using GOV.UK "), href = Some("https://www.gov.uk/help"))
+        )
+      )
+    )
+  ), language = En))
+}
+
+@govukLayout(
+    pageTitle = Some(s"$pageTitle - HMRC Developer Hub - GOV.UK"),
+    headBlock = Some(headBlock),
+    headerBlock = Some(headerBlock),
+    scriptsBlock = Some(hmrcScripts()),
+    beforeContentBlock = Some(beforeContentBlock),
+    footerBlock = Some(footerBlock),
+    mainContentLayout = None,
+    assetPath = None,
+    pageLayout = Some(fixedWidthPageLayout(_))
+)(mainContentBlock)
