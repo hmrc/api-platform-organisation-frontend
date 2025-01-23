@@ -1,0 +1,344 @@
+{
+  "submission" : {
+    "id" : "123a1dd3-09cf-46a0-bc73-350a385de678",
+    "organisationId" : "426a1df9-09cf-46a0-bc73-350a385ea461",
+    "startedOn" : "2020-01-02T03:04:05.006Z",
+    "startedBy" : "193316a2-e3b4-4aed-9001-a318e841cbb3",
+    "groups" : [ {
+      "heading" : "About your organisation",
+      "links" : [ {
+        "id" : "ac69b129-524a-4d10-89a5-7bfa46ed95c7",
+        "label" : "Enter organisation details",
+        "questions" : [ {
+          "question" : {
+            "id" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "wording" : "What is your organisation type?",
+            "marking" : [ {
+              "UK limited company" : "pass"
+            }, {
+              "Sole trader" : "pass"
+            }, {
+              "Partnership" : "pass"
+            }, {
+              "Registered society" : "pass"
+            }, {
+              "Charitable Incorporated Organisation (CIO)" : "pass"
+            }, {
+              "Trust" : "pass"
+            }, {
+              "Non-UK company with a branch or place of business in the UK" : "warn"
+            }, {
+              "Non-UK company without a branch or place of business in the UK" : "fail"
+            } ],
+            "errorInfo" : {
+              "summary" : "Select your organisation type"
+            },
+            "questionType" : "choose"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "4e148791-1a07-4f28-8fe4-ba3e18cdc118",
+            "wording" : "What is the company registration number?",
+            "statement" : {
+              "fragments" : [ {
+                "fragments" : [ {
+                  "text" : "You can ",
+                  "statementType" : "text"
+                }, {
+                  "text" : "search Companies House for your company registration number (opens in new tab)",
+                  "url" : "https://find-and-update.company-information.service.gov.uk/",
+                  "statementType" : "link"
+                }, {
+                  "text" : ".",
+                  "statementType" : "text"
+                } ],
+                "statementType" : "compound"
+              } ]
+            },
+            "hintText" : {
+              "text" : "It is 8 characters. For example, 01234567 or AC012345.",
+              "statementType" : "text"
+            },
+            "absence" : [ "My organisation doesn't have a company registration", "fail" ],
+            "errorInfo" : {
+              "summary" : "Your company registration number cannot be blank",
+              "message" : "Enter your company registration number, like 01234567"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "UK limited company"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "e1dbf1a3-e28b-1c83-a739-86f1319ca8cc",
+            "wording" : "What is your organisation’s address?",
+            "errorInfo" : {
+              "summary" : "Your organsation address cannot be blank",
+              "message" : "Enter your organisation address"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "6be23951-ac69-47bf-aa56-86d3d690ee0b",
+            "wording" : "What is your Corporation Tax Unique Taxpayer Reference (UTR)?",
+            "statement" : {
+              "fragments" : [ {
+                "fragments" : [ {
+                  "text" : "It will be on tax returns and other letters about Corporation Tax. It may be called ‘reference’, ‘UTR’ or ‘official use’. You can ",
+                  "statementType" : "text"
+                }, {
+                  "text" : "find a lost UTR number (opens in new tab)",
+                  "url" : "https://www.gov.uk/find-lost-utr-number",
+                  "statementType" : "link"
+                }, {
+                  "text" : ".",
+                  "statementType" : "text"
+                } ],
+                "statementType" : "compound"
+              } ]
+            },
+            "hintText" : {
+              "text" : "Your UTR can be 10 or 13 digits long.",
+              "statementType" : "text"
+            },
+            "errorInfo" : {
+              "summary" : "Your Corporation Tax Unique Taxpayer Reference cannot be blank",
+              "message" : "Enter your Corporation Tax Unique Taxpayer Reference, like 1234567890"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        } ]
+      }, {
+        "id" : "ac69b129-524a-4d10-89a5-7bfa46ed95c7",
+        "label" : "Enter responsible individual details",
+        "questions" : [ {
+          "question" : {
+            "id" : "99d9362d-e365-4af1-aa46-88e95f9858f7",
+            "wording" : "Are you the individual responsible for the software in your organisation?",
+            "statement" : {
+              "fragments" : [ {
+                "text" : "As the responsible individual you:",
+                "statementType" : "text"
+              }, {
+                "bullets" : [ {
+                  "fragments" : [ {
+                    "text" : "ensure your software conforms to the ",
+                    "statementType" : "text"
+                  }, {
+                    "text" : "terms of use (opens in new tab)",
+                    "url" : "/api-documentation/docs/terms-of-use",
+                    "statementType" : "link"
+                  } ],
+                  "statementType" : "compound"
+                }, {
+                  "fragments" : [ {
+                    "text" : "understand the ",
+                    "statementType" : "text"
+                  }, {
+                    "text" : "consequences of not conforming to the terms of use (opens in new tab)",
+                    "url" : "/api-documentation/docs/terms-of-use",
+                    "statementType" : "link"
+                  } ],
+                  "statementType" : "compound"
+                } ],
+                "statementType" : "bullets"
+              } ]
+            },
+            "yesMarking" : "pass",
+            "noMarking" : "pass",
+            "errorInfo" : {
+              "summary" : "Select Yes if you are the individual responsible for the software in your organisation"
+            },
+            "questionType" : "yesNo"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "36b7e670-83fc-4b31-8f85-4d3394908495",
+            "wording" : "Who is responsible for the software in your organisation?",
+            "label" : "First and last name",
+            "errorInfo" : {
+              "summary" : "Enter a first and last name",
+              "message" : "First and last name cannot be blank"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "99d9362d-e365-4af1-aa46-88e95f9858f7",
+            "expectedValue" : {
+              "value" : "No"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "18b4e672-43fc-8b33-9f83-7d324908496",
+            "wording" : "What is the responsible individual's job title in your organisation?",
+            "label" : "Job title",
+            "errorInfo" : {
+              "summary" : "Enter a job title",
+              "message" : "Job title cannot be blank"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "fb9b8036-cc88-4f4e-ad84-c02caa4cebae",
+            "wording" : "Give us the email address of the individual responsible for the software",
+            "statement" : {
+              "fragments" : [ {
+                "text" : "We will use this email to invite the responsible individual to create an account on the Developer Hub.",
+                "statementType" : "text"
+              }, {
+                "text" : "The responsible individual must verify before your registration can be completed.",
+                "statementType" : "text"
+              } ]
+            },
+            "label" : "Email address",
+            "hintText" : {
+              "text" : "Cannot be a shared mailbox",
+              "statementType" : "text"
+            },
+            "validation" : {
+              "validationType" : "email"
+            },
+            "errorInfo" : {
+              "summary" : "Enter an email address in the correct format, like yourname@example.com",
+              "message" : "Email address cannot be blank"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "99d9362d-e365-4af1-aa46-88e95f9858f7",
+            "expectedValue" : {
+              "value" : "No"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "a27b8039-cc32-4f2e-ad88-c96caa1cebae",
+            "wording" : "Give us the telephone number of the individual responsible for the software",
+            "statement" : {
+              "fragments" : [ {
+                "text" : "We'll only use this to contact you about your organisation's Developer Hub account.",
+                "statementType" : "text"
+              } ]
+            },
+            "label" : "Telephone",
+            "hintText" : {
+              "text" : "You can enter an organisation, personal or extension number. Include the country code for international numbers.",
+              "statementType" : "text"
+            },
+            "errorInfo" : {
+              "summary" : "Enter a telephone number",
+              "message" : "Telephone number cannot be blank"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        }, {
+          "question" : {
+            "id" : "b2dbf6a1-e39b-4c38-a524-19f0854ca1cc",
+            "wording" : "What is your organisation’s website address?",
+            "hintText" : {
+              "text" : "For example https://example.com",
+              "statementType" : "text"
+            },
+            "validation" : {
+              "validationType" : "url"
+            },
+            "absence" : [ "My organisation doesn't have a website", "fail" ],
+            "errorInfo" : {
+              "summary" : "Enter a website address in the correct format, like https://example.com",
+              "message" : "Enter a URL in the correct format, like https://example.com"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "askWhen" : "alwaysAsk"
+          }
+        } ]
+      } ]
+    } ],
+    "questionIdsOfInterest" : {
+      "organisationTypeId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+      "organisationNameId" : "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc"
+    },
+    "instances" : [ {
+      "index" : 0,
+      "answersToQuestions" : {
+        "cbdf264f-be39-4638-92ff-6ecd2259c662" : {
+          "value" : "UK limited company",
+          "answerType" : "singleChoice"
+        },
+        "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc" : {
+          "value" : "Bobs Burgers",
+          "answerType" : "text"
+        }
+      },
+      "statusHistory" : [ {
+        "timestamp" : "2020-01-02T03:04:05.006Z",
+        "completed" : false,
+        "Submission.StatusType" : "answering"
+      }, {
+        "timestamp" : "2020-01-02T03:04:05.006Z",
+        "requestedBy" : "bob@example.com",
+        "Submission.StatusType" : "created"
+      } ]
+    } ],
+    "context" : {
+      "IN_HOUSE_SOFTWARE" : "No",
+      "VAT_OR_ITSA" : "No",
+      "NEW_TERMS_OF_USE_UPLIFT" : "No"
+    }
+  },
+  "questionnaireProgress" : {
+    "ac69b129-524a-4d10-89a5-7bfa46ed95c7" : {
+      "state" : "InProgress",
+      "questionsToAsk" : [ "cbdf264f-be39-4638-92ff-6ecd2259c662", "e1dbf1a3-e28b-1c83-a739-86f1319ca8cc" ]
+    },
+    "1e4a1369-8e28-447c-bd47-efbabec1a43b" : {
+      "state" : "InvalidState",
+      "questionsToAsk" : [ ]
+    }
+  }
+}

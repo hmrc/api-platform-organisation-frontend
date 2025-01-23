@@ -19,10 +19,11 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import scala.concurrent.ExecutionContext
 
 import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.DevHubAuthorization
 import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.DevHubAuthorization
 
 abstract class BaseController(mcc: MessagesControllerComponents) extends FrontendController(mcc) with DevHubAuthorization with WithUnsafeDefaultFormBinding {
   val errorHandler: ErrorHandler

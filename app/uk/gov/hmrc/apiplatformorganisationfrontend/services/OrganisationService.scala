@@ -19,9 +19,10 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.services
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.models._
-import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class OrganisationService @Inject() (organisationConnector: OrganisationConnector) {

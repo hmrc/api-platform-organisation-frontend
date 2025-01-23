@@ -17,9 +17,9 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.CookieEncoding
 
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSessionId
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.CookieEncoding
 
 object WithLoggedInSession {
 

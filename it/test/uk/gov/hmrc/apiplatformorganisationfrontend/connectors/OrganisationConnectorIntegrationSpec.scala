@@ -21,9 +21,10 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application => PlayApplication, Configuration, Mode}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.apiplatformorganisationfrontend.models._
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec with GuiceOneAppPerSuite {
 

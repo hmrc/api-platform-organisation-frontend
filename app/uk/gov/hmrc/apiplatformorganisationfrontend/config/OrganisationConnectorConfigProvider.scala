@@ -18,8 +18,9 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
 import com.google.inject.{Inject, Provider, Singleton}
 
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 
 @Singleton
 class OrganisationConnectorConfigProvider @Inject() (config: ServicesConfig) extends Provider[OrganisationConnector.Config] {

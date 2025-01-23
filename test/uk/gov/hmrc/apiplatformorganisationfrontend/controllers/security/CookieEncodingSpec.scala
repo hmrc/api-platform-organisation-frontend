@@ -23,10 +23,10 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import play.api.{Application, Mode}
-import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSessionId
+import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 class CookieEncodingSpec extends AsyncHmrcSpec with GuiceOneAppPerSuite {
 

@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 
 class ConfigModule extends Module {
