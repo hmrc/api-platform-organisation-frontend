@@ -18,10 +18,11 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import scala.concurrent.ExecutionContext
 
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.DevHubAuthorization
 
@@ -32,4 +33,5 @@ abstract class BaseController(mcc: MessagesControllerComponents) extends Fronten
 
   implicit val appConfig: AppConfig
 
+  protected lazy val ETR = EitherTHelper.make[Result](ec)
 }

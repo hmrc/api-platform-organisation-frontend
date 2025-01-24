@@ -19,23 +19,85 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.play.http.metrics.common.API
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models._
 
 @Singleton
-class OrganisationConnector @Inject() (http: HttpClientV2, config: OrganisationConnector.Config)(implicit ec: ExecutionContext) {
+class OrganisationConnector @Inject() (
+    http: HttpClientV2,
+    config: OrganisationConnector.Config,
+    val metrics: ConnectorMetrics
+  )(implicit ec: ExecutionContext
+  ) {
+
+  import OrganisationConnector._
+  import Submission._
+
+  val api = API("api-platfrom-organisation")
 
   def createOrganisation(organisation: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[Organisation] = {
     http.post(url"${config.serviceBaseUrl}/create")
       .withBody(Json.toJson(organisation))
       .execute[Organisation]
   }
+
+  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: List[String])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to record answer for submission $submissionId and question ${questionId.value}"
+
+    metrics.record(api) {
+      http
+        .post(url"${config.serviceBaseUrl}/submissions/$submissionId/question/${questionId.value}")
+        .withBody(Json.toJson(OutboundRecordAnswersRequest(rawAnswers)))
+        .execute[Either[UpstreamErrorResponse, ExtendedSubmission]]
+        .map(_.leftMap(failed))
+    }
+  }
+
+  def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = {
+    metrics.record(api) {
+      http
+        .get(url"${config.serviceBaseUrl}/submissions/user/${userId}")
+        .execute[Option[Submission]]
+    }
+  }
+
+  def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] = {
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/submissions/user/${userId}")
+        .withBody(Json.toJson(CreateSubmissionRequest(requestedBy)))
+        .execute[Option[Submission]]
+    }
+  }
+
+  def fetchLatestExtendedSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/submissions/user/${userId}/extended")
+        .execute[Option[ExtendedSubmission]]
+    }
+  }
+
+  def fetchSubmission(id: SubmissionId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/submissions/${id.value}")
+        .execute[Option[ExtendedSubmission]]
+    }
+  }
 }
 
 object OrganisationConnector {
   case class Config(serviceBaseUrl: String)
+
+  case class OutboundRecordAnswersRequest(answers: List[String])
+  implicit val writesOutboundRecordAnswersRequest: Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
+
+  case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
+  implicit val readsCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
 }
