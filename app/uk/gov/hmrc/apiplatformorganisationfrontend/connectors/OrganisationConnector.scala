@@ -54,7 +54,7 @@ class OrganisationConnector @Inject() (
 
     metrics.record(api) {
       http
-        .post(url"${config.serviceBaseUrl}/submissions/$submissionId/question/${questionId.value}")
+        .post(url"${config.serviceBaseUrl}/submission/$submissionId/question/${questionId.value}")
         .withBody(Json.toJson(OutboundRecordAnswersRequest(rawAnswers)))
         .execute[Either[UpstreamErrorResponse, ExtendedSubmission]]
         .map(_.leftMap(failed))
@@ -64,14 +64,14 @@ class OrganisationConnector @Inject() (
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = {
     metrics.record(api) {
       http
-        .get(url"${config.serviceBaseUrl}/submissions/user/${userId}")
+        .get(url"${config.serviceBaseUrl}/submission/user/${userId}")
         .execute[Option[Submission]]
     }
   }
 
   def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] = {
     metrics.record(api) {
-      http.post(url"${config.serviceBaseUrl}/submissions/user/${userId}")
+      http.post(url"${config.serviceBaseUrl}/submission/user/${userId}")
         .withBody(Json.toJson(CreateSubmissionRequest(requestedBy)))
         .execute[Option[Submission]]
     }
@@ -79,14 +79,14 @@ class OrganisationConnector @Inject() (
 
   def fetchLatestExtendedSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = {
     metrics.record(api) {
-      http.get(url"${config.serviceBaseUrl}/submissions/user/${userId}/extended")
+      http.get(url"${config.serviceBaseUrl}/submission/user/${userId}/extended")
         .execute[Option[ExtendedSubmission]]
     }
   }
 
   def fetchSubmission(id: SubmissionId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = {
     metrics.record(api) {
-      http.get(url"${config.serviceBaseUrl}/submissions/${id.value}")
+      http.get(url"${config.serviceBaseUrl}/submission/${id.value}")
         .execute[Option[ExtendedSubmission]]
     }
   }
