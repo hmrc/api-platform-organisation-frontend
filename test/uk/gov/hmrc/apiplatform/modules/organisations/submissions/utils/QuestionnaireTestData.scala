@@ -59,6 +59,14 @@ trait QuestionnaireTestData {
       errorInfo = ErrorInfo("Your company registration number cannot be blank", "Enter your company registration number, like 01234567").some
     )
 
+    val question2b1 = Question.TextQuestion(
+      Question.Id("b9dbf1a3-e31b-4c89-a512-95f0652ca2ca"),
+      Wording("What is your full name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your full name cannot be blank", "Enter your full name").some
+    )
+
     val question2b = Question.TextQuestion(
       Question.Id("a2dbf1a7-e31b-4c89-a755-21f0652ca9cc"),
       Wording("What is your organisation’s name?"),
@@ -93,8 +101,9 @@ trait QuestionnaireTestData {
       label = Questionnaire.Label("Enter organisation details"),
       questions = NonEmptyList.of(
         QuestionItem(question1),
+        QuestionItem(question2b1, AskWhen.AskWhenAnswer(question1, "Sole trader")),
         QuestionItem(question2a, AskWhen.AskWhenAnswer(question1, "UK limited company")),
-        QuestionItem(question2b),
+        QuestionItem(question2b, AskWhen.AskWhenAnswer(question1, "UK limited company")),
         QuestionItem(question2c),
         QuestionItem(question2d)
       )

@@ -75,13 +75,13 @@ trait ProgressTestDataHelper {
     def withIncompleteProgress(): ExtendedSubmission =
       ExtendedSubmission(submission, allQuestionnaireIds.map(i => (i -> incompleteQuestionnaireProgress(i))).toList.toMap)
 
-    def withCompletedProgresss(): ExtendedSubmission =
+    def withCompletedProgress(): ExtendedSubmission =
       ExtendedSubmission(submission, allQuestionnaireIds.map(i => (i -> completedQuestionnaireProgress(i))).toList.toMap)
 
-    def withNotStartedProgresss(): ExtendedSubmission =
+    def withNotStartedProgress(): ExtendedSubmission =
       ExtendedSubmission(submission, allQuestionnaireIds.map(i => (i -> notStartedQuestionnaireProgress(i))).toList.toMap)
 
-    def withNotApplicableProgresss(): ExtendedSubmission =
+    def withNotApplicableProgress(): ExtendedSubmission =
       ExtendedSubmission(submission, allQuestionnaireIds.map(i => (i -> notApplicableQuestionnaireProgress(i))).toList.toMap)
   }
 }
@@ -111,7 +111,7 @@ trait SubmissionsTestData extends QuestionBuilder with QuestionnaireTestData wit
   val completelyAnswerExtendedSubmission =
     aSubmission.copy(id = completedSubmissionId)
       .hasCompletelyAnsweredWith(answersToQuestions)
-      .withCompletedProgresss()
+      .withCompletedProgress()
 
   val gatekeeperUserName = "gatekeeperUserName"
   val reasons            = "some reasons"

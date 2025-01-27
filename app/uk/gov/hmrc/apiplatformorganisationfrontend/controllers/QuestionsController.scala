@@ -172,7 +172,7 @@ class QuestionsController @Inject() (
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
 
       lazy val toProdChecklist =
-        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ProdCredsChecklistController.productionCredentialsChecklistPage(extSubmission.submission.id)
+        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(extSubmission.submission.id)
       lazy val toNextQuestion  = (nextQuestionId) => uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
 
       successful(Redirect(nextQuestion.fold(toProdChecklist)(toNextQuestion)))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,6 @@ class CheckAnswersController @Inject() (
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
     checkAnswersView: CheckAnswersView,
-//    prodCredsRequestReceivedView: ProductionCredentialsRequestReceivedView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
@@ -50,9 +49,6 @@ class CheckAnswersController @Inject() (
     with EitherTHelper[String]
     with SubmissionActionBuilders {
 
-  val redirectToGetProdCreds = (submissionId: SubmissionId) => Redirect(routes.ProdCredsChecklistController.productionCredentialsChecklistPage(submissionId))
-
-  /*, Read/Write and State details */
   def checkAnswersPage(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     submissionService.fetch(submissionId).map(_ match {
       case Some(extSubmission) => {
@@ -62,6 +58,8 @@ class CheckAnswersController @Inject() (
       case None                => BadRequest("No submission found")
     })
   }
+
+  //  val redirectToGetProdCreds = (submissionId: SubmissionId) => Redirect(routes.ChecklistController.checklistPage(submissionId))
 
   def checkAnswersAction(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     // requestProductionCredentials

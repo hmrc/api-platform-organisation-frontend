@@ -35,7 +35,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
-object ProdCredsChecklistController {
+object ChecklistController {
   case class DummyForm(dummy: String = "dummy")
 
   object DummyForm {
@@ -96,12 +96,12 @@ object ProdCredsChecklistController {
 }
 
 @Singleton
-class ProdCredsChecklistController @Inject() (
+class ChecklistController @Inject() (
     val errorHandler: ErrorHandler,
     mcc: MessagesControllerComponents,
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
-    productionCredentialsChecklistView: ProductionCredentialsChecklistView,
+    checklistView: ChecklistView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
@@ -110,22 +110,22 @@ class ProdCredsChecklistController @Inject() (
     with SubmissionActionBuilders
     with WithUnsafeDefaultFormBinding {
 
-  import ProdCredsChecklistController._
+  import ChecklistController._
 
-  def productionCredentialsChecklistPage(
+  def checklistPage(
       submissionId: SubmissionId
     ): Action[AnyContent] = withSubmission(submissionId) { implicit request =>
     val show = (viewModel: ViewModel) => {
       filterGroupingsForEmptyQuestionnaireSummaries(viewModel.groupings).fold(
         BadRequest("No questionnaires applicable")
       )(vg =>
-        Ok(productionCredentialsChecklistView(viewModel.copy(groupings = vg), DummyForm.form.fillAndValidate(DummyForm("dummy"))))
+        Ok(checklistView(viewModel.copy(groupings = vg), DummyForm.form.fillAndValidate(DummyForm("dummy"))))
       )
     }
     successful(show(convertSubmissionToViewModel(request.extSubmission)))
   }
 
-  def productionCredentialsChecklistAction(
+  def checklistAction(
       submissionId: SubmissionId
     ) = withSubmission(submissionId) { implicit request =>
     def handleValidForm(validForm: DummyForm) = {
@@ -142,7 +142,7 @@ class ProdCredsChecklistController @Inject() (
               .filter(!_.isComplete)
               .foldLeft(DummyForm.form.fill(validForm))((form, summary) => form.withError(summary.fieldName, s"Complete the ${summary.label.toLowerCase} section"))
 
-            Ok(productionCredentialsChecklistView(viewModel.copy(groupings = vg), form))
+            Ok(checklistView(viewModel.copy(groupings = vg), form))
           })
         )
       }

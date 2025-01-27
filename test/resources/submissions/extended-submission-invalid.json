@@ -40,6 +40,26 @@
           }
         }, {
           "question" : {
+            "id" : "b9dbf1a3-e31b-4c89-a512-95f0652ca2ca",
+            "wording" : "What is your full name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your full name cannot be blank",
+              "message" : "Enter your full name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Sole trader"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
             "id" : "4e148791-1a07-4f28-8fe4-ba3e18cdc118",
             "wording" : "What is the company registration number?",
             "statement" : {
@@ -90,7 +110,11 @@
             "questionType" : "text"
           },
           "askWhen" : {
-            "askWhen" : "alwaysAsk"
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "UK limited company"
+            },
+            "askWhen" : "askWhenAnswer"
           }
         }, {
           "question" : {

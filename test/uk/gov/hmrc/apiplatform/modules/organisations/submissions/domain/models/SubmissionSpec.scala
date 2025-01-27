@@ -127,7 +127,7 @@ class SubmissionSpec extends BaseJsonFormattersSpec with SubmissionsTestData {
 
   "shouldAsk" in {
     AskWhen.shouldAsk(standardContext, answersToQuestions)(OrganisationDetails.questionnaire.questions.head.askWhen) shouldBe true
-    AskWhen.shouldAsk(standardContext, answersToQuestions)(OrganisationDetails.questionnaire.questions.tail.head.askWhen) shouldBe true
+    AskWhen.shouldAsk(standardContext, answersToQuestions)(OrganisationDetails.questionnaire.questions.tail.tail.head.askWhen) shouldBe true
     AskWhen.shouldAsk(standardContext, answersToQuestions)(ResponsibleIndividualDetails.questionnaire.questions.tail.tail.head.askWhen) shouldBe true
   }
 
