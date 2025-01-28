@@ -53,7 +53,7 @@ sealed trait TextValidation {
       if (ValidatedOrganisationName.validate(text).isValid) {
         Right(text)
       } else {
-        Left(s"$text is not a valid application name")
+        Left(s"$text is not a valid organisation name")
       }
 
     }

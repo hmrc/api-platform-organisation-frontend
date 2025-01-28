@@ -33,16 +33,16 @@ object ValidatedOrganisationName {
   private val maximumLength        = 50
   private val disallowedCharacters = """<>/\"'`"""
 
-  private def validateCharacters(applicationName: String): ValidationResult[String] = Validated.condNec(
-    !applicationName.toCharArray.exists(c => c < 32 || c > 126 || disallowedCharacters.contains(c)),
-    applicationName,
+  private def validateCharacters(organisationName: String): ValidationResult[String] = Validated.condNec(
+    !organisationName.toCharArray.exists(c => c < 32 || c > 126 || disallowedCharacters.contains(c)),
+    organisationName,
     OrganisationNameInvalidCharacters
   )
 
-  private def validateLength(applicationName: String): ValidationResult[String] =
+  private def validateLength(organisationName: String): ValidationResult[String] =
     Validated.condNec(
-      applicationName.length >= minimumLength && applicationName.length <= maximumLength,
-      applicationName,
+      organisationName.length >= minimumLength && organisationName.length <= maximumLength,
+      organisationName,
       OrganisationNameInvalidLength
     )
 
