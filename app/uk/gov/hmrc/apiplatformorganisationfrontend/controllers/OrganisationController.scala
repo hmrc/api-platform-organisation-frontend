@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CreateOrganisationForm.toRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.models._
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 final case class CreateOrganisationForm(organisationName: String)
@@ -50,7 +50,8 @@ class OrganisationController @Inject() (
     createPage: CreateOrganisationPage,
     successPage: CreateOrganisationSuccessPage,
     landingPage: OrganisationLandingPage,
-    service: OrganisationService,
+    organisationService: OrganisationService,
+    submissionService: SubmissionService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -68,7 +69,7 @@ class OrganisationController @Inject() (
     }
 
     def handleValidForm(form: CreateOrganisationForm) = {
-      service.createOrganisation(toRequest(form)).map(org => Ok(successPage(org.organisationName)))
+      organisationService.createOrganisation(toRequest(form)).map(org => Ok(successPage(org.organisationName)))
     }
 
     CreateOrganisationForm.form.bindFromRequest().fold(handleInvalidForm, handleValidForm)
@@ -76,5 +77,12 @@ class OrganisationController @Inject() (
 
   val organisationLandingView: Action[AnyContent] = loggedInAction { implicit request =>
     Future.successful(Ok(landingPage(Some(request.userSession))))
+  }
+
+  val organisationLandingAction: Action[AnyContent] = loggedInAction { implicit request =>
+    submissionService.createSubmission(request.userId, request.email).map(_ match {
+      case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
+      case _                => BadRequest("No submission created")
+    })
   }
 }

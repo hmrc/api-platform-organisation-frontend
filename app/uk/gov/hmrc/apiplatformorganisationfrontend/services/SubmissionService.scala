@@ -27,6 +27,10 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnec
 
 @Singleton
 class SubmissionService @Inject() (organisationConnector: OrganisationConnector) {
+
+  def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] =
+    organisationConnector.createSubmission(userId, requestedBy)
+
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = organisationConnector.fetchLatestSubmissionByUserId(userId)
 
   def fetchLatestExtendedSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] =
