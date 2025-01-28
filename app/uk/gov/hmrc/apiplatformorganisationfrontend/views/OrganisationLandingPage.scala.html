@@ -55,9 +55,11 @@
         Our team will check the information you provide and may contact you with more questions. We aim to complete the checking process in 10 days.
     </p>
 
-    @govukButton(Button(
-        href = Some("#"),
-        isStartButton = true,
-        content = Text("Start now")
-    ))
+    @helper.form(action = routes.OrganisationController.organisationLandingAction) {
+        @helper.CSRF.formField
+        @govukButton(Button(
+            id = Some("createSubmission"), 
+            isStartButton = true,
+            content = Text("Start now")))
+    }
 }

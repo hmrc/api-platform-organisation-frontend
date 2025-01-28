@@ -20,10 +20,10 @@ import java.security.MessageDigest
 
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Cookie, RequestHeader}
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.SessionId
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSessionId
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 trait CookieEncoding {
   implicit val appConfig: AppConfig

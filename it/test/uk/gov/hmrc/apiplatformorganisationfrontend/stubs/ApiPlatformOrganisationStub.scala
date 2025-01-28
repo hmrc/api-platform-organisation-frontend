@@ -16,13 +16,18 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Question, Submission, SubmissionId}
+
 object ApiPlatformOrganisationStub {
+
+  import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission._
 
   object CreateOrganisation {
 
@@ -41,6 +46,131 @@ object ApiPlatformOrganisationStub {
     def fails(status: Int): StubMapping = {
       stubFor(
         post(urlEqualTo("/create"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object CreateSubmission {
+
+    def succeeds(userId: UserId, submission: Submission): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/user/${userId}"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(submission).toString())
+          )
+      )
+    }
+
+    def fails(userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/user/${userId}"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object FetchSubmission {
+
+    def succeeds(submissionId: SubmissionId, extendedSubmission: ExtendedSubmission): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/$submissionId"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(extendedSubmission).toString())
+          )
+      )
+    }
+
+    def fails(submissionId: SubmissionId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/$submissionId"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object FetchLatestExtendedSubmissionByUserId {
+
+    def succeeds(userId: UserId, extendedSubmission: ExtendedSubmission): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/user/$userId/extended"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(extendedSubmission).toString())
+          )
+      )
+    }
+
+    def fails(userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/user/$userId/extended"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object FetchLatestSubmissionByUserId {
+
+    def succeeds(userId: UserId, submission: Submission): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/user/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(submission).toString())
+          )
+      )
+    }
+
+    def fails(userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/submission/user/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object RecordAnswer {
+
+    def succeeds(submissionId: SubmissionId, questionId: Question.Id, extendedSubmission: ExtendedSubmission): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/$submissionId/question/${questionId.value}"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(extendedSubmission).toString())
+          )
+      )
+    }
+
+    def fails(submissionId: SubmissionId, questionId: Question.Id, status: Int): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/$submissionId/question/${questionId.value}"))
           .willReturn(
             aResponse()
               .withStatus(status)

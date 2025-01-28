@@ -21,14 +21,14 @@ import scala.concurrent.Future
 import cats.data.OptionT
 
 import play.api.mvc._
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.BaseController
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
 
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{LoggedInState, UserSession, UserSessionId}
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.BaseController
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models._
 
 trait DevHubAuthorization extends FrontendHeaderCarrierProvider with CookieEncoding {
   self: BaseController =>

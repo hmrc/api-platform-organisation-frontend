@@ -1,0 +1,279 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import include._
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+@import play.api.mvc.Call
+@import play.api.mvc.Request
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.ViewErrorInfo
+@import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+
+@this(layout: Layout)
+
+@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ViewErrorInfo])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+
+@pageHeading = @{ question.wording.value }
+
+@choiceAsId(choice: PossibleAnswer) = {question-@{choice.htmlValue}-id}
+
+@renderStatementText(st: StatementText) = @{st.text}
+
+@renderStatementLink(sl: StatementLink) = {<a class="govuk-link" href="@{sl.url}" target="_blank">@{sl.text}</a>}
+
+@renderCompoundFragment(cs: CompoundFragment) = @{
+  cs.fragments.map( fragment =>
+    fragment match {
+      case st: StatementText => renderStatementText(st)
+      case sl: StatementLink => renderStatementLink(sl)
+      case _ => Html("<p />")
+    }
+  ).toList
+}
+
+@renderNonBulletStatementFragment(nbsf: NonBulletStatementFragment) = @{
+  nbsf match {
+    case st: StatementText => renderStatementText(st)
+    case sl: StatementLink => renderStatementLink(sl)
+    case cs: CompoundFragment => renderCompoundFragment(cs)
+  }
+}
+
+@renderStatementBullets(cs: StatementBullets) = {
+  <ul class="govuk-list govuk-list--bullet">
+    @for( bullet <- cs.bullets.toList ) {
+      <li>@renderNonBulletStatementFragment(bullet)</li>
+    }
+  </ul>
+}
+
+@renderParagraphStatementText(st: StatementText) = { <p class="govuk-body">@renderStatementText(st)</p> }
+
+@renderParagraphStatementLink(sl: StatementLink) = { <p class="govuk-body">@renderStatementLink(sl)</p> }
+
+@renderParagraphCompoundFragment(cs: CompoundFragment) = { <p class="govuk-body">@renderCompoundFragment(cs)</p> }
+
+@renderHint(nbsf: NonBulletStatementFragment,id: String) = {
+  <div id="hint-@{id}" class="govuk-hint">@renderNonBulletStatementFragment(nbsf)</div>
+}
+
+@renderStatement(statement: Statement) = {
+  <p class="govuk-body">
+    @{
+      statement.fragments.map( fragment => fragment match {
+        case st: StatementText => renderParagraphStatementText(st)
+        case sl: StatementLink => renderParagraphStatementLink(sl)
+        case cs: CompoundFragment => renderParagraphCompoundFragment(cs)
+        case sb: StatementBullets => renderStatementBullets(sb)
+      })
+      .toList
+    }
+  </p>
+}
+
+@renderMaybeStatement(maybeStatement: Option[Statement]) = {
+  @{
+    maybeStatement match {
+      case Some(stmt) => renderStatement(stmt)
+      case _ =>
+    }
+  }
+}
+
+@renderRadioQuestionChoice(choice: PossibleAnswer, actualAnswer: Option[ActualAnswer.SingleChoiceAnswer]) = {
+  @defining( if(Some(choice.value) == actualAnswer.map(_.value)) """checked="checked"""" else "") { checked =>
+    <div class="govuk-radios__item">
+      <input class="govuk-radios__input" type="radio" id="@{choiceAsId(choice)}" name="answer" value="@{choice.value}" @{checked}
+        data-journey-val="@{choice.value}">
+      <label class="govuk-label govuk-radios__label" for="@{choiceAsId(choice)}">@{choice.value}</label>
+    </div>
+  }
+}
+
+@renderCheckboxChoice(choice: PossibleAnswer, actualAnswer: Option[ActualAnswer.MultipleChoiceAnswer]) = {
+  @defining( if(actualAnswer.map(_.values).getOrElse(Set.empty).contains(choice.value)) """checked="checked"""" else "") { checked =>
+    <div class="govuk-checkboxes__item">
+      <input class="govuk-checkboxes__input" id="@{choiceAsId(choice)}" name="answer" type="checkbox"
+        value="@{choice.value}" @{checked}>
+      <label class="govuk-label govuk-checkboxes__label" for="@{choiceAsId(choice)}">@{choice.value}</label>
+    </div>
+  }
+}
+
+@renderButtonOrButtons(absenceText: Option[String]) = {
+  @{
+    val html = absenceText match {
+      case Some(text) =>
+      <div class="govuk-button-group">
+        <button id="submit-save" class="govuk-button" type="submit" name="submit-action" value="save">Save and continue</button>
+        <button id="submit-noanswer" class="govuk-button govuk-button--secondary" type="submit" name="submit-action" value="no-answer">{text}</button>
+      </div>
+      case None =>
+        <button id="submit" class="govuk-button" type="submit" name="submit-action" value="save">Save and continue</button>
+    }
+    html
+  }
+}
+
+@renderMultiChoiceQuestion(question: Question.MultiChoiceQuestion) = {
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-visually-hidden">
+        <h1 class="govuk-fieldset__heading">
+          @pageHeading
+        </h1>
+      </legend>
+      @if(question.hintText.isDefined) {
+        @renderHint(question.hintText.get, question.id.value)
+      }
+      <div class="govuk-checkboxes" data-module="govuk-checkboxes" id="question-@{question.id.value}-id" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
+        @{
+        val a = currentAnswers match {
+          case Some(mca @ ActualAnswer.MultipleChoiceAnswer(_)) => Some(mca)
+          case _ => None
+        }
+        question.choices.map(choice => renderCheckboxChoice(choice, a))
+        }
+      </div>
+    </fieldset>
+  </div>
+
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
+}
+
+@renderSingleChoiceQuestion(question: Question.SingleChoiceQuestion, inline: Boolean) = {
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-visually-hidden">
+        <h1 class="govuk-fieldset__heading">
+          @pageHeading
+        </h1>
+      </legend>
+      @if(question.hintText.isDefined) {
+        @renderHint(question.hintText.get, question.id.value)
+      }
+      <div class='govuk-radios @{if(inline) " govuk-radios--inline" else "" }' id="question-@{question.id.value}-id" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
+        @{
+        val a = currentAnswers match {
+          case Some(sca @ ActualAnswer.SingleChoiceAnswer(_)) => Some(sca)
+          case _ => None
+        }
+        question.choices.map(choice => renderRadioQuestionChoice(choice, a))
+        }
+      </div>
+    </fieldset>
+  </div>
+
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
+}
+
+@renderTextInputQuestion(question: Question.TextQuestion) = {
+  @defining(
+    currentAnswers match {
+      case Some(mca @ ActualAnswer.TextAnswer(_)) => mca.value
+      case _ => ""
+    }
+  ) { actualValue =>
+    <div class="govuk-form-group @if(errorInfo.isDefined) {govuk-form-group--error}">
+      @if(question.label.isDefined) {
+        <label id="question-label" class="govuk-label" for="question-@{question.id.value}-id">
+          @{question.label.get.value}
+        </label>
+      } else {
+          <!-- Below is needed for accessibility, it is hidden visually -->
+        <h1 class="govuk-visually-hidden">
+          <label id="question-label" class="govuk-label govuk-label--l" for="question-@{question.id.value}-id">
+          @pageHeading
+          </label>
+        </h1>
+      }
+      @if(question.hintText.isDefined) {
+        @renderHint(question.hintText.get, question.id.value)
+      }
+      @if(errorInfo.isDefined) {
+      <p id="question-error" class="govuk-error-message">
+        <span class="govuk-visually-hidden">Error:</span>@errorInfo.get.message
+      </p>
+      }
+      <input class="govuk-input" id="question-@{question.id.value}-id" name="answer" type="text" value="@actualValue" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
+    </div>
+  }
+
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
+}
+
+@renderAcknowledgementOnly(question: Question.AcknowledgementOnly) = {
+    <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
+}
+
+@renderQuestionType(question: Question) = @{
+  question match {
+    case q: Question.YesNoQuestion        => renderSingleChoiceQuestion(q, true)
+    case q: Question.SingleChoiceQuestion => renderSingleChoiceQuestion(q, false)
+    case q: Question.MultiChoiceQuestion  => renderMultiChoiceQuestion(q)
+    case q: Question.TextQuestion         => renderTextInputQuestion(q)
+    case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
+    case _ => <p>TODO</p>
+  }
+}
+
+@pageTitle = @{
+  if(errorInfo.isDefined) {
+    s"Error: ${pageHeading}"
+  } else {
+    pageHeading
+  }
+}
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = pageTitle,
+    loggedInSession = Some(loggedIn)
+) {
+
+  @if(errorInfo.isDefined) {
+    <div id="error-summary-display" class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 id="error-summary-title" class="govuk-error-summary__title">
+        There is a problem
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+          <li>
+            <a href="#question-@{question.id.value}-id">@{errorInfo.get.summary}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  }
+
+  <h1 class="govuk-heading-l">@pageHeading</h1>
+
+  @renderMaybeStatement(question.statement)
+
+  @helper.form(action = submitAction, Symbol("class") -> "form") {
+    @helper.CSRF.formField
+
+    @renderQuestionType(question)
+  }
+
+}

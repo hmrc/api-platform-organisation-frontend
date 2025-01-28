@@ -1,0 +1,82 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+@import include._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(layout: Layout)
+
+@(model: ViewModel, form: Form[DummyForm])(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
+
+@pageTitle = @{
+    "Get verified on the Developer Hub"
+}
+
+@labelAsId(label: String) = @{
+  label.toLowerCase.replaceAll(" ", "-") + "-link"
+}
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = pageTitle,
+    loggedInSession = Some(loggedIn),
+    form = Some(form)
+) {
+
+    <h1 class="govuk-heading-l">
+        @pageTitle
+    </h1>
+    <ol class="app-task-list">
+            <!-- Section 1 -->
+        @for(group <- model.groupings.toList) {
+        <li>
+            <h2 class="app-task-list__section">
+                @group.label
+            </h2>
+            <ul class="app-task-list__items govuk-!-padding-left-0">
+              @for(questionnaire <- group.questionnaireSummaries.toList) {
+                <li class="app-task-list__item">
+                    @if(questionnaire.nextQuestionUrl.isDefined) {
+                        <span class="app-task-list__task-name">
+                            <a id="@{labelAsId(questionnaire.label)}" href="@questionnaire.nextQuestionUrl.get" name="@questionnaire.fieldName">@questionnaire.label</a>
+                        </span>
+                    } else {
+                        <span class="app-task-list__task-name">
+                            @questionnaire.label
+                        </span>
+                    }
+
+                    <strong class="govuk-tag @if(!questionnaire.isComplete) {govuk-tag--grey} app-task-list__tag" id="@{questionnaire.id.value}-status">@questionnaire.state.toLowerCase.capitalize</strong>
+
+                </li>
+              }
+            </ul>
+        </li>
+        }
+    </ol>
+
+    @helper.form(action = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistAction(model.submissionId), Symbol("class") -> "form") {
+        @helper.CSRF.formField
+
+        <div class="govuk-button-group">
+            <button id="submit-ok" class="govuk-button" type="submit" name="submit-action">Save and continue</button>
+        </div>
+    }
+
+}

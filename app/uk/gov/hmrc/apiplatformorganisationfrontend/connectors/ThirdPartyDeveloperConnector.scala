@@ -20,12 +20,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
 
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{UserSession, UserSessionId}
+import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (

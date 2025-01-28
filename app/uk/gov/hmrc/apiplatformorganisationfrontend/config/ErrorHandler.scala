@@ -22,8 +22,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.i18n.MessagesApi
 import play.api.mvc.RequestHeader
 import play.twirl.api.Html
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.ErrorTemplate
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
+
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.ErrorTemplate
 
 @Singleton
 class ErrorHandler @Inject() (

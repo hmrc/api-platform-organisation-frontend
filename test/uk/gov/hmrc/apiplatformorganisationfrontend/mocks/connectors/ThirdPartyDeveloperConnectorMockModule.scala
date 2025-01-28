@@ -20,11 +20,10 @@ import scala.concurrent.Future.successful
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.data.SampleUserSession
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.UserIdTracker
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 
 trait ThirdPartyDeveloperConnectorMockModule
     extends MockitoSugar

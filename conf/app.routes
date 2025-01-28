@@ -1,10 +1,22 @@
 # microservice specific routes
 
-->          /hmrc-frontend        hmrcfrontend.Routes
+->          /hmrc-frontend                         hmrcfrontend.Routes
 
-GET         /create               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationView
-POST        /create               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationAction
+GET         /create                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationView
+POST        /create                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationAction
 
-GET         /landing              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingView
+GET         /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingView
+POST        /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingAction
 
-GET         /assets/*file         controllers.Assets.versioned(path = "/public", file: Asset)
+GET         /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
+POST        /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
+
+GET         /submission/:sid/question/:qid         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.showQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.recordAnswer(sid: SubmissionId, qid: Question.Id)
+GET         /submission/:sid/question/:qid/update  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid/update  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
+
+GET         /submission/:sid/check-answers         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
+GET         /submission/:sid/submit-request        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
+
+GET         /assets/*file                          controllers.Assets.versioned(path = "/public", file: Asset)
