@@ -26,7 +26,7 @@ class ConfigModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[AppConfig].toSelf.eagerly(),
     bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
-    bind(classOf[ConnectorMetrics]).to(classOf[ConnectorMetricsImpl])
+    bind[ConnectorMetrics].to[ConnectorMetricsImpl]
   )
 
 }
