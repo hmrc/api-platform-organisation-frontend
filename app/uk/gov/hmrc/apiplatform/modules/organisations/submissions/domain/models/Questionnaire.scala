@@ -24,16 +24,16 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormat
 
 sealed trait AskWhen
 
-object AskWhen {
-  case class AskWhenContext(contextKey: String, expectedValue: String)                                     extends AskWhen
-  case class AskWhenAnswer(questionId: Question.Id, expectedValues: List[ActualAnswer.SingleChoiceAnswer]) extends AskWhen
-  case object AlwaysAsk                                                                                    extends AskWhen
+object AskWhen extends NonEmptyListFormatters {
+  case class AskWhenContext(contextKey: String, expectedValue: String)                                             extends AskWhen
+  case class AskWhenAnswer(questionId: Question.Id, expectedValues: NonEmptyList[ActualAnswer.SingleChoiceAnswer]) extends AskWhen
+  case object AlwaysAsk                                                                                            extends AskWhen
 
   object AskWhenAnswer {
 
     def apply(question: Question.SingleChoiceQuestion, expectedValues: String*): AskWhen = {
       require(!expectedValues.toList.map(expValue => question.choices.find(qc => qc.value == expValue).isDefined).contains(false))
-      AskWhenAnswer(question.id, expectedValues.toList.map(value => ActualAnswer.SingleChoiceAnswer(value)))
+      AskWhenAnswer(question.id, NonEmptyList.fromListUnsafe(expectedValues.toList.map(value => ActualAnswer.SingleChoiceAnswer(value))))
     }
   }
 
@@ -52,7 +52,7 @@ object AskWhen {
     askWhen match {
       case AlwaysAsk                                 => true
       case AskWhenContext(contextKey, expectedValue) => context.get(contextKey).map(_.equalsIgnoreCase(expectedValue)).getOrElse(false)
-      case AskWhenAnswer(questionId, expectedValues) => answersToQuestions.get(questionId).map(expectedValues.contains(_)).getOrElse(false)
+      case AskWhenAnswer(questionId, expectedValues) => answersToQuestions.get(questionId).map(expectedValues.toList.contains(_)).getOrElse(false)
     }
   }
 
