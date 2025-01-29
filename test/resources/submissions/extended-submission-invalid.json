@@ -53,9 +53,9 @@
           },
           "askWhen" : {
             "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
-            "expectedValue" : {
+            "expectedValues" : [ {
               "value" : "Sole trader"
-            },
+            } ],
             "askWhen" : "askWhenAnswer"
           }
         }, {
@@ -91,9 +91,9 @@
           },
           "askWhen" : {
             "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
-            "expectedValue" : {
+            "expectedValues" : [ {
               "value" : "UK limited company"
-            },
+            } ],
             "askWhen" : "askWhenAnswer"
           }
         }, {
@@ -111,9 +111,9 @@
           },
           "askWhen" : {
             "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
-            "expectedValue" : {
+            "expectedValues" : [ {
               "value" : "UK limited company"
-            },
+            } ],
             "askWhen" : "askWhenAnswer"
           }
         }, {
@@ -222,9 +222,9 @@
           },
           "askWhen" : {
             "questionId" : "99d9362d-e365-4af1-aa46-88e95f9858f7",
-            "expectedValue" : {
+            "expectedValues" : [ {
               "value" : "No"
-            },
+            } ],
             "askWhen" : "askWhenAnswer"
           }
         }, {
@@ -270,9 +270,9 @@
           },
           "askWhen" : {
             "questionId" : "99d9362d-e365-4af1-aa46-88e95f9858f7",
-            "expectedValue" : {
+            "expectedValues" : [ {
               "value" : "No"
-            },
+            } ],
             "askWhen" : "askWhenAnswer"
           }
         }, {
