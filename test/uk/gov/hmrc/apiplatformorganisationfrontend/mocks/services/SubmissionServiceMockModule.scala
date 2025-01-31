@@ -71,7 +71,7 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
         when(aMock.recordAnswer(*[SubmissionId], *[Question.Id], eqTo(answer))(*)).thenReturn(successful(Right(out)))
       }
 
-      def thenReturnsNone() = {
+      def thenReturnsError() = {
         when(aMock.recordAnswer(*[SubmissionId], *[Question.Id], *)(*)).thenReturn(successful(Left("Failed to record answer for submission")))
       }
     }
@@ -83,6 +83,16 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
 
       def thenReturnsNone() = {
         when(aMock.createSubmission(*[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(None))
+      }
+    }
+
+    object SubmitSubmission {
+
+      def thenReturns(out: Submission) =
+        when(aMock.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
+
+      def thenReturnsError() = {
+        when(aMock.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Failed to submit submission")))
       }
     }
   }

@@ -183,7 +183,7 @@ class QuestionControllerSpec
 
     "fail if invalid answer provided and returns custom error message" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      SubmissionServiceMock.RecordAnswer.thenReturnsNone()
+      SubmissionServiceMock.RecordAnswer.thenReturnsError()
       private val invalidEmailAnswer = "bob"
       private val request            = loggedInRequest.withFormUrlEncodedBody("answer" -> invalidEmailAnswer, "submit-action" -> "save")
 

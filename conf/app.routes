@@ -17,6 +17,7 @@ GET         /submission/:sid/question/:qid/update  uk.gov.hmrc.apiplatformorgani
 POST        /submission/:sid/question/:qid/update  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
 
 GET         /submission/:sid/check-answers         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
-GET         /submission/:sid/submit-request        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
+POST        /submission/:sid/submit-request        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
+GET         /submission/:sid/submit-success        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
 
 GET         /assets/*file                          controllers.Assets.versioned(path = "/public", file: Asset)

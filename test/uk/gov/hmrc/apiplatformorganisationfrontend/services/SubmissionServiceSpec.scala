@@ -66,13 +66,34 @@ class SubmissionServiceSpec extends AsyncHmrcSpec {
       result shouldBe defined
       result.get.submission.id shouldBe completelyAnswerExtendedSubmission.submission.id
     }
+  }
 
+  "recordAnswer" should {
     "record answer for given submisson id and question id" in new Setup {
       when(mockOrganisationConnector.recordAnswer(*[SubmissionId], *[Question.Id], *)(*)).thenReturn(successful(Right(answeringSubmission.withIncompleteProgress())))
 
       val result = await(underTest.recordAnswer(completelyAnswerExtendedSubmission.submission.id, questionId, List("")))
 
-      // result shouldBe 'defined
+      result.isRight shouldBe true
+    }
+  }
+
+  "createSubmission" should {
+    "create submisson" in new Setup {
+      when(mockOrganisationConnector.createSubmission(*[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Some(submittedSubmission)))
+
+      val result = await(underTest.createSubmission(userId, LaxEmailAddress("bob@example.com")))
+
+      result.isDefined shouldBe true
+    }
+  }
+
+  "submitSubmission" should {
+    "submit submisson" in new Setup {
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
+
+      val result = await(underTest.submitSubmission(submittedSubmission.id, LaxEmailAddress("bob@example.com")))
+
       result.isRight shouldBe true
     }
   }
