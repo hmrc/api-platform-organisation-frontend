@@ -79,6 +79,31 @@ object ApiPlatformOrganisationStub {
     }
   }
 
+  object SubmitSubmission {
+
+    def succeeds(submissionId: SubmissionId, submission: Submission): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/${submissionId}"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(submission).toString())
+          )
+      )
+    }
+
+    def fails(submissionId: SubmissionId, status: Int): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/${submissionId}"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
   object FetchSubmission {
 
     def succeeds(submissionId: SubmissionId, extendedSubmission: ExtendedSubmission): StubMapping = {

@@ -40,7 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.CheckAnswersView
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SubmitSubmissionSuccessPage}
 import uk.gov.hmrc.apiplatformorganisationfrontend.{AsIdsHelpers, WithCSRFAddToken}
 
 class CheckAnswersControllerSpec
@@ -77,6 +77,7 @@ class CheckAnswersControllerSpec
     val incompleteExtendedSubmission = ExtendedSubmission(aSubmission, incompleteProgress)
 
     val checkAnswersView              = app.injector.instanceOf[CheckAnswersView]
+    val submitSubmissionSuccessPage   = app.injector.instanceOf[SubmitSubmissionSuccessPage]
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
@@ -88,6 +89,7 @@ class CheckAnswersControllerSpec
       cookieSigner,
       SubmissionServiceMock.aMock,
       checkAnswersView,
+      submitSubmissionSuccessPage,
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
@@ -115,11 +117,32 @@ class CheckAnswersControllerSpec
   }
 
   "checkAnswersAction" should {
-    "fail as not implemented yet" in new Setup {
+    "redirect to success page if successful" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(answeringSubmission.withIncompleteProgress())
+      SubmissionServiceMock.SubmitSubmission.thenReturns(submittedSubmission)
 
       val result = controller.checkAnswersAction(submissionId)(loggedInRequest.withCSRFToken)
-      status(result) shouldBe BAD_REQUEST
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/$submissionId/submit-success")
+    }
+
+    "redirect back to check answers page if fails" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(answeringSubmission.withIncompleteProgress())
+      SubmissionServiceMock.SubmitSubmission.thenReturnsError()
+
+      val result = controller.checkAnswersAction(submissionId)(loggedInRequest.withCSRFToken)
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/$submissionId/check-answers")
+    }
+  }
+
+  "submitSuccessPage" should {
+    "show success page" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(answeringSubmission.withIncompleteProgress())
+
+      val result = controller.submitSuccessPage(submissionId)(loggedInRequest.withCSRFToken)
+      status(result) shouldBe OK
+      contentAsString(result) should include("Your verification request is being processed")
     }
   }
 }

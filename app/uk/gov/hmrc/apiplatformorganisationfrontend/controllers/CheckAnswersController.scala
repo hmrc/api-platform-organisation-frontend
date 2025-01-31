@@ -42,6 +42,7 @@ class CheckAnswersController @Inject() (
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
     checkAnswersView: CheckAnswersView,
+    submitSubmissionSuccessPage: SubmitSubmissionSuccessPage,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
@@ -59,17 +60,15 @@ class CheckAnswersController @Inject() (
     })
   }
 
-  //  val redirectToGetProdCreds = (submissionId: SubmissionId) => Redirect(routes.ChecklistController.checklistPage(submissionId))
-
   def checkAnswersAction(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
-    // requestProductionCredentials
-    //   .requestProductionCredentials(request.application, request.userSession, requesterIsResponsibleIndividual, isNewTouUplift)
-    //   .map(_ match {
-    //     case Right(app)                 => {
-    //      Redirect(routes.CheckAnswersController.requestReceivedPage(submissionId))
-    //   }
-    //   case Left(ErrorDetails(_, msg)) => Redirect(routes.CheckAnswersController.checkAnswersPage(productionAppId)).flashing("error" -> msg)
-    // })
-    Future.successful(BadRequest("Not implemented yet..."))
+    submissionService.submitSubmission(submissionId, request.email)
+      .map(_ match {
+        case Right(sub) => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
+        case Left(msg)  => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
+      })
+  }
+
+  def submitSuccessPage(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
+    Future.successful(Ok(submitSubmissionSuccessPage()))
   }
 }

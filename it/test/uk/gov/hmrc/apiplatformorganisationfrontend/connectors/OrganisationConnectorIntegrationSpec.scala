@@ -86,6 +86,25 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     }
   }
 
+  "submitSubmission" should {
+    val requestedBy = LaxEmailAddress("bob@example.com")
+    "successfully submit" in new Setup {
+      ApiPlatformOrganisationStub.SubmitSubmission.succeeds(submissionId, aSubmission)
+
+      val result = await(underTest.submitSubmission(submissionId, requestedBy))
+
+      result.isRight shouldBe true
+    }
+
+    "fail when the submit returns an error" in new Setup {
+      ApiPlatformOrganisationStub.SubmitSubmission.fails(submissionId, INTERNAL_SERVER_ERROR)
+
+      val result = await(underTest.submitSubmission(submissionId, requestedBy))
+
+      result.isLeft shouldBe true
+    }
+  }
+
   "fetchSubmission" should {
     "successfully get one" in new Setup {
       ApiPlatformOrganisationStub.FetchSubmission.succeeds(completelyAnswerExtendedSubmission.submission.id, completelyAnswerExtendedSubmission)

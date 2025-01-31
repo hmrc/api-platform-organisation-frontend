@@ -77,6 +77,18 @@ class OrganisationConnector @Inject() (
     }
   }
 
+  def submitSubmission(submissionId: SubmissionId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to submit submission $submissionId"
+
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/submission/${submissionId}")
+        .withBody(Json.toJson(SubmitSubmissionRequest(requestedBy)))
+        .execute[Either[UpstreamErrorResponse, Submission]]
+        .map(_.leftMap(failed))
+    }
+  }
+
   def fetchLatestExtendedSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = {
     metrics.record(api) {
       http.get(url"${config.serviceBaseUrl}/submission/user/${userId}/extended")
@@ -100,4 +112,7 @@ object OrganisationConnector {
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
   implicit val readsCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
+
+  case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
+  implicit val readsSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 }
