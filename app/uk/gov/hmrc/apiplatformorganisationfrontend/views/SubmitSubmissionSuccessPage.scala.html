@@ -22,5 +22,9 @@ govukPanel: GovukPanel)
 @()(implicit request: RequestHeader, messages: Messages)
 
 @layout(pageTitle = "HMRC Developer Hub") {
- @govukPanel(Panel(title=Text("Your verification request is being processed"),content=Text("We will email you within 10 days to let you know the outcome of your verification.")))
+  @govukPanel(Panel(title=Text("Your verification request is being processed")))
+
+  <h2 class="govuk-heading-m">What happens next</h2>
+
+  <p class="govuk-body">We will email you within 10 days to let you know the outcome of your verification.</p>
 }

@@ -16,10 +16,13 @@
 
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
 @import include._
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 
-@this(layout: Layout)
+@this(layout: Layout,
+        govukButton: GovukButton)
 
 @(model: ViewModel, error: Option[String])(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
 
@@ -57,10 +60,10 @@
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
     @answersFragment(model, canChange = true)
 
-    <div class="govuk-button-group">
-        <a href="@uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersAction(model.submissionId)" class="govuk-button" data-module="govuk-button">
-            Confirm and send
-        </a>
-    </div>
-
+    @helper.form(action = routes.CheckAnswersController.checkAnswersAction(model.submissionId)) {
+      @helper.CSRF.formField
+      @govukButton(Button(
+          id = Some("confirmAndSend"), 
+         content = Text("Confirm and send")))
+  }
 }
