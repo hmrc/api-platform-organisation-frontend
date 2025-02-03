@@ -8,6 +8,8 @@ POST        /create                                uk.gov.hmrc.apiplatformorgani
 GET         /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingView
 POST        /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingAction
 
+GET         /main-landing                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.mainLandingView
+
 GET         /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
 POST        /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
 

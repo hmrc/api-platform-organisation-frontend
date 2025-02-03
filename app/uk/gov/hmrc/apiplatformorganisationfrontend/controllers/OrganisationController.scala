@@ -50,6 +50,7 @@ class OrganisationController @Inject() (
     createPage: CreateOrganisationPage,
     successPage: CreateOrganisationSuccessPage,
     landingPage: OrganisationLandingPage,
+    mainlandingPage: MainLandingPage,
     organisationService: OrganisationService,
     submissionService: SubmissionService,
     val cookieSigner: CookieSigner,
@@ -79,10 +80,17 @@ class OrganisationController @Inject() (
     Future.successful(Ok(landingPage(Some(request.userSession))))
   }
 
+  val mainLandingView: Action[AnyContent] = loggedInAction { implicit request =>
+    submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
+      case Some(submission) => Future.successful(Ok(mainlandingPage(Some(request.userSession), Some(submission.id))))
+      case _ => Future.successful(Ok(mainlandingPage(Some(request.userSession), None)))
+    }
+  }
+
   val organisationLandingAction: Action[AnyContent] = loggedInAction { implicit request =>
-    submissionService.createSubmission(request.userId, request.email).map(_ match {
+    submissionService.createSubmission(request.userId, request.email).map {
       case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
-      case _                => BadRequest("No submission created")
-    })
+      case _ => BadRequest("No submission created")
+    }
   }
 }

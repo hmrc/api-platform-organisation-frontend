@@ -1,0 +1,50 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.{CreateOrganisationForm, routes}
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.SubmissionId
+
+@this(layout: Layout,
+        govukButton: GovukButton)
+
+
+@(loggedInSession: Option[UserSession], existingSubmissionId: Option[SubmissionId])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = "Main organisations landing page",
+    loggedInSession = loggedInSession
+) {
+
+    <h1 class="govuk-heading-l">Main organisations landing page </h1>
+
+    @if(existingSubmissionId.isDefined) {
+        @govukButton(Button(
+            href = Some(controllers.routes.ChecklistController.checklistPage(existingSubmissionId.get).url),
+            isStartButton = true,
+            content = Text("Continue Organisation entry")
+        ))
+    } else {
+        @govukButton(Button(
+            href = Some(controllers.routes.OrganisationController.organisationLandingView.url),
+            isStartButton = true,
+            content = Text("Create New Organisation")
+        ))
+    }
+}
