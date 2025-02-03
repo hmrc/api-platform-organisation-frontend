@@ -97,8 +97,6 @@ class QuestionSpec extends BaseJsonFormattersSpec with SubmissionsTestData {
       |  }, {
       |    "Charitable Incorporated Organisation (CIO)" : "pass"
       |  }, {
-      |    "Trust" : "pass"
-      |  }, {
       |    "Non-UK company with a branch or place of business in the UK" : "warn"
       |  }, {
       |    "Non-UK company without a branch or place of business in the UK" : "fail"
@@ -109,22 +107,22 @@ class QuestionSpec extends BaseJsonFormattersSpec with SubmissionsTestData {
       |}""".stripMargin
 
   "question absence text" in {
-    OrganisationDetails.question2c.absenceText shouldBe None
+    OrganisationDetails.questionLtdOrgName.absenceText shouldBe None
     ResponsibleIndividualDetails.question6.absenceText shouldBe Some("My organisation doesn't have a website")
   }
 
   "question absence mark" in {
-    OrganisationDetails.question2c.absenceMark shouldBe None
+    OrganisationDetails.questionLtdOrgName.absenceMark shouldBe None
     ResponsibleIndividualDetails.question6.absenceMark shouldBe Some(Mark.Fail)
   }
 
   "question is optional" in {
-    OrganisationDetails.question1.isOptional shouldBe false
-    OrganisationDetails.question2a.isOptional shouldBe true
+    OrganisationDetails.questionOrgType.isOptional shouldBe false
+    OrganisationDetails.questionCompanyNumber.isOptional shouldBe true
   }
 
   "question html value" in {
-    OrganisationDetails.question1.choices.head.htmlValue shouldBe "UK-limited-company"
+    OrganisationDetails.questionOrgType.choices.head.htmlValue shouldBe "UK-limited-company"
   }
 
   "toJson for text question" in {
@@ -150,10 +148,10 @@ class QuestionSpec extends BaseJsonFormattersSpec with SubmissionsTestData {
   }
 
   "toJson for choose one of question" in {
-    Json.prettyPrint(Json.toJson(OrganisationDetails.question1)) shouldBe jsonChooseOneOfQuestion
+    Json.prettyPrint(Json.toJson(OrganisationDetails.questionOrgType)) shouldBe jsonChooseOneOfQuestion
   }
 
   "read choose one of question from json" in {
-    testFromJson[Question.ChooseOneOfQuestion](jsonChooseOneOfQuestion)(OrganisationDetails.question1)
+    testFromJson[Question.ChooseOneOfQuestion](jsonChooseOneOfQuestion)(OrganisationDetails.questionOrgType)
   }
 }

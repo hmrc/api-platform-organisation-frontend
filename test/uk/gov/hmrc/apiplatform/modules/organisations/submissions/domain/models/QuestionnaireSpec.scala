@@ -26,7 +26,7 @@ class QuestionnaireSpec extends AnyWordSpec with Matchers with SubmissionsTestDa
 
   "Questionnaire" should {
     "find question by id when given a question id that exists in the questionnire" in new Setup {
-      OrganisationDetails.questionnaire.hasQuestion(OrganisationDetails.question1.id) shouldBe true
+      OrganisationDetails.questionnaire.hasQuestion(OrganisationDetails.questionOrgType.id) shouldBe true
     }
 
     "fail to find question by id when given a question id that does not exist in the questionnire" in new Setup {

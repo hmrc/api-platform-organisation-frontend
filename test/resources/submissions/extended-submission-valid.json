@@ -24,8 +24,6 @@
             }, {
               "Charitable Incorporated Organisation (CIO)" : "pass"
             }, {
-              "Trust" : "pass"
-            }, {
               "Non-UK company with a branch or place of business in the UK" : "warn"
             }, {
               "Non-UK company without a branch or place of business in the UK" : "fail"
@@ -37,26 +35,6 @@
           },
           "askWhen" : {
             "askWhen" : "alwaysAsk"
-          }
-        }, {
-          "question" : {
-            "id" : "b9dbf1a3-e31b-4c89-a512-95f0652ca2ca",
-            "wording" : "What is your full name?",
-            "validation" : {
-              "validationType" : "organisationName"
-            },
-            "errorInfo" : {
-              "summary" : "Your full name cannot be blank",
-              "message" : "Enter your full name"
-            },
-            "questionType" : "text"
-          },
-          "askWhen" : {
-            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
-            "expectedValue" : {
-              "value" : "Sole trader"
-            },
-            "askWhen" : "askWhenAnswer"
           }
         }, {
           "question" : {
@@ -127,7 +105,11 @@
             "questionType" : "text"
           },
           "askWhen" : {
-            "askWhen" : "alwaysAsk"
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "UK limited company"
+            },
+            "askWhen" : "askWhenAnswer"
           }
         }, {
           "question" : {
@@ -160,7 +142,238 @@
             "questionType" : "text"
           },
           "askWhen" : {
-            "askWhen" : "alwaysAsk"
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "UK limited company"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "d1abf9a7-e31b-4c89-a755-21f0652ca23a",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Sole trader"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "a2dbf9a7-e31b-4c89-a755-21f0652de91c",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Registered society"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "d8aaf3a2-e31b-4c89-a755-21f0652ab52a",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Charitable Incorporated Organisation (CIO)"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "b2fef9a2-e31b-4c89-a755-21f0652af99e",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Non-UK company with a branch or place of business in the UK"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "a8eaf9a2-e31b-4c89-a755-21f0652ae45a",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Non-UK company without a branch or place of business in the UK"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "wording" : "What type of partnership are you registering?",
+            "marking" : [ {
+              "General partnership" : "pass"
+            }, {
+              "Limited liability partnership" : "pass"
+            }, {
+              "Limited partnership" : "pass"
+            }, {
+              "Scottish partnership" : "pass"
+            }, {
+              "Scottish limited partnership" : "pass"
+            } ],
+            "errorInfo" : {
+              "summary" : "Select your partnership type"
+            },
+            "questionType" : "choose"
+          },
+          "askWhen" : {
+            "questionId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
+            "expectedValue" : {
+              "value" : "Partnership"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "b6dbf9a2-e31b-4c89-a755-23f0652ab29d",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "expectedValue" : {
+              "value" : "General partnership"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "a1dbf9a2-e31b-4c89-a755-23f0652ab17a",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "expectedValue" : {
+              "value" : "Limited liability partnership"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "f3dbf9a2-e31b-4c89-a755-23f0652ab57e",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "expectedValue" : {
+              "value" : "Limited partnership"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "c7dbf9a2-e31b-4c89-a755-23f0651ab48a",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "expectedValue" : {
+              "value" : "Scottish partnership"
+            },
+            "askWhen" : "askWhenAnswer"
+          }
+        }, {
+          "question" : {
+            "id" : "e3dbf6a2-e31b-4c89-a755-23f0652ab17c",
+            "wording" : "What is your organisation’s name?",
+            "validation" : {
+              "validationType" : "organisationName"
+            },
+            "errorInfo" : {
+              "summary" : "Your organsation name cannot be blank",
+              "message" : "Enter your organisation name"
+            },
+            "questionType" : "text"
+          },
+          "askWhen" : {
+            "questionId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+            "expectedValue" : {
+              "value" : "Scottish limited partnership"
+            },
+            "askWhen" : "askWhenAnswer"
           }
         } ]
       }, {
@@ -325,7 +538,18 @@
     } ],
     "questionIdsOfInterest" : {
       "organisationTypeId" : "cbdf264f-be39-4638-92ff-6ecd2259c662",
-      "organisationNameId" : "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc"
+      "partnershipTypeId" : "adba162f-be58-2818-92ff-2ecd1799c513",
+      "organisationNameLtdId" : "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc",
+      "organisationNameSoleId" : "d1abf9a7-e31b-4c89-a755-21f0652ca23a",
+      "organisationNameRsId" : "a2dbf9a7-e31b-4c89-a755-21f0652de91c",
+      "organisationNameCioId" : "d8aaf3a2-e31b-4c89-a755-21f0652ab52a",
+      "organisationNameNonUkWithId" : "b2fef9a2-e31b-4c89-a755-21f0652af99e",
+      "organisationNameNonUkWithoutId" : "a8eaf9a2-e31b-4c89-a755-21f0652ae45a",
+      "organisationNameGpId" : "b6dbf9a2-e31b-4c89-a755-23f0652ab29d",
+      "organisationNameLlpId" : "a1dbf9a2-e31b-4c89-a755-23f0652ab17a",
+      "organisationNameLpId" : "f3dbf9a2-e31b-4c89-a755-23f0652ab57e",
+      "organisationNameSpId" : "c7dbf9a2-e31b-4c89-a755-23f0651ab48a",
+      "organisationNameSlpId" : "e3dbf6a2-e31b-4c89-a755-23f0652ab17c"
     },
     "instances" : [ {
       "index" : 0,
@@ -333,10 +557,6 @@
         "cbdf264f-be39-4638-92ff-6ecd2259c662" : {
           "value" : "UK limited company",
           "answerType" : "singleChoice"
-        },
-        "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc" : {
-          "value" : "Bobs Burgers",
-          "answerType" : "text"
         }
       },
       "statusHistory" : [ {
@@ -358,7 +578,7 @@
   "questionnaireProgress" : {
     "ac69b129-524a-4d10-89a5-7bfa46ed95c7" : {
       "state" : "InProgress",
-      "questionsToAsk" : [ "cbdf264f-be39-4638-92ff-6ecd2259c662", "e1dbf1a3-e28b-1c83-a739-86f1319ca8cc" ]
+      "questionsToAsk" : [ "cbdf264f-be39-4638-92ff-6ecd2259c662", "a2dbf1a7-e31b-4c89-a755-21f0652ca9cc" ]
     },
     "1e4a1369-8e28-447c-bd47-efbabec1a43b" : {
       "state" : "NotApplicable",
