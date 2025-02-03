@@ -53,7 +53,18 @@ case class QuestionnaireProgress(state: QuestionnaireState, questionsToAsk: List
 
 case class QuestionIdsOfInterest(
     organisationTypeId: Question.Id,
-    organisationNameId: Question.Id
+    partnershipTypeId: Question.Id,
+    organisationNameLtdId: Question.Id,
+    organisationNameSoleId: Question.Id,
+    organisationNameRsId: Question.Id,
+    organisationNameCioId: Question.Id,
+    organisationNameNonUkWithId: Question.Id,
+    organisationNameNonUkWithoutId: Question.Id,
+    organisationNameGpId: Question.Id,
+    organisationNameLlpId: Question.Id,
+    organisationNameLpId: Question.Id,
+    organisationNameSpId: Question.Id,
+    organisationNameSlpId: Question.Id
   )
 
 object Submission extends EnvReads with NonEmptyListFormatters {

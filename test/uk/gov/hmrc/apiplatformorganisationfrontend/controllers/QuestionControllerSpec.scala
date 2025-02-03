@@ -102,8 +102,8 @@ class QuestionControllerSpec
     "succeed and check for label, hintText" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
-      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.question2a.id.value}"
-      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.question2a.id)(loggedInRequest.withCSRFToken)
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionCompanyNumber.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
       contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
@@ -111,7 +111,7 @@ class QuestionControllerSpec
       contentAsString(result) contains ("It is 8 characters. For example, 01234567 or AC012345.") shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(
         result
-      ) contains (s"""aria-describedby="hint-${OrganisationDetails.question2a.id.value}"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      ) contains (s"""aria-describedby="hint-${OrganisationDetails.questionCompanyNumber.id.value}"""") shouldBe true withClue ("HTML content did not contain describeBy")
       contentAsString(result) contains ("<title>")
     }
 
@@ -162,10 +162,10 @@ class QuestionControllerSpec
       private val answer1 = "Bobs Burgers"
       private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
 
-      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.question2b.id)(request.withCSRFToken)
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.question2c.id.value}")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgAddress.id.value}")
     }
 
     "succeed when answer given and trim answer" in new Setup {
@@ -175,10 +175,10 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(List(answer1.trim()), aSubmission.withIncompleteProgress())
 
-      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.question2b.id)(request.withCSRFToken)
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.question2c.id.value}")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgAddress.id.value}")
     }
 
     "fail if invalid answer provided and returns custom error message" in new Setup {
@@ -294,16 +294,16 @@ class QuestionControllerSpec
         .withCompletedProgress()
 
       val modifiedAnswersToQuestions = fullyAnsweredSubmission.submission.latestInstance.answersToQuestions -
-        OrganisationDetails.question2c.id ++ Map(
-          OrganisationDetails.question1.id -> ActualAnswer.SingleChoiceAnswer("Sole trader")
+        OrganisationDetails.questionLtdOrgAddress.id ++ Map(
+          OrganisationDetails.questionOrgType.id -> ActualAnswer.SingleChoiceAnswer("Partnership")
         )
 
       val modifiedProgress = Map(OrganisationDetails.questionnaire.id ->
         QuestionnaireProgress(
           QuestionnaireState.InProgress,
           List(
-            OrganisationDetails.question1.id,
-            OrganisationDetails.question2b1.id
+            OrganisationDetails.questionOrgType.id,
+            OrganisationDetails.questionPartnershipType.id
           )
         ))
 
@@ -322,11 +322,11 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
       SubmissionServiceMock.RecordAnswer.thenReturns(modifiedSubmission)
 
-      private val utrAnswer = "Sole trader"
-      private val request   = loggedInRequest.withFormUrlEncodedBody("answer" -> utrAnswer, "submit-action" -> "save")
+      private val answer  = "Partnership"
+      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer, "submit-action" -> "save")
 
-      private val firstQuestionId    = OrganisationDetails.question1.id
-      private val followUpQuestionId = OrganisationDetails.question2b1.id
+      private val firstQuestionId    = OrganisationDetails.questionOrgType.id
+      private val followUpQuestionId = OrganisationDetails.questionPartnershipType.id
 
       val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, firstQuestionId)(request.withCSRFToken)
 

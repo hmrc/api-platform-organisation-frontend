@@ -185,17 +185,17 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
   "recordAnswer" should {
     "successfully record answer" in new Setup {
-      ApiPlatformOrganisationStub.RecordAnswer.succeeds(submissionId, aSubmission.questionIdsOfInterest.organisationNameId, completelyAnswerExtendedSubmission)
+      ApiPlatformOrganisationStub.RecordAnswer.succeeds(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, completelyAnswerExtendedSubmission)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameId, List("answer")))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, List("answer")))
 
       result shouldBe Right(completelyAnswerExtendedSubmission)
     }
 
     "fail when the creation call returns an error" in new Setup {
-      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameId, INTERNAL_SERVER_ERROR)
+      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameId, List("answer")))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, List("answer")))
 
       result.isLeft shouldBe true
     }

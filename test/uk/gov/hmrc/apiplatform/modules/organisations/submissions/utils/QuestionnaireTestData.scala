@@ -27,7 +27,7 @@ trait QuestionnaireTestData {
 
   object OrganisationDetails {
 
-    val question1 = Question.ChooseOneOfQuestion(
+    val questionOrgType = Question.ChooseOneOfQuestion(
       Question.Id("cbdf264f-be39-4638-92ff-6ecd2259c662"),
       Wording("What is your organisation type?"),
       statement = None,
@@ -37,14 +37,27 @@ trait QuestionnaireTestData {
         (PossibleAnswer("Partnership")                                                    -> Mark.Pass),
         (PossibleAnswer("Registered society")                                             -> Mark.Pass),
         (PossibleAnswer("Charitable Incorporated Organisation (CIO)")                     -> Mark.Pass),
-        (PossibleAnswer("Trust")                                                          -> Mark.Pass),
         (PossibleAnswer("Non-UK company with a branch or place of business in the UK")    -> Mark.Warn),
         (PossibleAnswer("Non-UK company without a branch or place of business in the UK") -> Mark.Fail)
       ),
       errorInfo = ErrorInfo("Select your organisation type").some
     )
 
-    val question2a = Question.TextQuestion(
+    val questionPartnershipType = Question.ChooseOneOfQuestion(
+      Question.Id("adba162f-be58-2818-92ff-2ecd1799c513"),
+      Wording("What type of partnership are you registering?"),
+      statement = None,
+      marking = ListMap(
+        (PossibleAnswer("General partnership")           -> Mark.Pass),
+        (PossibleAnswer("Limited liability partnership") -> Mark.Pass),
+        (PossibleAnswer("Limited partnership")           -> Mark.Pass),
+        (PossibleAnswer("Scottish partnership")          -> Mark.Pass),
+        (PossibleAnswer("Scottish limited partnership")  -> Mark.Pass)
+      ),
+      errorInfo = ErrorInfo("Select your partnership type").some
+    )
+
+    val questionCompanyNumber = Question.TextQuestion(
       Question.Id("4e148791-1a07-4f28-8fe4-ba3e18cdc118"),
       Wording("What is the company registration number?"),
       statement = Statement(
@@ -59,15 +72,7 @@ trait QuestionnaireTestData {
       errorInfo = ErrorInfo("Your company registration number cannot be blank", "Enter your company registration number, like 01234567").some
     )
 
-    val question2b1 = Question.TextQuestion(
-      Question.Id("b9dbf1a3-e31b-4c89-a512-95f0652ca2ca"),
-      Wording("What is your full name?"),
-      statement = None,
-      validation = TextValidation.OrganisationName.some,
-      errorInfo = ErrorInfo("Your full name cannot be blank", "Enter your full name").some
-    )
-
-    val question2b = Question.TextQuestion(
+    val questionLtdOrgName = Question.TextQuestion(
       Question.Id("a2dbf1a7-e31b-4c89-a755-21f0652ca9cc"),
       Wording("What is your organisation’s name?"),
       statement = None,
@@ -75,14 +80,14 @@ trait QuestionnaireTestData {
       errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
     )
 
-    val question2c = Question.TextQuestion(
+    val questionLtdOrgAddress = Question.TextQuestion(
       Question.Id("e1dbf1a3-e28b-1c83-a739-86f1319ca8cc"),
       Wording("What is your organisation’s address?"),
       statement = None,
       errorInfo = ErrorInfo("Your organsation address cannot be blank", "Enter your organisation address").some
     )
 
-    val question2d = Question.TextQuestion(
+    val questionLtdOrgUtr = Question.TextQuestion(
       Question.Id("6be23951-ac69-47bf-aa56-86d3d690ee0b"),
       Wording("What is your Corporation Tax Unique Taxpayer Reference (UTR)?"),
       statement = Statement(
@@ -96,16 +101,106 @@ trait QuestionnaireTestData {
       errorInfo = ErrorInfo("Your Corporation Tax Unique Taxpayer Reference cannot be blank", "Enter your Corporation Tax Unique Taxpayer Reference, like 1234567890").some
     )
 
+    val questionSoleName = Question.TextQuestion(
+      Question.Id("d1abf9a7-e31b-4c89-a755-21f0652ca23a"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionRsOrgName = Question.TextQuestion(
+      Question.Id("a2dbf9a7-e31b-4c89-a755-21f0652de91c"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionCioOrgName = Question.TextQuestion(
+      Question.Id("d8aaf3a2-e31b-4c89-a755-21f0652ab52a"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionNonUkWithOrgName = Question.TextQuestion(
+      Question.Id("b2fef9a2-e31b-4c89-a755-21f0652af99e"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionNonUkWithoutOrgName = Question.TextQuestion(
+      Question.Id("a8eaf9a2-e31b-4c89-a755-21f0652ae45a"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionGpOrgName = Question.TextQuestion(
+      Question.Id("b6dbf9a2-e31b-4c89-a755-23f0652ab29d"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionLlpOrgName = Question.TextQuestion(
+      Question.Id("a1dbf9a2-e31b-4c89-a755-23f0652ab17a"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionLpOrgName = Question.TextQuestion(
+      Question.Id("f3dbf9a2-e31b-4c89-a755-23f0652ab57e"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionSpOrgName = Question.TextQuestion(
+      Question.Id("c7dbf9a2-e31b-4c89-a755-23f0651ab48a"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
+    val questionSlpOrgName = Question.TextQuestion(
+      Question.Id("e3dbf6a2-e31b-4c89-a755-23f0652ab17c"),
+      Wording("What is your organisation’s name?"),
+      statement = None,
+      validation = TextValidation.OrganisationName.some,
+      errorInfo = ErrorInfo("Your organsation name cannot be blank", "Enter your organisation name").some
+    )
+
     val questionnaire = Questionnaire(
       id = Questionnaire.Id("ac69b129-524a-4d10-89a5-7bfa46ed95c7"),
       label = Questionnaire.Label("Enter organisation details"),
       questions = NonEmptyList.of(
-        QuestionItem(question1),
-        QuestionItem(question2b1, AskWhen.AskWhenAnswer(question1, "Sole trader")),
-        QuestionItem(question2a, AskWhen.AskWhenAnswer(question1, "UK limited company")),
-        QuestionItem(question2b, AskWhen.AskWhenAnswer(question1, "UK limited company")),
-        QuestionItem(question2c),
-        QuestionItem(question2d)
+        QuestionItem(questionOrgType),
+        QuestionItem(questionCompanyNumber, AskWhen.AskWhenAnswer(questionOrgType, "UK limited company")),
+        QuestionItem(questionLtdOrgName, AskWhen.AskWhenAnswer(questionOrgType, "UK limited company")),
+        QuestionItem(questionLtdOrgAddress, AskWhen.AskWhenAnswer(questionOrgType, "UK limited company")),
+        QuestionItem(questionLtdOrgUtr, AskWhen.AskWhenAnswer(questionOrgType, "UK limited company")),
+        QuestionItem(questionSoleName, AskWhen.AskWhenAnswer(questionOrgType, "Sole trader")),
+        QuestionItem(questionRsOrgName, AskWhen.AskWhenAnswer(questionOrgType, "Registered society")),
+        QuestionItem(questionCioOrgName, AskWhen.AskWhenAnswer(questionOrgType, "Charitable Incorporated Organisation (CIO)")),
+        QuestionItem(questionNonUkWithOrgName, AskWhen.AskWhenAnswer(questionOrgType, "Non-UK company with a branch or place of business in the UK")),
+        QuestionItem(questionNonUkWithoutOrgName, AskWhen.AskWhenAnswer(questionOrgType, "Non-UK company without a branch or place of business in the UK")),
+        QuestionItem(questionPartnershipType, AskWhen.AskWhenAnswer(questionOrgType, "Partnership")),
+        QuestionItem(questionGpOrgName, AskWhen.AskWhenAnswer(questionPartnershipType, "General partnership")),
+        QuestionItem(questionLlpOrgName, AskWhen.AskWhenAnswer(questionPartnershipType, "Limited liability partnership")),
+        QuestionItem(questionLpOrgName, AskWhen.AskWhenAnswer(questionPartnershipType, "Limited partnership")),
+        QuestionItem(questionSpOrgName, AskWhen.AskWhenAnswer(questionPartnershipType, "Scottish partnership")),
+        QuestionItem(questionSlpOrgName, AskWhen.AskWhenAnswer(questionPartnershipType, "Scottish limited partnership"))
       )
     )
   }
@@ -209,8 +304,19 @@ trait QuestionnaireTestData {
     )
 
   val testQuestionIdsOfInterest = QuestionIdsOfInterest(
-    organisationTypeId = OrganisationDetails.question1.id,
-    organisationNameId = OrganisationDetails.question2b.id
+    organisationTypeId = OrganisationDetails.questionOrgType.id,
+    partnershipTypeId = OrganisationDetails.questionPartnershipType.id,
+    organisationNameLtdId = OrganisationDetails.questionLtdOrgName.id,
+    organisationNameSoleId = OrganisationDetails.questionSoleName.id,
+    organisationNameRsId = OrganisationDetails.questionRsOrgName.id,
+    organisationNameCioId = OrganisationDetails.questionCioOrgName.id,
+    organisationNameNonUkWithId = OrganisationDetails.questionNonUkWithOrgName.id,
+    organisationNameNonUkWithoutId = OrganisationDetails.questionNonUkWithoutOrgName.id,
+    organisationNameGpId = OrganisationDetails.questionGpOrgName.id,
+    organisationNameLlpId = OrganisationDetails.questionLlpOrgName.id,
+    organisationNameLpId = OrganisationDetails.questionLpOrgName.id,
+    organisationNameSpId = OrganisationDetails.questionSpOrgName.id,
+    organisationNameSlpId = OrganisationDetails.questionSlpOrgName.id
   )
 
   val questionnaire      = ResponsibleIndividualDetails.questionnaire
@@ -230,50 +336,49 @@ trait QuestionnaireTestData {
 
   val answersToQuestions: Submission.AnswersToQuestions =
     Map(
-      testQuestionIdsOfInterest.organisationTypeId -> ActualAnswer.SingleChoiceAnswer("UK limited company"),
-      testQuestionIdsOfInterest.organisationNameId -> ActualAnswer.TextAnswer("Bobs Burgers")
+      testQuestionIdsOfInterest.organisationTypeId -> ActualAnswer.SingleChoiceAnswer("UK limited company")
     )
 
   val samplePassAnswersToQuestions = Map(
-    (OrganisationDetails.question1.id          -> ActualAnswer.SingleChoiceAnswer("UK limited company")),
-    (OrganisationDetails.question2a.id         -> ActualAnswer.TextAnswer("12345678")),
-    (OrganisationDetails.question2b.id         -> ActualAnswer.TextAnswer("Bobs Burgers")),
-    (OrganisationDetails.question2c.id         -> ActualAnswer.TextAnswer("1 High Street, London")),
-    (OrganisationDetails.question2d.id         -> ActualAnswer.TextAnswer("1234567890")),
-    (ResponsibleIndividualDetails.question1.id -> ActualAnswer.SingleChoiceAnswer("No")),
-    (ResponsibleIndividualDetails.question2.id -> ActualAnswer.TextAnswer("Bob Fleming")),
-    (ResponsibleIndividualDetails.question3.id -> ActualAnswer.TextAnswer("Managing Director")),
-    (ResponsibleIndividualDetails.question4.id -> ActualAnswer.TextAnswer("bob@burgers.com")),
-    (ResponsibleIndividualDetails.question5.id -> ActualAnswer.TextAnswer("01234 567890")),
-    (ResponsibleIndividualDetails.question6.id -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
+    (OrganisationDetails.questionOrgType.id       -> ActualAnswer.SingleChoiceAnswer("UK limited company")),
+    (OrganisationDetails.questionCompanyNumber.id -> ActualAnswer.TextAnswer("12345678")),
+    (OrganisationDetails.questionLtdOrgName.id    -> ActualAnswer.TextAnswer("Bobs Burgers")),
+    (OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.TextAnswer("1 High Street, London")),
+    (OrganisationDetails.questionLtdOrgUtr.id     -> ActualAnswer.TextAnswer("1234567890")),
+    (ResponsibleIndividualDetails.question1.id    -> ActualAnswer.SingleChoiceAnswer("No")),
+    (ResponsibleIndividualDetails.question2.id    -> ActualAnswer.TextAnswer("Bob Fleming")),
+    (ResponsibleIndividualDetails.question3.id    -> ActualAnswer.TextAnswer("Managing Director")),
+    (ResponsibleIndividualDetails.question4.id    -> ActualAnswer.TextAnswer("bob@burgers.com")),
+    (ResponsibleIndividualDetails.question5.id    -> ActualAnswer.TextAnswer("01234 567890")),
+    (ResponsibleIndividualDetails.question6.id    -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
   )
 
   val sampleFailAnswersToQuestions = Map(
-    (OrganisationDetails.question1.id          -> ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK")),
-    (OrganisationDetails.question2a.id         -> ActualAnswer.TextAnswer("12345678")),
-    (OrganisationDetails.question2b.id         -> ActualAnswer.TextAnswer("Bobs Burgers")),
-    (OrganisationDetails.question2c.id         -> ActualAnswer.TextAnswer("1 High Street, London")),
-    (OrganisationDetails.question2d.id         -> ActualAnswer.TextAnswer("1234567890")),
-    (ResponsibleIndividualDetails.question1.id -> ActualAnswer.SingleChoiceAnswer("No")),
-    (ResponsibleIndividualDetails.question2.id -> ActualAnswer.TextAnswer("Bob Fleming")),
-    (ResponsibleIndividualDetails.question3.id -> ActualAnswer.TextAnswer("Managing Director")),
-    (ResponsibleIndividualDetails.question4.id -> ActualAnswer.TextAnswer("bob@burgers.com")),
-    (ResponsibleIndividualDetails.question5.id -> ActualAnswer.TextAnswer("01234 567890")),
-    (ResponsibleIndividualDetails.question6.id -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
+    (OrganisationDetails.questionOrgType.id       -> ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK")),
+    (OrganisationDetails.questionCompanyNumber.id -> ActualAnswer.TextAnswer("12345678")),
+    (OrganisationDetails.questionLtdOrgName.id    -> ActualAnswer.TextAnswer("Bobs Burgers")),
+    (OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.TextAnswer("1 High Street, London")),
+    (OrganisationDetails.questionLtdOrgUtr.id     -> ActualAnswer.TextAnswer("1234567890")),
+    (ResponsibleIndividualDetails.question1.id    -> ActualAnswer.SingleChoiceAnswer("No")),
+    (ResponsibleIndividualDetails.question2.id    -> ActualAnswer.TextAnswer("Bob Fleming")),
+    (ResponsibleIndividualDetails.question3.id    -> ActualAnswer.TextAnswer("Managing Director")),
+    (ResponsibleIndividualDetails.question4.id    -> ActualAnswer.TextAnswer("bob@burgers.com")),
+    (ResponsibleIndividualDetails.question5.id    -> ActualAnswer.TextAnswer("01234 567890")),
+    (ResponsibleIndividualDetails.question6.id    -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
   )
 
   val sampleWarningsAnswersToQuestions = Map(
-    (OrganisationDetails.question1.id          -> ActualAnswer.SingleChoiceAnswer("Non-UK company with a branch or place of business in the UK")),
-    (OrganisationDetails.question2a.id         -> ActualAnswer.TextAnswer("12345678")),
-    (OrganisationDetails.question2b.id         -> ActualAnswer.TextAnswer("Bobs Burgers")),
-    (OrganisationDetails.question2c.id         -> ActualAnswer.TextAnswer("1 High Street, London")),
-    (OrganisationDetails.question2d.id         -> ActualAnswer.TextAnswer("1234567890")),
-    (ResponsibleIndividualDetails.question1.id -> ActualAnswer.SingleChoiceAnswer("No")),
-    (ResponsibleIndividualDetails.question2.id -> ActualAnswer.TextAnswer("Bob Fleming")),
-    (ResponsibleIndividualDetails.question3.id -> ActualAnswer.TextAnswer("Managing Director")),
-    (ResponsibleIndividualDetails.question4.id -> ActualAnswer.TextAnswer("bob@burgers.com")),
-    (ResponsibleIndividualDetails.question5.id -> ActualAnswer.TextAnswer("01234 567890")),
-    (ResponsibleIndividualDetails.question6.id -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
+    (OrganisationDetails.questionOrgType.id       -> ActualAnswer.SingleChoiceAnswer("Non-UK company with a branch or place of business in the UK")),
+    (OrganisationDetails.questionCompanyNumber.id -> ActualAnswer.TextAnswer("12345678")),
+    (OrganisationDetails.questionLtdOrgName.id    -> ActualAnswer.TextAnswer("Bobs Burgers")),
+    (OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.TextAnswer("1 High Street, London")),
+    (OrganisationDetails.questionLtdOrgUtr.id     -> ActualAnswer.TextAnswer("1234567890")),
+    (ResponsibleIndividualDetails.question1.id    -> ActualAnswer.SingleChoiceAnswer("No")),
+    (ResponsibleIndividualDetails.question2.id    -> ActualAnswer.TextAnswer("Bob Fleming")),
+    (ResponsibleIndividualDetails.question3.id    -> ActualAnswer.TextAnswer("Managing Director")),
+    (ResponsibleIndividualDetails.question4.id    -> ActualAnswer.TextAnswer("bob@burgers.com")),
+    (ResponsibleIndividualDetails.question5.id    -> ActualAnswer.TextAnswer("01234 567890")),
+    (ResponsibleIndividualDetails.question6.id    -> ActualAnswer.TextAnswer("https://www.bobsburgers.com"))
   )
 
   def firstQuestion(questionnaire: Questionnaire) = questionnaire.questions.head.question.id

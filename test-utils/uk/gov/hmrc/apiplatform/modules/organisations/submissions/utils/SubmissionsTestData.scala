@@ -133,7 +133,10 @@ trait SubmissionsTestData extends QuestionBuilder with QuestionnaireTestData wit
       QuestionnaireState.NotStarted,
       List(ResponsibleIndividualDetails.question1.id, ResponsibleIndividualDetails.question2.id, ResponsibleIndividualDetails.question3.id)
     ),
-    OrganisationDetails.questionnaire.id                     -> QuestionnaireProgress(QuestionnaireState.InProgress, List(OrganisationDetails.question1.id, OrganisationDetails.question2c.id)),
+    OrganisationDetails.questionnaire.id                     -> QuestionnaireProgress(
+      QuestionnaireState.InProgress,
+      List(OrganisationDetails.questionOrgType.id, OrganisationDetails.questionLtdOrgName.id)
+    ),
     Questionnaire.Id("1e4a1369-8e28-447c-bd47-efbabec1a43b") -> QuestionnaireProgress(QuestionnaireState.NotApplicable, List.empty)
   )
   val partiallyAnsweredExtendedSubmission = ExtendedSubmission(answeringSubmission, partialQuestionnaireProgress)
@@ -143,14 +146,24 @@ trait SubmissionsTestData extends QuestionBuilder with QuestionnaireTestData wit
     val orgId = OrganisationId.random
     val usrId = UserId.random
 
-    val question1               = chooseOneOfQuestion(1, "a", "b", "c")
-    val questionName            = textQuestion(5)
-    val questionPrivacyUrl      = textQuestion(6)
-    val questionTermsUrl        = textQuestion(7)
-    val questionWeb             = textQuestion(8)
-    val question2               = acknowledgementOnly(9)
-    val question3               = multichoiceQuestion(10, "a1", "b", "c")
-    val questionServerLocations = multichoiceQuestion(14, "In the UK", "Outside the EEA with adequacy agreements")
+    val question1          = chooseOneOfQuestion(1, "a", "b", "c", "d", "e", "f", "g")
+    val question2          = chooseOneOfQuestion(2, "ga", "gb", "gc", "gd", "ge")
+    val questionName1      = textQuestion(3)
+    val questionName2      = textQuestion(4)
+    val questionName3      = textQuestion(5)
+    val questionName4      = textQuestion(6)
+    val questionName5      = textQuestion(7)
+    val questionName6      = textQuestion(8)
+    val questionName7      = textQuestion(9)
+    val questionName8      = textQuestion(10)
+    val questionName9      = textQuestion(11)
+    val questionName10     = textQuestion(12)
+    val questionName11     = textQuestion(13)
+    val questionPrivacyUrl = textQuestion(14)
+    val questionTermsUrl   = textQuestion(15)
+    val questionWeb        = textQuestion(16)
+    val questionAck        = acknowledgementOnly(17)
+    val questionMulti      = multichoiceQuestion(18, "a1", "b", "c")
 
     val questionnaire1 = Questionnaire(
       id = Questionnaire.Id.random,
@@ -158,12 +171,22 @@ trait SubmissionsTestData extends QuestionBuilder with QuestionnaireTestData wit
       questions = NonEmptyList.of(
         QuestionItem(question1),
         QuestionItem(question2),
-        QuestionItem(question3),
-        QuestionItem(questionName),
+        QuestionItem(questionName1, AskWhen.AskWhenAnswer(question1, "a")),
+        QuestionItem(questionName2, AskWhen.AskWhenAnswer(question1, "b")),
+        QuestionItem(questionName3, AskWhen.AskWhenAnswer(question1, "c")),
+        QuestionItem(questionName4, AskWhen.AskWhenAnswer(question1, "d")),
+        QuestionItem(questionName5, AskWhen.AskWhenAnswer(question1, "e")),
+        QuestionItem(questionName6, AskWhen.AskWhenAnswer(question1, "f")),
+        QuestionItem(questionName7, AskWhen.AskWhenAnswer(question2, "ga")),
+        QuestionItem(questionName8, AskWhen.AskWhenAnswer(question2, "gb")),
+        QuestionItem(questionName9, AskWhen.AskWhenAnswer(question2, "gc")),
+        QuestionItem(questionName10, AskWhen.AskWhenAnswer(question2, "gd")),
+        QuestionItem(questionName11, AskWhen.AskWhenAnswer(question2, "ge")),
         QuestionItem(questionPrivacyUrl),
         QuestionItem(questionTermsUrl),
         QuestionItem(questionWeb),
-        QuestionItem(questionServerLocations)
+        QuestionItem(questionAck),
+        QuestionItem(questionMulti)
       )
     )
 
@@ -185,7 +208,18 @@ trait SubmissionsTestData extends QuestionBuilder with QuestionnaireTestData wit
       questionnaireGroups,
       QuestionIdsOfInterest(
         question1.id,
-        questionName.id
+        question2.id,
+        questionName1.id,
+        questionName2.id,
+        questionName3.id,
+        questionName4.id,
+        questionName5.id,
+        questionName6.id,
+        questionName7.id,
+        questionName8.id,
+        questionName9.id,
+        questionName10.id,
+        questionName11.id
       ),
       standardContext
     )
@@ -307,12 +341,12 @@ object AnsweringQuestionsHelper extends AnsweringQuestionsHelper
 trait MarkedSubmissionsTestData extends SubmissionsTestData with AnsweringQuestionsHelper {
 
   val markedAnswers: Map[Question.Id, Mark] = Map(
-    (OrganisationDetails.question1.id          -> Mark.Pass),
-    (OrganisationDetails.question2a.id         -> Mark.Pass),
-    (OrganisationDetails.question2b.id         -> Mark.Pass),
-    (ResponsibleIndividualDetails.question3.id -> Mark.Pass),
-    (ResponsibleIndividualDetails.question4.id -> Mark.Pass),
-    (ResponsibleIndividualDetails.question6.id -> Mark.Fail)
+    (OrganisationDetails.questionOrgType.id       -> Mark.Pass),
+    (OrganisationDetails.questionCompanyNumber.id -> Mark.Pass),
+    (OrganisationDetails.questionLtdOrgName.id    -> Mark.Pass),
+    (ResponsibleIndividualDetails.question3.id    -> Mark.Pass),
+    (ResponsibleIndividualDetails.question4.id    -> Mark.Pass),
+    (ResponsibleIndividualDetails.question6.id    -> Mark.Fail)
   )
 
   val markedSubmission = MarkedSubmission(submittedSubmission, markedAnswers)
