@@ -83,14 +83,14 @@ class OrganisationController @Inject() (
   val mainLandingView: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
       case Some(submission) => Future.successful(Ok(mainlandingPage(Some(request.userSession), Some(submission.id))))
-      case _ => Future.successful(Ok(mainlandingPage(Some(request.userSession), None)))
+      case _                => Future.successful(Ok(mainlandingPage(Some(request.userSession), None)))
     }
   }
 
   val organisationLandingAction: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.createSubmission(request.userId, request.email).map {
       case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
-      case _ => BadRequest("No submission created")
+      case _                => BadRequest("No submission created")
     }
   }
 }
