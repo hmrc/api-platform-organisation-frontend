@@ -82,5 +82,16 @@ class TextValidationSpec extends HmrcSpec with TableDrivenPropertyChecks {
       TextValidation.OrganisationName.isValid("1") shouldBe false
       TextValidation.OrganisationName.isValid("12£") shouldBe false
     }
+
+    "find a valid organisationNumber" in {
+      TextValidation.OrganisationNumber.isValid("1234aBcD") shouldBe true
+      TextValidation.OrganisationNumber.isValid("AbCd1234") shouldBe true
+    }
+
+    "find a invalid organisationNumber" in {
+      TextValidation.OrganisationNumber.isValid("12") shouldBe false
+      TextValidation.OrganisationNumber.isValid("123456789") shouldBe false
+      TextValidation.OrganisationNumber.isValid("AbCd12&£") shouldBe false
+    }
   }
 }
