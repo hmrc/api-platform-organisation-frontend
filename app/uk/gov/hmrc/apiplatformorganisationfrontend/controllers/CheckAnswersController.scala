@@ -42,6 +42,7 @@ class CheckAnswersController @Inject() (
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
     checkAnswersView: CheckAnswersView,
+    submittedAnswersView: SubmittedAnswersView,
     submitSubmissionSuccessPage: SubmitSubmissionSuccessPage,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
@@ -54,7 +55,11 @@ class CheckAnswersController @Inject() (
     submissionService.fetch(submissionId).map(_ match {
       case Some(extSubmission) => {
         val viewModel = convertSubmissionToViewModel(extSubmission)
-        Ok(checkAnswersView(viewModel, request.msgRequest.flash.get("error")))
+        if (extSubmission.submission.status.isOpenToAnswers) {
+          Ok(checkAnswersView(viewModel, request.msgRequest.flash.get("error")))
+        } else {
+          Ok(submittedAnswersView(viewModel))
+        }
       }
       case None                => BadRequest("No submission found")
     })

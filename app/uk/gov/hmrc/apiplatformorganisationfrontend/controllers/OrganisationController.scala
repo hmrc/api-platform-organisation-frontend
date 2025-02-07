@@ -46,7 +46,7 @@ class OrganisationController @Inject() (
 
   val mainLandingView: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
-      case Some(submission) => Future.successful(Ok(mainlandingPage(Some(request.userSession), Some(submission.id))))
+      case Some(submission) => Future.successful(Ok(mainlandingPage(Some(request.userSession), Some(submission.id), submission.status.isOpenToAnswers)))
       case _                => Future.successful(Ok(mainlandingPage(Some(request.userSession), None)))
     }
   }

@@ -23,7 +23,7 @@
         govukButton: GovukButton)
 
 
-@(loggedInSession: Option[UserSession], existingSubmissionId: Option[SubmissionId])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+@(loggedInSession: Option[UserSession], existingSubmissionId: Option[SubmissionId], isOpenToAnswers: Boolean = false)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
     crumbs = Seq(Crumb.home),
@@ -34,11 +34,19 @@
     <h1 class="govuk-heading-l">Main organisations landing page </h1>
 
     @if(existingSubmissionId.isDefined) {
-        @govukButton(Button(
-            href = Some(controllers.routes.ChecklistController.checklistPage(existingSubmissionId.get).url),
-            isStartButton = true,
-            content = Text("Continue Organisation entry")
-        ))
+        @if(isOpenToAnswers) {
+            @govukButton(Button(
+                href = Some(controllers.routes.ChecklistController.checklistPage(existingSubmissionId.get).url),
+                isStartButton = true,
+                content = Text("Continue Organisation entry")
+            ))
+        } else {
+            @govukButton(Button(
+                href = Some(controllers.routes.CheckAnswersController.checkAnswersPage(existingSubmissionId.get).url),
+                isStartButton = true,
+                content = Text("View your answers")
+            ))
+        }
     } else {
         @govukButton(Button(
             href = Some(controllers.routes.OrganisationController.organisationLandingView.url),

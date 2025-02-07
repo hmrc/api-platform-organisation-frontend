@@ -59,7 +59,7 @@ trait StatusTestDataHelper {
   }
 }
 
-trait ProgressTestDataHelper {
+trait ProgressTestDataHelper extends FixedClock {
 
   implicit class ProgressSyntax(submission: Submission) {
     private val allQuestionnaireIds: NonEmptyList[Questionnaire.Id] = submission.allQuestionnaires.map(_.id)
@@ -83,6 +83,9 @@ trait ProgressTestDataHelper {
 
     def withNotApplicableProgress(): ExtendedSubmission =
       ExtendedSubmission(submission, allQuestionnaireIds.map(i => (i -> notApplicableQuestionnaireProgress(i))).toList.toMap)
+
+    def withSubmittedProgress(): ExtendedSubmission =
+      ExtendedSubmission(Submission.submit(instant, "bob@example.com")(submission), allQuestionnaireIds.map(i => (i -> completedQuestionnaireProgress(i))).toList.toMap)
   }
 }
 

@@ -40,7 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SubmitSubmissionSuccessPage}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SubmitSubmissionSuccessPage, SubmittedAnswersView}
 import uk.gov.hmrc.apiplatformorganisationfrontend.{AsIdsHelpers, WithCSRFAddToken}
 
 class CheckAnswersControllerSpec
@@ -77,6 +77,7 @@ class CheckAnswersControllerSpec
     val incompleteExtendedSubmission = ExtendedSubmission(aSubmission, incompleteProgress)
 
     val checkAnswersView              = app.injector.instanceOf[CheckAnswersView]
+    val submittedAnswersView          = app.injector.instanceOf[SubmittedAnswersView]
     val submitSubmissionSuccessPage   = app.injector.instanceOf[SubmitSubmissionSuccessPage]
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
@@ -89,6 +90,7 @@ class CheckAnswersControllerSpec
       cookieSigner,
       SubmissionServiceMock.aMock,
       checkAnswersView,
+      submittedAnswersView,
       submitSubmissionSuccessPage,
       ThirdPartyDeveloperConnectorMock.aMock
     )
@@ -105,6 +107,7 @@ class CheckAnswersControllerSpec
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
+      contentAsString(result) should include("Confirm and send")
     }
 
     "return an error when submission is not found" in new Setup {
@@ -113,6 +116,15 @@ class CheckAnswersControllerSpec
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe NOT_FOUND
+    }
+
+    "return read only version of page when answers have been submitted" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withSubmittedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) should include("to update submitted answers")
     }
   }
 
