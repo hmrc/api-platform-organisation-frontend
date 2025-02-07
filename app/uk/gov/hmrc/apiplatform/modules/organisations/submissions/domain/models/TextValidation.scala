@@ -55,8 +55,16 @@ sealed trait TextValidation {
       } else {
         Left(s"$text is not a valid organisation name")
       }
-
     }
+
+    case TextValidation.OrganisationNumber => {
+      if (ValidatedOrganisationNumber.validate(text).isValid) {
+        Right(text)
+      } else {
+        Left(s"$text is not a valid organisation number")
+      }
+    }
+
   }
 }
 
@@ -67,6 +75,7 @@ object TextValidation {
   case class MatchRegex(regex: String) extends TextValidation
   case object Email                    extends TextValidation
   case object OrganisationName         extends TextValidation
+  case object OrganisationNumber       extends TextValidation
 
   import uk.gov.hmrc.play.json.Union
 
@@ -77,5 +86,6 @@ object TextValidation {
     .and[MatchRegex]("regex")
     .andType("email", () => Email)
     .andType("organisationName", () => OrganisationName)
+    .andType("organisationNumber", () => OrganisationNumber)
     .format
 }
