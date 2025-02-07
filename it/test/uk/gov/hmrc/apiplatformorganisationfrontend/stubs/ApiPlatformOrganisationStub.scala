@@ -29,31 +29,6 @@ object ApiPlatformOrganisationStub {
 
   import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission._
 
-  object CreateOrganisation {
-
-    def succeeds(): StubMapping = {
-      stubFor(
-        post(urlEqualTo("/create"))
-          .willReturn(
-            aResponse()
-              .withStatus(OK)
-              .withBody(Json.parse(s"""{"id":"1234", "organisationName": "Example"}""").toString)
-              .withHeader("content-type", "application/json")
-          )
-      )
-    }
-
-    def fails(status: Int): StubMapping = {
-      stubFor(
-        post(urlEqualTo("/create"))
-          .willReturn(
-            aResponse()
-              .withStatus(status)
-          )
-      )
-    }
-  }
-
   object CreateSubmission {
 
     def succeeds(userId: UserId, submission: Submission): StubMapping = {

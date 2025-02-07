@@ -2,9 +2,6 @@
 
 ->          /hmrc-frontend                         hmrcfrontend.Routes
 
-GET         /create                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationView
-POST        /create                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.createOrganisationAction
-
 GET         /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingView
 POST        /landing                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationLandingAction
 
