@@ -22,27 +22,37 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.ViewErrorInfo
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
+@import play.twirl.api.HtmlFormat
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 
-@this(layout: Layout)
+@this(layout: Layout,
+        govukRadios: GovukRadios,
+        govukInput: GovukInput,
+        govukCheckboxes: GovukCheckboxes,
+        govukDateInput: GovukDateInput
+)
 
 @(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ViewErrorInfo])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
-
+@questionId = @{s"question-${question.id.value}-id"}
 @choiceAsId(choice: PossibleAnswer) = {question-@{choice.htmlValue}-id}
 
-@renderStatementText(st: StatementText) = @{st.text}
+@renderStatementText(st: StatementText) = @{Html(st.text)}
 
 @renderStatementLink(sl: StatementLink) = {<a class="govuk-link" href="@{sl.url}" target="_blank">@{sl.text}</a>}
 
 @renderCompoundFragment(cs: CompoundFragment) = @{
-  cs.fragments.map( fragment =>
+ HtmlFormat.fill(cs.fragments.map( fragment =>
     fragment match {
       case st: StatementText => renderStatementText(st)
       case sl: StatementLink => renderStatementLink(sl)
       case _ => Html("<p />")
     }
-  ).toList
+  ).toList)
 }
 
 @renderNonBulletStatementFragment(nbsf: NonBulletStatementFragment) = @{
@@ -67,10 +77,6 @@
 
 @renderParagraphCompoundFragment(cs: CompoundFragment) = { <p class="govuk-body">@renderCompoundFragment(cs)</p> }
 
-@renderHint(nbsf: NonBulletStatementFragment,id: String) = {
-  <div id="hint-@{id}" class="govuk-hint">@renderNonBulletStatementFragment(nbsf)</div>
-}
-
 @renderStatement(statement: Statement) = {
   <p class="govuk-body">
     @{
@@ -94,26 +100,6 @@
   }
 }
 
-@renderRadioQuestionChoice(choice: PossibleAnswer, actualAnswer: Option[ActualAnswer.SingleChoiceAnswer]) = {
-  @defining( if(Some(choice.value) == actualAnswer.map(_.value)) """checked="checked"""" else "") { checked =>
-    <div class="govuk-radios__item">
-      <input class="govuk-radios__input" type="radio" id="@{choiceAsId(choice)}" name="answer" value="@{choice.value}" @{checked}
-        data-journey-val="@{choice.value}">
-      <label class="govuk-label govuk-radios__label" for="@{choiceAsId(choice)}">@{choice.value}</label>
-    </div>
-  }
-}
-
-@renderCheckboxChoice(choice: PossibleAnswer, actualAnswer: Option[ActualAnswer.MultipleChoiceAnswer]) = {
-  @defining( if(actualAnswer.map(_.values).getOrElse(Set.empty).contains(choice.value)) """checked="checked"""" else "") { checked =>
-    <div class="govuk-checkboxes__item">
-      <input class="govuk-checkboxes__input" id="@{choiceAsId(choice)}" name="answer" type="checkbox"
-        value="@{choice.value}" @{checked}>
-      <label class="govuk-label govuk-checkboxes__label" for="@{choiceAsId(choice)}">@{choice.value}</label>
-    </div>
-  }
-}
-
 @renderButtonOrButtons(absenceText: Option[String]) = {
   @{
     val html = absenceText match {
@@ -130,27 +116,17 @@
 }
 
 @renderMultiChoiceQuestion(question: Question.MultiChoiceQuestion) = {
-  <div class="govuk-form-group">
-    <fieldset class="govuk-fieldset">
-      <legend class="govuk-visually-hidden">
-        <h1 class="govuk-fieldset__heading">
-          @pageHeading
-        </h1>
-      </legend>
-      @if(question.hintText.isDefined) {
-        @renderHint(question.hintText.get, question.id.value)
-      }
-      <div class="govuk-checkboxes" data-module="govuk-checkboxes" id="question-@{question.id.value}-id" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
-        @{
-        val a = currentAnswers match {
-          case Some(mca @ ActualAnswer.MultipleChoiceAnswer(_)) => Some(mca)
-          case _ => None
-        }
-        question.choices.map(choice => renderCheckboxChoice(choice, a))
-        }
-      </div>
-    </fieldset>
-  </div>
+  @govukCheckboxes(Checkboxes(name = "answer",
+      fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
+      hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+      items = question.choices.map(choice => CheckboxItem(content = Text(choice.value),
+          value = choice.value,
+          checked = currentAnswers match {
+              case Some(ActualAnswer.MultipleChoiceAnswer(values)) => values.contains(choice.value)
+              case _ => false
+          }
+      )).toList
+  ))
 
   @renderMaybeStatement(question.afterStatement)
 
@@ -158,27 +134,16 @@
 }
 
 @renderSingleChoiceQuestion(question: Question.SingleChoiceQuestion, inline: Boolean) = {
-  <div class="govuk-form-group">
-    <fieldset class="govuk-fieldset">
-      <legend class="govuk-visually-hidden">
-        <h1 class="govuk-fieldset__heading">
-          @pageHeading
-        </h1>
-      </legend>
-      @if(question.hintText.isDefined) {
-        @renderHint(question.hintText.get, question.id.value)
-      }
-      <div class='govuk-radios @{if(inline) " govuk-radios--inline" else "" }' id="question-@{question.id.value}-id" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
-        @{
-        val a = currentAnswers match {
-          case Some(sca @ ActualAnswer.SingleChoiceAnswer(_)) => Some(sca)
+  @govukRadios(Radios(name = "answer",
+      fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
+      hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+      classes = if(inline) "govuk-radios--inline" else "",
+      value = currentAnswers match {
+          case Some(sca@ActualAnswer.SingleChoiceAnswer(_)) => Some(sca.value)
           case _ => None
-        }
-        question.choices.map(choice => renderRadioQuestionChoice(choice, a))
-        }
-      </div>
-    </fieldset>
-  </div>
+      },
+      items = question.choices.map(choice => RadioItem(content = Text(choice.value), value = Some(choice.value))).toList
+    ))
 
   @renderMaybeStatement(question.afterStatement)
 
@@ -186,40 +151,21 @@
 }
 
 @renderTextInputQuestion(question: Question.TextQuestion) = {
-  @defining(
-    currentAnswers match {
-      case Some(mca @ ActualAnswer.TextAnswer(_)) => mca.value
-      case _ => ""
-    }
-  ) { actualValue =>
-    <div class="govuk-form-group @if(errorInfo.isDefined) {govuk-form-group--error}">
-      @if(question.label.isDefined) {
-        <label id="question-label" class="govuk-label" for="question-@{question.id.value}-id">
-          @{question.label.get.value}
-        </label>
-      } else {
-          <!-- Below is needed for accessibility, it is hidden visually -->
-        <h1 class="govuk-visually-hidden">
-          <label id="question-label" class="govuk-label govuk-label--l" for="question-@{question.id.value}-id">
-          @pageHeading
-          </label>
-        </h1>
-      }
-      @if(question.hintText.isDefined) {
-        @renderHint(question.hintText.get, question.id.value)
-      }
-      @if(errorInfo.isDefined) {
-      <p id="question-error" class="govuk-error-message">
-        <span class="govuk-visually-hidden">Error:</span>@errorInfo.get.message
-      </p>
-      }
-      <input class="govuk-input" id="question-@{question.id.value}-id" name="answer" type="text" value="@actualValue" @if(question.hintText.isDefined){aria-describedby="hint-@{question.id.value}"}>
-    </div>
-  }
+    @govukInput(Input(id = questionId,
+        label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
+        name = "answer",
+        inputType = "text",
+        value = currentAnswers match {
+            case Some(ActualAnswer.TextAnswer(value)) => Some(value)
+            case _ => None
+        },
+        hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+        errorMessage = errorInfo.map(err => ErrorMessage(content = Text(err.message)))
+    ))
 
-  @renderMaybeStatement(question.afterStatement)
+    @renderMaybeStatement(question.afterStatement)
 
-  @renderButtonOrButtons(question.absenceText)
+    @renderButtonOrButtons(question.absenceText)
 }
 
 @renderAcknowledgementOnly(question: Question.AcknowledgementOnly) = {
@@ -259,7 +205,7 @@
       <div class="govuk-error-summary__body">
         <ul class="govuk-list govuk-error-summary__list">
           <li>
-            <a href="#question-@{question.id.value}-id">@{errorInfo.get.summary}</a>
+            <a href="#@questionId">@{errorInfo.get.summary}</a>
           </li>
         </ul>
       </div>

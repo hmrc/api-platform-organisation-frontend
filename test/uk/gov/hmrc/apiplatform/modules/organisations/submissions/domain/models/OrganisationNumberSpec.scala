@@ -17,7 +17,9 @@
 package uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models
 
 import cats.data.Validated.{Invalid, Valid}
+
 import play.api.libs.json.{JsString, Json}
+
 import uk.gov.hmrc.apiplatform.modules.common.utils.BaseJsonFormattersSpec
 
 class OrganisationNumberSpec extends BaseJsonFormattersSpec {
@@ -74,7 +76,7 @@ class OrganisationNumberSpec extends BaseJsonFormattersSpec {
       case Invalid(x) =>
         x.length shouldBe 1
         x.head shouldBe OrganisationNumberInvalidLength
-      case _ => fail("should be invalid")
+      case _          => fail("should be invalid")
     }
   }
 
@@ -84,7 +86,7 @@ class OrganisationNumberSpec extends BaseJsonFormattersSpec {
       case Invalid(x) =>
         x.length shouldBe 1
         x.head shouldBe OrganisationNumberInvalidLength
-      case _ => fail("should be invalid")
+      case _          => fail("should be invalid")
     }
   }
 
@@ -94,7 +96,7 @@ class OrganisationNumberSpec extends BaseJsonFormattersSpec {
       case Invalid(x) =>
         x.length shouldBe 1
         x.head shouldBe OrganisationNumberInvalidCharacters
-      case _ => fail("should be invalid")
+      case _          => fail("should be invalid")
     }
   }
 
@@ -105,7 +107,7 @@ class OrganisationNumberSpec extends BaseJsonFormattersSpec {
         x.length shouldBe 2
         x.head shouldBe OrganisationNumberInvalidCharacters
         x.toNonEmptyList.tail.head shouldBe OrganisationNumberInvalidLength
-      case _ => fail("should be invalid")
+      case _          => fail("should be invalid")
     }
   }
 }

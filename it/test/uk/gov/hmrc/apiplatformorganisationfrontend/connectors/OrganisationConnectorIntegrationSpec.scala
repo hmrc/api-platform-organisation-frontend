@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
-import uk.gov.hmrc.apiplatformorganisationfrontend.models._
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
 
 class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec with GuiceOneAppPerSuite {
@@ -44,27 +43,6 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       .configure(stubConfig)
       .in(Mode.Test)
       .build()
-
-  "createOrganisation" should {
-    val organisationName = OrganisationName("Example")
-    val request          = CreateOrganisationRequest(organisationName)
-
-    "successfully create one" in new Setup {
-      ApiPlatformOrganisationStub.CreateOrganisation.succeeds()
-
-      val result = await(underTest.createOrganisation(request))
-
-      result shouldBe Organisation("1234", organisationName)
-    }
-
-    "fail when the org creation call returns an error" in new Setup {
-      ApiPlatformOrganisationStub.CreateOrganisation.fails(INTERNAL_SERVER_ERROR)
-
-      intercept[UpstreamErrorResponse] {
-        await(underTest.createOrganisation(request))
-      }.statusCode shouldBe INTERNAL_SERVER_ERROR
-    }
-  }
 
   "createSubmission" should {
     val requestedBy = LaxEmailAddress("bob@example.com")

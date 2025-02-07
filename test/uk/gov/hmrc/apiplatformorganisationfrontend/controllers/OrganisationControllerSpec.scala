@@ -36,11 +36,10 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.OrganisationFixtures
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationServiceMockModule, SubmissionServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
-    with OrganisationServiceMockModule
     with SubmissionServiceMockModule
     with ThirdPartyDeveloperConnectorMockModule
     with UserBuilder
@@ -58,10 +57,8 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       with LocalUserIdTracker {
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
-    val createPage                    = app.injector.instanceOf[CreateOrganisationPage]
     val landingPage                   = app.injector.instanceOf[OrganisationLandingPage]
     val mainLandingPage               = app.injector.instanceOf[MainLandingPage]
-    val successPage                   = app.injector.instanceOf[CreateOrganisationSuccessPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -69,56 +66,13 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val underTest =
       new OrganisationController(
         mcc,
-        createPage,
-        successPage,
         landingPage,
         mainLandingPage,
-        OrganisationServiceMock.aMock,
         SubmissionServiceMock.aMock,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
       )
-  }
-
-  "GET /create" should {
-    val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/"))
-
-    "return 200" in new Setup {
-      val result = underTest.createOrganisationView(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-
-    "return HTML" in new Setup {
-      val result = underTest.createOrganisationView(fakeRequest)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
-    }
-  }
-
-  "POST /create" should {
-    val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/create").withFormUrlEncodedBody("organisation-name" -> "1234"))
-
-    "return 200" in new Setup {
-      OrganisationServiceMock.CreateOrganisation.willReturn(standardOrg)
-      val result = underTest.createOrganisationAction(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-
-    "return 400" in new Setup {
-      val result = underTest.createOrganisationAction(
-        CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/create").withFormUrlEncodedBody("organisation-name" -> ""))
-      )
-      status(result) shouldBe Status.BAD_REQUEST
-    }
-
-    "return HTML" in new Setup {
-      OrganisationServiceMock.CreateOrganisation.willReturn(standardOrg)
-
-      val result = underTest.createOrganisationAction(fakeRequest)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
-    }
   }
 
   "GET /landing" should {

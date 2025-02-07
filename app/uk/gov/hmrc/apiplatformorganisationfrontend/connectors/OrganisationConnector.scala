@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
-import uk.gov.hmrc.apiplatformorganisationfrontend.models._
 
 @Singleton
 class OrganisationConnector @Inject() (
@@ -41,12 +40,6 @@ class OrganisationConnector @Inject() (
   import Submission._
 
   val api = API("api-platfrom-organisation")
-
-  def createOrganisation(organisation: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[Organisation] = {
-    http.post(url"${config.serviceBaseUrl}/create")
-      .withBody(Json.toJson(organisation))
-      .execute[Organisation]
-  }
 
   def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: List[String])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] = {
     import cats.implicits._
