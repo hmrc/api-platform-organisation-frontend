@@ -33,7 +33,7 @@
 }
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = title,
     loggedInSession = Some(loggedIn)
 ) {

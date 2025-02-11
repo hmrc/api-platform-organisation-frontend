@@ -29,7 +29,7 @@
 @title = @{ "Your answers" }
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = title,
     loggedInSession = Some(loggedIn)
 ) {
@@ -38,7 +38,7 @@
         @title
     </h1>
 
-    Contact <a href="mailto:SDSTeam@@hmrc.gov.uk">SDSTeam@@hmrc.gov.uk</a> to update submitted answers
+    <p class="govuk-body">Email <a href="mailto:SDSTeam@@hmrc.gov.uk">SDSTeam@@hmrc.gov.uk</a> to update submitted answers</p>
 
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
     @answersFragment(model, canChange = false)
