@@ -137,7 +137,7 @@ class QuestionControllerSpec
 
   "updateQuestion" should {
     "succeed" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${questionId.value}/update"
       val result             = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
@@ -147,11 +147,19 @@ class QuestionControllerSpec
     }
 
     "fail with a BAD REQUEST for an invalid questionId" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
 
       val result = controller.updateQuestion(aSubmission.id, Question.Id("BAD_ID"))(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe BAD_REQUEST
+    }
+
+    "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val result = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe NOT_FOUND
     }
   }
 
