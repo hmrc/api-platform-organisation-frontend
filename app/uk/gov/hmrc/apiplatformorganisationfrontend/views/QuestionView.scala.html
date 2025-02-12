@@ -21,9 +21,10 @@
 @import play.api.mvc.Request
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.ViewErrorInfo
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
-@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukBackLink
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
@@ -192,7 +193,7 @@
 }
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = pageTitle,
     loggedInSession = Some(loggedIn)
 ) {
