@@ -102,7 +102,7 @@ class CheckAnswersControllerSpec
 
   "checkAnswersPage" should {
     "succeed when submission is complete" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withCompletedProgress())
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.copy(startedBy = user.userId).withCompletedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
@@ -119,12 +119,20 @@ class CheckAnswersControllerSpec
     }
 
     "return read only version of page when answers have been submitted" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withSubmittedProgress())
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.copy(startedBy = user.userId).withSubmittedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
       contentAsString(result) should include("to update submitted answers")
+    }
+
+    "fail with BAD_REQUEST if logged in user doesn't match submission user" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
     }
   }
 
