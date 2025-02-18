@@ -75,7 +75,8 @@ class ChecklistControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest       = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    implicit val loggedInUser = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
@@ -90,7 +91,7 @@ class ChecklistControllerSpec
     }
 
     "succeed with submission" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(partiallyAnsweredExtendedSubmission.copy(submission = partiallyAnsweredExtendedSubmission.submission.copy(startedBy = user.userId)))
+      SubmissionServiceMock.Fetch.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val result = controller.checklistPage(submissionId)(loggedInRequest.withCSRFToken)
 
@@ -99,7 +100,7 @@ class ChecklistControllerSpec
     }
 
     "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(partiallyAnsweredExtendedSubmission)
+      SubmissionServiceMock.Fetch.thenReturnsWrongUser(partiallyAnsweredExtendedSubmission)
 
       val result = controller.checklistPage(submissionId)(loggedInRequest.withCSRFToken)
 

@@ -89,11 +89,7 @@ class QuestionsController @Inject() (
         question  = oQuestion.get
       } yield {
         errorInfo.fold[Result](
-          if (submission.startedBy == request.userRequest.userId) {
-            Ok(questionView(question, submitAction, persistedAnswer, None))
-          } else {
-            NotFound
-          }
+          Ok(questionView(question, submitAction, persistedAnswer, None))
         )(ei => BadRequest(questionView(question, submitAction, onFormAnswer, Some(ViewErrorInfo(ei)))))
       }
     )

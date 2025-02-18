@@ -95,14 +95,15 @@ class CheckAnswersControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest       = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    implicit val loggedInUser = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
 
   "checkAnswersPage" should {
     "succeed when submission is complete" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.copy(startedBy = user.userId).withCompletedProgress())
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withCompletedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
@@ -119,7 +120,7 @@ class CheckAnswersControllerSpec
     }
 
     "return read only version of page when answers have been submitted" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.copy(startedBy = user.userId).withSubmittedProgress())
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withSubmittedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
@@ -127,12 +128,12 @@ class CheckAnswersControllerSpec
       contentAsString(result) should include("to update submitted answers")
     }
 
-    "fail with BAD_REQUEST if logged in user doesn't match submission user" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withCompletedProgress())
+    "fail with NOT_FOUND if logged in user doesn't match submission user" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturnsWrongUser(answeredSubmission.withCompletedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
-      status(result) shouldBe BAD_REQUEST
+      status(result) shouldBe NOT_FOUND
     }
   }
 

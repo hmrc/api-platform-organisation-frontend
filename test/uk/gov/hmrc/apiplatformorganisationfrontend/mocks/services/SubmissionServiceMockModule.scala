@@ -23,6 +23,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
 
 trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
@@ -52,7 +53,11 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
 
     object Fetch {
 
-      def thenReturns(out: ExtendedSubmission) = {
+      def thenReturns(out: ExtendedSubmission)(implicit user: User) = {
+        when(aMock.fetch(*[SubmissionId])(*)).thenReturn(successful(Some(out.copy(submission = out.submission.copy(startedBy = user.userId)))))
+      }
+
+      def thenReturnsWrongUser(out: ExtendedSubmission) = {
         when(aMock.fetch(*[SubmissionId])(*)).thenReturn(successful(Some(out)))
       }
 

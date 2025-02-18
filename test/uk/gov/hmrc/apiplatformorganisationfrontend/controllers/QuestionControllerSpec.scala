@@ -83,14 +83,15 @@ class QuestionControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest       = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    implicit val loggedInUser = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
 
   "showQuestion" should {
     "succeed" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${questionId.value}"
       val result             = controller.showQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
@@ -100,7 +101,7 @@ class QuestionControllerSpec
     }
 
     "succeed and check for label, hintText" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionCompanyNumber.id.value}"
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(loggedInRequest.withCSRFToken)
@@ -134,7 +135,7 @@ class QuestionControllerSpec
     }
 
     "fail with NOT_FOUND if logged in user doesn't match submission user" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturnsWrongUser(aSubmission.withIncompleteProgress())
 
       val result = controller.showQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
 
@@ -144,7 +145,7 @@ class QuestionControllerSpec
 
   "updateQuestion" should {
     "succeed" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${questionId.value}/update"
       val result             = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
@@ -154,7 +155,7 @@ class QuestionControllerSpec
     }
 
     "fail with a BAD REQUEST for an invalid questionId" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.copy(startedBy = user.userId).withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val result = controller.updateQuestion(aSubmission.id, Question.Id("BAD_ID"))(loggedInRequest.withCSRFToken)
 
@@ -162,7 +163,7 @@ class QuestionControllerSpec
     }
 
     "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.Fetch.thenReturnsWrongUser(aSubmission.withIncompleteProgress())
 
       val result = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
 
