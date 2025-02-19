@@ -53,15 +53,14 @@ class CheckAnswersController @Inject() (
 
   def checkAnswersPage(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     submissionService.fetch(submissionId).map {
-      case Some(extSubmission) if extSubmission.submission.startedBy == request.userId =>
+      case Some(extSubmission) =>
         val viewModel = convertSubmissionToViewModel(extSubmission)
         if (extSubmission.submission.status.isOpenToAnswers) {
           Ok(checkAnswersView(viewModel, request.msgRequest.flash.get("error")))
         } else {
           Ok(submittedAnswersView(viewModel))
         }
-      case Some(_)                                                                     => BadRequest("No submission found")
-      case None                                                                        => BadRequest("No submission found")
+      case None                => BadRequest("No submission found")
     }
   }
 

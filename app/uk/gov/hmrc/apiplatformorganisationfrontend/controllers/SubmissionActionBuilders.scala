@@ -23,7 +23,6 @@ import cats.instances.future.catsStdInstancesForFuture
 
 import play.api.mvc.{ActionRefiner, _}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.Status
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.BaseController
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
@@ -34,24 +33,8 @@ class SubmissionRequest[A](val extSubmission: ExtendedSubmission, val userReques
   lazy val answersToQuestions = submission.latestInstance.answersToQuestions
 }
 
-object SubmissionActionBuilders {
-
-  object SubmissionStatusFilter {
-    type Type = Status => Boolean
-    val answeredCompletely: Type = _.isAnsweredCompletely
-    val submitted: Type          = _.isSubmitted
-
-    val submittedGrantedOrDeclined: Type = status =>
-      status.isSubmitted || status.isGranted || status.isGrantedWithWarnings || status.isDeclined || status.isFailed || status.isWarnings || status.isPendingResponsibleIndividual
-    val granted: Type                    = status => status.isGranted || status.isGrantedWithWarnings
-    val allAllowed: Type                 = _ => true
-  }
-}
-
 trait SubmissionActionBuilders {
   self: BaseController =>
-
-  import SubmissionActionBuilders.SubmissionStatusFilter
 
   def submissionService: SubmissionService
 
@@ -70,16 +53,16 @@ trait SubmissionActionBuilders {
       }
     }
 
-  private def submissionFilter[SR[_] <: SubmissionRequest[_]](submissionStatusFilter: SubmissionStatusFilter.Type)(redirectOnIncomplete: => Result): ActionFilter[SR] =
+  private def submissionFilter[SR[_] <: SubmissionRequest[_]]: ActionFilter[SR] =
     new ActionFilter[SR] {
 
       override protected def executionContext: ExecutionContext = ec
 
       override protected def filter[A](request: SR[A]): Future[Option[Result]] =
-        if (submissionStatusFilter(request.extSubmission.submission.status)) {
+        if (request.extSubmission.submission.startedBy == request.userRequest.userId) {
           successful(None)
         } else {
-          successful(Some(redirectOnIncomplete))
+          errorHandler.notFoundTemplate(request.asInstanceOf[UserRequest[A]]).map(NotFound(_)).map(Some(_))
         }
     }
 
@@ -87,7 +70,7 @@ trait SubmissionActionBuilders {
     Action.async { implicit request =>
       (
         loggedInActionRefiner() andThen
-          submissionRefiner(submissionId)
+          submissionRefiner(submissionId) andThen submissionFilter
       ).invokeBlock(request, block)
     }
   }

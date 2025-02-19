@@ -73,6 +73,9 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
       )
+
+    implicit val loggedInUser = user
+
   }
 
   "GET /landing" should {

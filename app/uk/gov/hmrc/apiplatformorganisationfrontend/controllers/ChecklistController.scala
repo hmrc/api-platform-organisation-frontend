@@ -122,12 +122,7 @@ class ChecklistController @Inject() (
         Ok(checklistView(viewModel.copy(groupings = vg), DummyForm.form.fillAndValidate(DummyForm("dummy"))))
       )
     }
-
-    if (request.submission.startedBy == request.userRequest.userId) {
-      successful(show(convertSubmissionToViewModel(request.extSubmission)))
-    } else {
-      successful(NotFound)
-    }
+    successful(show(convertSubmissionToViewModel(request.extSubmission)))
   }
 
   def checklistAction(
