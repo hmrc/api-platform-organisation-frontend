@@ -41,7 +41,7 @@ class OrganisationConnector @Inject() (
 
   val api = API("api-platfrom-organisation")
 
-  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: List[String])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] = {
+  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to record answer for submission $submissionId and question ${questionId.value}"
 
@@ -100,7 +100,7 @@ class OrganisationConnector @Inject() (
 object OrganisationConnector {
   case class Config(serviceBaseUrl: String)
 
-  case class OutboundRecordAnswersRequest(answers: List[String])
+  case class OutboundRecordAnswersRequest(responses: Map[String, Seq[String]])
   implicit val writesOutboundRecordAnswersRequest: Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)

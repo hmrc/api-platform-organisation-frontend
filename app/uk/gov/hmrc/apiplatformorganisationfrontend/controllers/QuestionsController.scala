@@ -139,30 +139,16 @@ class QuestionsController @Inject() (
       showQuestion(submissionId, questionId, onFormAnswer, errorInfo.some)(request)
     }
 
-    val formValues   = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
-    val submitAction = formValues.get("submit-action").flatMap(_.headOption)
-    val rawAnswers   = formValues.get("answer").fold(List.empty[String])(_.toList.filter(_.nonEmpty))
-    val answers      = rawAnswers.map(a => a.trim())
+    val formValues     = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
+    val trimmedAnswers = formValues.map { case (k, v) => k -> v.map(_.trim()) }
+    val rawAnswers     = formValues.get("answer").fold(List.empty[String])(_.toList.filter(_.nonEmpty))
+    val answers        = rawAnswers.map(a => a.trim())
 
-    import cats.implicits._
     import cats.instances.future.catsStdInstancesForFuture
-
-    def validateAnswers(submitAction: Option[String], answers: List[String]): Either[String, List[String]] = (submitAction, answers) match {
-      case (Some("acknowledgement"), Nil) => Either.right(Nil)
-      case (Some("acknowledgement"), _)   => Either.left("Bad request - values for acknowledgement")
-      case (Some("save"), Nil)            => Either.left("save action requires values")
-      case (Some("save"), List(""))       => Either.left("save action requires non blank values")
-      case (Some("save"), _)              => Either.right(answers)
-      case (Some("no-answer"), _)         => Either.right(Nil)
-      case (None, _)                      => Either.left("Bad request - no action")
-      case (Some(_), _)                   => Either.left("Bad request - no such action")
-    }
 
     (
       for {
-        effectiveAnswers <- fromEither(validateAnswers(submitAction, answers))
-        // TODO - add validation
-        result           <- fromEitherF(submissionService.recordAnswer(submissionId, questionId, effectiveAnswers))
+        result <- fromEitherF(submissionService.recordAnswer(submissionId, questionId, trimmedAnswers))
       } yield result
     )
       .fold(failed(answers), success)

@@ -41,6 +41,6 @@ class SubmissionService @Inject() (organisationConnector: OrganisationConnector)
 
   def fetch(id: SubmissionId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = organisationConnector.fetchSubmission(id)
 
-  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: List[String])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] =
+  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] =
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
 }
