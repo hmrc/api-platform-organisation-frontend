@@ -72,7 +72,7 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
         when(aMock.recordAnswer(*[SubmissionId], *[Question.Id], *)(*)).thenReturn(successful(Right(out)))
       }
 
-      def thenReturnsForAnswer(answer: List[String], out: ExtendedSubmission) = {
+      def thenReturnsForAnswer(answer: Map[String, Seq[String]], out: ExtendedSubmission) = {
         when(aMock.recordAnswer(*[SubmissionId], *[Question.Id], eqTo(answer))(*)).thenReturn(successful(Right(out)))
       }
 

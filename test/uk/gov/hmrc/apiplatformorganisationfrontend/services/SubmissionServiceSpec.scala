@@ -72,7 +72,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec {
     "record answer for given submisson id and question id" in new Setup {
       when(mockOrganisationConnector.recordAnswer(*[SubmissionId], *[Question.Id], *)(*)).thenReturn(successful(Right(answeringSubmission.withIncompleteProgress())))
 
-      val result = await(underTest.recordAnswer(completelyAnswerExtendedSubmission.submission.id, questionId, List("")))
+      val result = await(underTest.recordAnswer(completelyAnswerExtendedSubmission.submission.id, questionId, Map("" -> Seq(""))))
 
       result.isRight shouldBe true
     }

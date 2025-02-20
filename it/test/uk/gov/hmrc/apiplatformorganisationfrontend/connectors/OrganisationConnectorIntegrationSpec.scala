@@ -165,7 +165,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "successfully record answer" in new Setup {
       ApiPlatformOrganisationStub.RecordAnswer.succeeds(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, completelyAnswerExtendedSubmission)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, List("answer")))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
 
       result shouldBe Right(completelyAnswerExtendedSubmission)
     }
@@ -173,7 +173,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "fail when the creation call returns an error" in new Setup {
       ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, List("answer")))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
 
       result.isLeft shouldBe true
     }

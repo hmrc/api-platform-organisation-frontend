@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services
 
-import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
+import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 
-class ActualAnswersAsTextSpec extends HmrcSpec {
+class ActualAnswersAsTextSpec extends HmrcSpec with FixedClock {
 
   "ActualAnswersAsText" should {
     "SingleChoiceAnswer" in {
@@ -33,7 +33,9 @@ class ActualAnswersAsTextSpec extends HmrcSpec {
     "MultipleChoiceAnswer" in {
       ActualAnswersAsText(ActualAnswer.MultipleChoiceAnswer(Set("ChoiceA", "ChoiceB"))) shouldBe "ChoiceAChoiceB"
     }
-
+    "DateAnswer" in {
+      ActualAnswersAsText(ActualAnswer.DateAnswer(now.toLocalDate)) shouldBe "02 Jan 2020"
+    }
     "NoAnswer" in {
       ActualAnswersAsText(ActualAnswer.NoAnswer) shouldBe "n/a"
     }
