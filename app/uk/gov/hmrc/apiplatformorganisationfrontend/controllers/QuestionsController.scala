@@ -140,7 +140,7 @@ class QuestionsController @Inject() (
     }
 
     val formValues     = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
-    val trimmedAnswers = formValues.map { case (k, v) => k -> v.map(_.trim()) }
+    val trimmedAnswers = formValues.map { case (k, v) => k -> v.map(_.trim()).filter(_.nonEmpty) }
     val rawAnswers     = formValues.get("answer").fold(List.empty[String])(_.toList.filter(_.nonEmpty))
     val answers        = rawAnswers.map(a => a.trim())
 
