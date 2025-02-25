@@ -100,7 +100,7 @@ class QuestionControllerSpec
       contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
     }
 
-    "succeed and check for label, hintText" in new Setup {
+    "succeed and check for label, hintText, text question" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionCompanyNumber.id.value}"
@@ -113,6 +113,48 @@ class QuestionControllerSpec
       contentAsString(
         result
       ) contains (s"""aria-describedby="question-${OrganisationDetails.questionCompanyNumber.id.value}-id-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      contentAsString(result) contains ("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, date question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionDate.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionDate.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result) contains ("What date was your organisation founded?") shouldBe true withClue ("HTML content did not contain label")
+      print(contentAsString(result))
+      contentAsString(result) contains ("""This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>""") shouldBe true withClue ("HTML content did not contain link")
+      contentAsString(result) contains ("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, multichoice question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionMultiple.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionMultiple.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result) contains ("What is your favourite Colour?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result) contains ("Red") shouldBe true withClue ("HTML content did not check boxes")
+      contentAsString(result) contains ("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, acknowledgement question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionAcknowledgement.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionAcknowledgement.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(
+        result
+      ) contains ("Your customers will see the information you provide here when they authorise your software to interact with HMRC.") shouldBe true withClue ("HTML content did not contain statement")
+      contentAsString(result) contains ("Customers authorising your software") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result) contains ("<title>") shouldBe true
     }
 
@@ -190,6 +232,19 @@ class QuestionControllerSpec
 
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map("answer" -> Seq(answer1.trim()), "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgAddress.id.value}")
+    }
+
+    "succeed when empty answer given" in new Setup {
+      private val answer1 = "   "
+      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map("answer" -> Seq.empty, "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
 
       val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 

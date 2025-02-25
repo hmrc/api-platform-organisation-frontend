@@ -32,7 +32,6 @@ import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
-import uk.gov.hmrc.apiplatformorganisationfrontend.OrganisationFixtures
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
@@ -44,7 +43,6 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with ThirdPartyDeveloperConnectorMockModule
     with UserBuilder
     with LocalUserIdTracker
-    with OrganisationFixtures
     with SubmissionsTestData {
   implicit val ec: ExecutionContext = ExecutionContext.global
 

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models
 
+import java.time.format.DateTimeFormatter
+
 import cats.data.NonEmptyList
 
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
@@ -24,10 +26,12 @@ object AnswersViewModel {
   case class ViewQuestion(id: Question.Id, text: String, answer: String)
   case class ViewQuestionnaire(label: String, state: String, id: Questionnaire.Id, questions: NonEmptyList[ViewQuestion])
   case class ViewModel(submissionId: SubmissionId, questionnaires: List[ViewQuestionnaire])
+  private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
 
   private def convertAnswer(answer: ActualAnswer): Option[String] = answer match {
     case ActualAnswer.SingleChoiceAnswer(value)    => Some(value)
     case ActualAnswer.TextAnswer(value)            => Some(value)
+    case ActualAnswer.DateAnswer(value)            => Some(value.format(dateTimeFormatter))
     case ActualAnswer.MultipleChoiceAnswer(values) => Some(values.mkString)
     case ActualAnswer.NoAnswer                     => Some("n/a")
     case ActualAnswer.AcknowledgedAnswer           => None

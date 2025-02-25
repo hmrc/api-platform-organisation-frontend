@@ -103,12 +103,21 @@ class CheckAnswersControllerSpec
 
   "checkAnswersPage" should {
     "succeed when submission is complete" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(answeredSubmission.withCompletedProgress())
+      SubmissionServiceMock.Fetch.thenReturns(buildFullyAnsweredSubmission().withCompletedProgress())
 
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
       contentAsString(result) should include("Confirm and send")
+    }
+
+    "Flash an error when submission is failed" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(buildFullyAnsweredSubmission().withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken.withFlash("error" -> "some submit error"))
+
+      status(result) shouldBe OK
+      contentAsString(result) should include("some submit error")
     }
 
     "return an error when submission is not found" in new Setup {
