@@ -19,4 +19,7 @@ GET         /submission/:sid/check-answers         uk.gov.hmrc.apiplatformorgani
 POST        /submission/:sid/submit-request        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
 GET         /submission/:sid/submit-success        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
 
+GET         /organisation/:oid/manage-members      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageMembers(oid: OrganisationId)
+POST        /organisation/:oid/remove-member       uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeMemberAction(oid: OrganisationId, emailAddress: LaxEmailAddress)
+
 GET         /assets/*file                          controllers.Assets.versioned(path = "/public", file: Asset)
