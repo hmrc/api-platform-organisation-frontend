@@ -34,6 +34,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithCSRFAddToken
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
@@ -83,8 +84,8 @@ class QuestionControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest       = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
-    implicit val loggedInUser = user
+    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    implicit val loggedInUser: User = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
