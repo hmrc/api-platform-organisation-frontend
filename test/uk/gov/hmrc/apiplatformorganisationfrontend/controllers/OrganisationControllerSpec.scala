@@ -77,10 +77,10 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
   }
 
-  "GET /landing" should {
+  "GET /before-you-start" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
 
       val result = underTest.beforeYouStartView(fakeRequest)
       status(result) shouldBe Status.OK
@@ -88,7 +88,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return HTML" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
 
       val result = underTest.beforeYouStartView(fakeRequest)
       contentType(result) shouldBe Some("text/html")
@@ -105,10 +105,10 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     }
   }
 
-  "POST /landing" should {
+  "POST /before-you-start" should {
     "return 303" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
       SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
 
       val result = underTest.beforeYouStartAction(fakeRequest)
@@ -118,7 +118,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 400 if fails" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
       SubmissionServiceMock.CreateSubmission.thenReturnsNone()
 
       val result = underTest.beforeYouStartAction(fakeRequest)
@@ -126,7 +126,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     }
   }
 
-  "GET /main-landing" should {
+  "GET /landing" should {
     "return landing page with button to continue submission if submission for user found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
