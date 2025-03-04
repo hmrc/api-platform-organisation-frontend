@@ -21,7 +21,8 @@ import scala.concurrent.Future.successful
 import org.mockito.quality.Strictness
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationId
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 
 trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
@@ -31,12 +32,12 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
 
     object Fetch {
 
-      def thenReturns(out: Organisation) = {
-        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Some(out)))
+      def thenReturns(out: OrganisationWithMembers) = {
+        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Right(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(None))
+        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
   }

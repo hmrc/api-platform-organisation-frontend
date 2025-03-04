@@ -22,15 +22,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{OrganisationId, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ManageMembersController {
-  case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, members: Set[LaxEmailAddress])
+  case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, members: List[RegisteredOrUnregisteredUser])
 }
 
 @Singleton
@@ -48,17 +49,19 @@ class ManageMembersController @Inject() (
   import ManageMembersController._
 
   def manageMembers(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
-    organisationService.fetch(organisationId).map {
-      case Some(org) => {
-        val viewModel = ManageMembersViewModel(org.id, org.organisationName, org.members.map(m => m.emailAddress))
-        Ok(manageMembersPage(Some(request.userSession), viewModel))
-      }
-      case _         => BadRequest("Organisation not found")
-    }
+    organisationService.fetch(organisationId)
+      .map(_ match {
+        case Right(org) => {
+          val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.members)
+          Ok(manageMembersPage(Some(request.userSession), viewModel))
+        }
+        case Left(msg)  => BadRequest(msg)
+      })
   }
 
-  def removeMemberAction(organisationId: OrganisationId, emailAddress: LaxEmailAddress): Action[AnyContent] = loggedInAction { implicit request =>
-    val viewModel = ManageMembersViewModel(OrganisationId.random, OrganisationName("Org name"), Set(LaxEmailAddress("bob@example.com")))
+  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
+    val viewModel =
+      ManageMembersViewModel(OrganisationId.random, OrganisationName("Org name"), List(RegisteredOrUnregisteredUser(UserId.random, LaxEmailAddress("bob@example.com"), true, true)))
     Future.successful(Ok(manageMembersPage(Some(request.userSession), viewModel)))
   }
 

@@ -60,12 +60,12 @@
         </tr>
       </thead>    
       <tbody class="govuk-table__body">
-        @for(emailAddress <- viewModel.members) {
+        @for(member <- viewModel.members) {
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell center-table-text">@emailAddress.text</td>
+            <td class="govuk-table__cell center-table-text">@member.email.text</td>
             <td class="govuk-table__cell center-table-text">
-              <a class="govuk-button govuk-button--secondary govuk-!-margin-0" href="@routes.ManageMembersController.removeMemberAction(viewModel.organisationId, emailAddress).url">
-                Remove <span class="govuk-visually-hidden">@emailAddress.text</span>
+              <a class="govuk-button govuk-button--secondary govuk-!-margin-0" href="@routes.ManageMembersController.removeMemberAction(viewModel.organisationId, member.userId).url">
+                Remove <span class="govuk-visually-hidden">@member.email.text</span>
               </a>
             </td>
           </tr>  

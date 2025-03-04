@@ -32,12 +32,14 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, Us
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationId, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.OrganisationServiceMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -70,9 +72,11 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         ThirdPartyDeveloperConnectorMock.aMock
       )
 
-    val orgId        = OrganisationId.random
-    val userId       = UserId.random
-    val organisation = Organisation(orgId, OrganisationName("My org"), Set(Member(userId, LaxEmailAddress("bob@example.com"))))
+    val orgId          = OrganisationId.random
+    val userId         = UserId.random
+    val email          = LaxEmailAddress("bob@example.com")
+    val organisation   = Organisation(orgId, OrganisationName("My org"), Set(Member(userId, email)))
+    val orgWithMembers = OrganisationWithMembers(organisation, List(RegisteredOrUnregisteredUser(userId, email, true, true)))
 
     implicit val loggedInUser: User = user
   }
@@ -81,7 +85,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     "return page with list of members" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/manage-members").withUser(underTest)(sessionId))
-      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      OrganisationServiceMock.Fetch.thenReturns(orgWithMembers)
 
       val result = underTest.manageMembers(orgId)(fakeRequest)
       status(result) shouldBe Status.OK
