@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
 
 @Singleton
@@ -104,6 +104,21 @@ class OrganisationConnector @Inject() (
     }
   }
 
+  def fetchLatestOrganisationByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Organisation]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/organisation/user/$userId")
+        .execute[Option[Organisation]]
+    }
+  }
+
+  def createOrganisation(organisationName: OrganisationName, userId: UserId)(implicit hc: HeaderCarrier): Future[Organisation] = {
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/organisation/create")
+        .withBody(Json.toJson(CreateOrganisationRequest(organisationName, userId)))
+        .execute[Organisation]
+    }
+  }
+
   def addMemberToOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
@@ -143,4 +158,7 @@ object OrganisationConnector {
 
   case class UpdateMembersRequest(userId: UserId)
   implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
+
+  case class CreateOrganisationRequest(organisationName: OrganisationName, requestedBy: UserId)
+  implicit val writesCreateOrganisationRequest: Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
 }

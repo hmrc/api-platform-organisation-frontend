@@ -35,6 +35,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
@@ -62,12 +63,15 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
+    val mockOrganisationConnector = mock[OrganisationConnector]
+
     val underTest =
       new OrganisationController(
         mcc,
         landingPage,
         mainLandingPage,
         SubmissionServiceMock.aMock,
+        mockOrganisationConnector,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
