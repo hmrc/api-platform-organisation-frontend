@@ -21,8 +21,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.http.HeaderCarrier
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationId
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
 
@@ -33,12 +34,27 @@ class OrganisationService @Inject() (
   )(implicit val ec: ExecutionContext
   ) extends EitherTHelper[String] {
 
-  def fetch(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithMembers]] = {
+  def fetch(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Option[Organisation]] = {
+    organisationConnector.fetchOrganisation(id)
+  }
+
+  def fetchWithMembers(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithMembers]] = {
     (
       for {
         org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(org.members.map(m => m.userId).toList))
       } yield OrganisationWithMembers(org, members.users)
     ).value
+  }
+
+  def addMemberToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    for {
+      userId <- thirdPartyDeveloperConnector.getOrCreateUserId(emailAddress)
+      org    <- organisationConnector.addMemberToOrganisation(id, userId)
+    } yield org
+  }
+
+  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    organisationConnector.removeMemberFromOrganisation(id, userId)
   }
 }

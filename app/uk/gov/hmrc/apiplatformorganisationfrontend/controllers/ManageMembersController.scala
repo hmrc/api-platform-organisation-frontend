@@ -17,8 +17,11 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future.successful
 
+import play.api.data.Form
+import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
@@ -27,17 +30,45 @@ import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ManageMembersController {
   case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, members: List[RegisteredOrUnregisteredUser])
+  case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
+  case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, member: RegisteredOrUnregisteredUser)
+
+  case class AddMemberForm(email: String)
+
+  object AddMemberForm {
+
+    def form: Form[AddMemberForm] = Form(
+      mapping(
+        "email" -> emailValidator()
+      )(AddMemberForm.apply)(AddMemberForm.unapply)
+    )
+  }
+
+  case class RemoveMemberForm(confirm: Option[String] = Some(""))
+
+  object RemoveMemberForm {
+
+    def form: Form[RemoveMemberForm] = Form(
+      mapping(
+        "confirm" -> optional(text)
+          .verifying("member.error.confirmation.no.choice.field", _.isDefined)
+      )(RemoveMemberForm.apply)(RemoveMemberForm.unapply)
+    )
+  }
 }
 
 @Singleton
 class ManageMembersController @Inject() (
     mcc: MessagesControllerComponents,
     manageMembersPage: ManageMembersPage,
+    addMemberPage: AddMemberPage,
+    removeMemberPage: RemoveMemberPage,
     organisationService: OrganisationService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
@@ -48,8 +79,11 @@ class ManageMembersController @Inject() (
 
   import ManageMembersController._
 
+  val addMemberForm: Form[AddMemberForm]       = AddMemberForm.form
+  val removeMemberForm: Form[RemoveMemberForm] = RemoveMemberForm.form
+
   def manageMembers(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
-    organisationService.fetch(organisationId)
+    organisationService.fetchWithMembers(organisationId)
       .map(_ match {
         case Right(org) => {
           val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.members)
@@ -59,10 +93,68 @@ class ManageMembersController @Inject() (
       })
   }
 
-  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
-    val viewModel =
-      ManageMembersViewModel(OrganisationId.random, OrganisationName("Org name"), List(RegisteredOrUnregisteredUser(UserId.random, LaxEmailAddress("bob@example.com"), true, true)))
-    Future.successful(Ok(manageMembersPage(Some(request.userSession), viewModel)))
+  def addMember(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+    organisationService.fetch(organisationId) map {
+      case Some(org) => Ok(addMemberPage(Some(request.userSession), addMemberForm, AddMemberViewModel(org.id, org.organisationName)))
+      case _         => BadRequest("Organisation not found")
+    }
   }
 
+  def addMemberAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+    addMemberForm.bindFromRequest().fold(
+      formWithErrors => {
+        organisationService.fetch(organisationId) map {
+          case Some(org) => BadRequest(addMemberPage(Some(request.userSession), formWithErrors, AddMemberViewModel(organisationId, org.organisationName)))
+          case _         => BadRequest("Organisation not found")
+        }
+      },
+      memberAddData => {
+        organisationService.addMemberToOrganisation(organisationId, LaxEmailAddress(memberAddData.email))
+          .map(_ match {
+            case Right(org) => Redirect(routes.ManageMembersController.manageMembers(organisationId))
+            case Left(msg)  => BadRequest(msg)
+          })
+      }
+    )
+  }
+
+  def removeMember(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
+    organisationService.fetchWithMembers(organisationId)
+      .map(_ match {
+        case Right(org) => {
+          val member    = org.members.find(m => m.userId == userId)
+          val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, member.get)
+          Ok(removeMemberPage(Some(request.userSession), removeMemberForm, viewModel))
+        }
+        case Left(msg)  => BadRequest(msg)
+      })
+  }
+
+  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
+    removeMemberForm.bindFromRequest().fold(
+      formWithErrors => {
+        organisationService.fetchWithMembers(organisationId)
+          .map(_ match {
+            case Right(org) => {
+              val member    = org.members.find(m => m.userId == userId)
+              val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, member.get)
+              BadRequest(removeMemberPage(Some(request.userSession), formWithErrors, viewModel))
+            }
+            case Left(msg)  => BadRequest(msg)
+          })
+      },
+      confirmData => {
+        confirmData.confirm match {
+          case Some("Yes") => {
+            organisationService.removeMemberFromOrganisation(organisationId, userId)
+              .map(_ match {
+                case Right(org) => Redirect(routes.ManageMembersController.manageMembers(organisationId))
+                case Left(msg)  => BadRequest(msg)
+              })
+          }
+          case _           => successful(Redirect(routes.ManageMembersController.manageMembers(organisationId)))
+        }
+      }
+    )
+  }
 }

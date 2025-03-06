@@ -104,6 +104,29 @@ class OrganisationConnector @Inject() (
     }
   }
 
+  def addMemberToOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
+
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/organisation/${id.value}/add-member")
+        .withBody(Json.toJson(UpdateMembersRequest(userId)))
+        .execute[Either[UpstreamErrorResponse, Organisation]]
+        .map(_.leftMap(failed))
+    }
+  }
+
+  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
+
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/organisation/${id.value}/remove-member")
+        .withBody(Json.toJson(UpdateMembersRequest(userId)))
+        .execute[Either[UpstreamErrorResponse, Organisation]]
+        .map(_.leftMap(failed))
+    }
+  }
 }
 
 object OrganisationConnector {
@@ -113,8 +136,11 @@ object OrganisationConnector {
   implicit val writesOutboundRecordAnswersRequest: Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val readsCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
+  implicit val writesCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
 
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val readsSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
+  implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
+
+  case class UpdateMembersRequest(userId: UserId)
+  implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
 }

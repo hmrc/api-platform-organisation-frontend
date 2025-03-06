@@ -18,20 +18,21 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
-@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.ManageMembersViewModel
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.{AddMemberViewModel, AddMemberForm}
+@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include._
 
 @this(layout: Layout,
         govukButton: GovukButton)
 
-@(loggedInSession: Option[UserSession], viewModel: ManageMembersViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+@(loggedInSession: Option[UserSession], form: Form[AddMemberForm], viewModel: AddMemberViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
     crumbs = Seq(Crumb.home),
-    pageTitle = "Manage organisation members",
+    pageTitle = "Add organisation member",
     loggedInSession = loggedInSession
 ) {
 
-    <h1 class="govuk-heading-l">Manage organisation members</h1>
+    <h1 class="govuk-heading-l">Add an organisation member</h1>
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-quarter">
@@ -44,39 +45,26 @@
     
     <br>
     
-    <h2 class="govuk-heading-m">Organisation members</h2>
+    <h2 class="govuk-heading-m">Organisation member</h2>
 
-    <table class="govuk-table">
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">
+    @helper.form(action = routes.ManageMembersController.addMemberAction(viewModel.organisationId)) {
+      @helper.CSRF.formField
+
+        <div class="govuk-form-group">
+          <label class="govuk-label" for="email" id="email-label">
             Email address
-          </th>
-          <th scope="col" class="govuk-table__header">
-            <span class="govuk-visually-hidden">
-               Delete button column
-            </span>
-          </th>
-        </tr>
-      </thead>    
-      <tbody class="govuk-table__body">
-        @for(member <- viewModel.members) {
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell center-table-text">@member.email.text</td>
-            <td class="govuk-table__cell center-table-text">
-              <a class="govuk-button govuk-button--secondary govuk-!-margin-0" href="@routes.ManageMembersController.removeMember(viewModel.organisationId, member.userId).url">
-                Remove <span class="govuk-visually-hidden">@member.email.text</span>
-              </a>
-            </td>
-          </tr>  
-        }
-      </tbody>
-    </table>
-    @helper.form(action = routes.ManageMembersController.addMember(viewModel.organisationId)) {
-        @helper.CSRF.formField
+          </label>
+          <span id="add-email-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> @fieldError(form.errors, "email")
+          </span>
+          <input type="text" class="govuk-input @if(form.errors("email").nonEmpty) {govuk-input--error}" id="email" name="email" value="@form.data.getOrElse("email", "")" aria-labelledby="email-label" aria-describedby="add-email-error">
+        </div>
+
         @govukButton(Button(
             id = Some("addMember"), 
             isStartButton = false,
             content = Text("Add member")))
+
+        <a href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
     }
 }

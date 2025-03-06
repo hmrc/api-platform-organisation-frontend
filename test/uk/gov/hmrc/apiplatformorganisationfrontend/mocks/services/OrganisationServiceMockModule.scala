@@ -21,7 +21,8 @@ import scala.concurrent.Future.successful
 import org.mockito.quality.Strictness
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationId
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 
@@ -32,12 +33,45 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
 
     object Fetch {
 
-      def thenReturns(out: OrganisationWithMembers) = {
-        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Right(out)))
+      def thenReturns(out: Organisation) = {
+        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Some(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.fetch(*[OrganisationId])(*)).thenReturn(successful(None))
+      }
+    }
+
+    object FetchWithMembers {
+
+      def thenReturns(out: OrganisationWithMembers) = {
+        when(aMock.fetchWithMembers(*[OrganisationId])(*)).thenReturn(successful(Right(out)))
+      }
+
+      def thenReturnsNone() = {
+        when(aMock.fetchWithMembers(*[OrganisationId])(*)).thenReturn(successful(Left("Organisation not found")))
+      }
+    }
+
+    object AddMemberToOrganisation {
+
+      def thenReturns(out: Organisation) = {
+        when(aMock.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
+      }
+
+      def thenReturnsNone() = {
+        when(aMock.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Organisation not found")))
+      }
+    }
+
+    object RemoveMemberFromOrganisation {
+
+      def thenReturns(out: Organisation) = {
+        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Right(out)))
+      }
+
+      def thenReturnsNone() = {
+        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
   }
