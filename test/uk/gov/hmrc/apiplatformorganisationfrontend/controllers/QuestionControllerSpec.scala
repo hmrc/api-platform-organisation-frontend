@@ -125,8 +125,25 @@ class QuestionControllerSpec
       status(result) shouldBe OK
       contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(result) contains ("What date was your organisation founded?") shouldBe true withClue ("HTML content did not contain label")
-      print(contentAsString(result))
       contentAsString(result) contains ("""This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>""") shouldBe true withClue ("HTML content did not contain link")
+      contentAsString(result) contains ("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, address question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionAddress.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      print(contentAsString(result))
+      contentAsString(result) contains ("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result) contains ("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
+      contentAsString(result) contains ("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
+      contentAsString(result) contains ("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
+      contentAsString(result) contains ("Region") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result) contains ("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
       contentAsString(result) contains ("<title>") shouldBe true
     }
 
@@ -166,6 +183,17 @@ class QuestionControllerSpec
 
       status(result) shouldBe BAD_REQUEST
       contentAsString(result) contains ("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
+    }
+
+    "display fail and show error summary" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val result =
+        controller.showQuestion(aSubmission.id, testQuestionIdsOfInterest.organisationTypeId, None, Some(ErrorInfo("blah", None)))(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+      contentAsString(result) contains ("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
+      contentAsString(result) contains ("blah") shouldBe true withClue ("Page should contain `blah` message")
     }
 
     "fail with a BAD REQUEST for an invalid questionId" in new Setup {
@@ -295,6 +323,31 @@ class QuestionControllerSpec
 
       private val answer1 = "Yes"
       private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+
+      val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id}/check-answers")
+    }
+
+    "succeed when given no answer and redirect to check answers page if no more questions need answering" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+      SubmissionServiceMock.RecordAnswer.thenReturns(fullyAnsweredSubmission)
+
+      private val request = loggedInRequest.withFormUrlEncodedBody("submit-action" -> "save")
 
       val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
 
