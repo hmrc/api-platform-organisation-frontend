@@ -23,7 +23,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 
 trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
@@ -42,14 +42,25 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
       }
     }
 
-    object FetchWithMembers {
+    object FetchWithAllMembersDetails {
 
-      def thenReturns(out: OrganisationWithMembers) = {
-        when(aMock.fetchWithMembers(*[OrganisationId])(*)).thenReturn(successful(Right(out)))
+      def thenReturns(out: OrganisationWithAllMembersDetails) = {
+        when(aMock.fetchWithAllMembersDetails(*[OrganisationId])(*)).thenReturn(successful(Right(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.fetchWithMembers(*[OrganisationId])(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.fetchWithAllMembersDetails(*[OrganisationId])(*)).thenReturn(successful(Left("Organisation not found")))
+      }
+    }
+
+    object FetchWithMemberDetails {
+
+      def thenReturns(out: OrganisationWithMemberDetails) = {
+        when(aMock.fetchWithMemberDetails(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Right(out)))
+      }
+
+      def thenReturnsNone() = {
+        when(aMock.fetchWithMemberDetails(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
 

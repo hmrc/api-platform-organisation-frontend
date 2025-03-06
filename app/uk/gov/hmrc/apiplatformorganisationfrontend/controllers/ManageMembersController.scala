@@ -83,7 +83,7 @@ class ManageMembersController @Inject() (
   val removeMemberForm: Form[RemoveMemberForm] = RemoveMemberForm.form
 
   def manageMembers(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
-    organisationService.fetchWithMembers(organisationId)
+    organisationService.fetchWithAllMembersDetails(organisationId)
       .map(_ match {
         case Right(org) => {
           val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.members)
@@ -119,11 +119,10 @@ class ManageMembersController @Inject() (
   }
 
   def removeMember(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
-    organisationService.fetchWithMembers(organisationId)
+    organisationService.fetchWithMemberDetails(organisationId, userId)
       .map(_ match {
         case Right(org) => {
-          val member    = org.members.find(m => m.userId == userId)
-          val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, member.get)
+          val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.member)
           Ok(removeMemberPage(Some(request.userSession), removeMemberForm, viewModel))
         }
         case Left(msg)  => BadRequest(msg)
@@ -133,11 +132,10 @@ class ManageMembersController @Inject() (
   def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
     removeMemberForm.bindFromRequest().fold(
       formWithErrors => {
-        organisationService.fetchWithMembers(organisationId)
+        organisationService.fetchWithMemberDetails(organisationId, userId)
           .map(_ match {
             case Right(org) => {
-              val member    = org.members.find(m => m.userId == userId)
-              val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, member.get)
+              val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.member)
               BadRequest(removeMemberPage(Some(request.userSession), formWithErrors, viewModel))
             }
             case Left(msg)  => BadRequest(msg)

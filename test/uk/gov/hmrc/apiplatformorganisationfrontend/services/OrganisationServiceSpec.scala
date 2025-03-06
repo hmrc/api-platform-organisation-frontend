@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithAllMembersDetails
 
 class OrganisationServiceSpec extends AsyncHmrcSpec {
 
@@ -38,12 +38,12 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
   trait Setup extends FixedClock with ThirdPartyDeveloperConnectorMockModule with LocalUserIdTracker {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val orgId          = OrganisationId.random
-    val userId         = UserId.random
-    val email          = LaxEmailAddress("bob@example.com")
-    val organisation   = Organisation(orgId, OrganisationName("My org"), Set(Member(userId)))
-    val userDetails    = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithMembers = OrganisationWithMembers(organisation, List(userDetails))
+    val orgId             = OrganisationId.random
+    val userId            = UserId.random
+    val email             = LaxEmailAddress("bob@example.com")
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Set(Member(userId)))
+    val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(userDetails))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
@@ -64,12 +64,12 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     }
   }
 
-  "fetchWithMembers" should {
+  "fetchWithAllMembersDetails" should {
     "return organisation with members details for given org id" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
       ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
 
-      val result = await(underTest.fetchWithMembers(orgId))
+      val result = await(underTest.fetchWithAllMembersDetails(orgId))
 
       result.isRight shouldBe true
       result.value.organisation.id shouldBe orgId
@@ -79,10 +79,42 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     "return left if organisation not found" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(None))
 
-      val result = await(underTest.fetchWithMembers(orgId))
+      val result = await(underTest.fetchWithAllMembersDetails(orgId))
 
       result.isLeft shouldBe true
       result.left.value shouldBe "Organisation not found"
+    }
+  }
+
+  "fetchWithMemberDetails" should {
+    "return organisation with members details for given org id" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+
+      val result = await(underTest.fetchWithMemberDetails(orgId, userId))
+
+      result.isRight shouldBe true
+      result.value.organisation.id shouldBe orgId
+      result.value.member.email shouldBe email
+    }
+
+    "return left if organisation not found" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(None))
+
+      val result = await(underTest.fetchWithMemberDetails(orgId, userId))
+
+      result.isLeft shouldBe true
+      result.left.value shouldBe "Organisation not found"
+    }
+
+    "return left if user not found" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List.empty))
+
+      val result = await(underTest.fetchWithMemberDetails(orgId, userId))
+
+      result.isLeft shouldBe true
+      result.left.value shouldBe "User not found"
     }
   }
 

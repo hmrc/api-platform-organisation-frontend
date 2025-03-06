@@ -19,4 +19,6 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.models
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 
-case class OrganisationWithMembers(organisation: Organisation, members: List[RegisteredOrUnregisteredUser])
+case class OrganisationWithAllMembersDetails(organisation: Organisation, members: List[RegisteredOrUnregisteredUser])
+
+case class OrganisationWithMemberDetails(organisation: Organisation, member: RegisteredOrUnregisteredUser)

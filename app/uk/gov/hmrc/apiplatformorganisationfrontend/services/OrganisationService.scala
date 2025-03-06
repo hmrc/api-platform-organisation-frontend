@@ -25,7 +25,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, Us
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithMembers
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
 
 @Singleton
 class OrganisationService @Inject() (
@@ -38,12 +38,22 @@ class OrganisationService @Inject() (
     organisationConnector.fetchOrganisation(id)
   }
 
-  def fetchWithMembers(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithMembers]] = {
+  def fetchWithAllMembersDetails(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithAllMembersDetails]] = {
     (
       for {
         org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(org.members.map(m => m.userId).toList))
-      } yield OrganisationWithMembers(org, members.users)
+      } yield OrganisationWithAllMembersDetails(org, members.users)
+    ).value
+  }
+
+  def fetchWithMemberDetails(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithMemberDetails]] = {
+    (
+      for {
+        org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
+        members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(List(userId)))
+        member  <- fromOption(members.users.find(m => m.userId == userId), "User not found")
+      } yield OrganisationWithMemberDetails(org, member)
     ).value
   }
 
