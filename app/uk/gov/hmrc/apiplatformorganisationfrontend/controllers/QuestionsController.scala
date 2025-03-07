@@ -104,12 +104,8 @@ class QuestionsController @Inject() (
 
   def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ErrorInfo] = None): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
-      if (request.submission.startedBy == request.userRequest.userId) {
-        val submitAction = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.updateAnswer(submissionId, questionId)
-        processQuestion(submissionId, questionId, onFormAnswer, errorInfo)(submitAction)
-      } else {
-        successful(NotFound)
-      }
+      val submitAction = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.updateAnswer(submissionId, questionId)
+      processQuestion(submissionId, questionId, onFormAnswer, errorInfo)(submitAction)
     }
 
   private def processAnswer(

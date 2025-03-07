@@ -33,6 +33,7 @@
         govukRadios: GovukRadios,
         govukInput: GovukInput,
         govukCheckboxes: GovukCheckboxes,
+        govukFieldset: GovukFieldset,
         govukDateInput: GovukDateInput
 )
 
@@ -180,6 +181,81 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
+@renderAddressQuestion(question: Question.AddressQuestion) = {
+    @govukFieldset(Fieldset(
+        legend = None,
+        html = HtmlFormat.fill(Seq(
+            govukInput(Input(
+                id = "address-line-1",
+                name = "addressLineOne",
+                label = Label(
+                    content = Text("Address line 1")
+                ),
+              value = currentAnswers match {
+                  case Some(ActualAnswer.AddressAnswer(add)) => add.addressLineOne
+                  case _ => None
+              },
+                autocomplete = Some("address-line1")
+            )),
+            govukInput(Input(
+                id = "address-line-2",
+                name = "addressLineTwo",
+                label = Label(
+                    content = Text("Address line 2 (optional)")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.AddressAnswer(add)) => add.addressLineTwo
+                    case _ => None
+                },
+                autocomplete = Some("address-line2")
+            )),
+            govukInput(Input(
+                id = "address-town",
+                name = "locality",
+                label = Label(
+                    content = Text("Town or city")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.AddressAnswer(add)) => add.locality
+                    case _ => None
+                },
+                classes = "govuk-!-width-two-thirds",
+                autocomplete = Some("address-level2")
+            )),
+            govukInput(Input(
+                id = "address-region",
+                name = "region",
+                label = Label(
+                    content = Text("Region")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.AddressAnswer(add)) => add.region
+                    case _ => None
+                },
+                classes = "govuk-!-width-two-thirds",
+                autocomplete = Some("address-level1")
+            )),
+            govukInput(Input(
+                id = "address-postcode",
+                name = "postcode",
+                label = Label(
+                    content = Text("Postcode")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.AddressAnswer(add)) => add.postalCode
+                    case _ => None
+                },
+                classes = "govuk-input--width-10",
+                autocomplete = Some("postal-code")
+            ))
+        ))
+    ))
+  
+    @renderMaybeStatement(question.afterStatement)
+
+    @renderButtonOrButtons(question.absenceText)
+}
+
 @renderTextInputQuestion(question: Question.TextQuestion) = {
     @govukInput(Input(id = questionId,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
@@ -210,6 +286,7 @@
     case q: Question.TextQuestion         => renderTextInputQuestion(q)
     case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
     case q: Question.DateQuestion  => renderDateQuestion(q)
+    case q: Question.AddressQuestion  => renderAddressQuestion(q)
     case _ => <p>TODO</p>
   }
 }
