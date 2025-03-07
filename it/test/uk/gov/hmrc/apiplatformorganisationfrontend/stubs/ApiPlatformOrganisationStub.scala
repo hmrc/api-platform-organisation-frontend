@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, post, stubFor, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 import play.api.http.Status.OK
@@ -232,9 +232,9 @@ object ApiPlatformOrganisationStub {
 
   object RemoveMemberFromOrganisation {
 
-    def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {
+    def succeeds(orgId: OrganisationId, userId: UserId, organisation: Organisation): StubMapping = {
       stubFor(
-        post(urlEqualTo(s"/organisation/$orgId/remove-member"))
+        delete(urlEqualTo(s"/organisation/$orgId/remove-member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(OK)
@@ -244,9 +244,9 @@ object ApiPlatformOrganisationStub {
       )
     }
 
-    def fails(orgId: OrganisationId, status: Int): StubMapping = {
+    def fails(orgId: OrganisationId, userId: UserId, status: Int): StubMapping = {
       stubFor(
-        post(urlEqualTo(s"/organisation/$orgId/remove-member"))
+        delete(urlEqualTo(s"/organisation/$orgId/remove-member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(status)

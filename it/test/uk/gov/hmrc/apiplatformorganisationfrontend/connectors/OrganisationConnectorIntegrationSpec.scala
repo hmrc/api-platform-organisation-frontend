@@ -229,7 +229,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
   "removeMemberFromOrganisation" should {
     "successfully remove one" in new Setup {
-      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.succeeds(orgId, organisation)
+      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.succeeds(orgId, userId, organisation)
 
       val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
 
@@ -237,7 +237,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     }
 
     "fail when the call returns an error" in new Setup {
-      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
+      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, userId, INTERNAL_SERVER_ERROR)
 
       val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
 
