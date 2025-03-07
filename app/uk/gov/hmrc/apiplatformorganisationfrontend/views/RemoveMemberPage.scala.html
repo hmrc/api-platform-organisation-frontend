@@ -1,0 +1,83 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.{RemoveMemberViewModel, RemoveMemberForm}
+@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include._
+
+@this(layout: Layout,
+        govukButton: GovukButton)
+
+@(loggedInSession: Option[UserSession], form: Form[RemoveMemberForm], viewModel: RemoveMemberViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = "Remove organisation member",
+    loggedInSession = loggedInSession
+) {
+
+    <h1 class="govuk-heading-l">Remove an organisation member</h1>
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-quarter">
+            <span class="govuk-body govuk-!-font-weight-bold govuk-!-margin-0">Organisation:</span>
+        </div>
+        <div class="govuk-grid-column-three-quarters">
+            <p class="govuk-body govuk-!-margin-0" id="organisation-name">@viewModel.organisationName.toString</p>
+        </div>
+    </div>
+    
+    <br>
+    
+    <h2 class="govuk-heading-m">Organisation member</h2>
+
+    @helper.form(action = routes.ManageMembersController.removeMemberAction(viewModel.organisationId, viewModel.member.userId)) {
+      @helper.CSRF.formField
+
+        <p class="govuk-body">@viewModel.member.email.text</p>
+        <div class="govuk-form-group @if(form.errors("confirm").nonEmpty) {govuk-form-group--error}">
+          <fieldset id="confirm" class="govuk-fieldset" aria-describedby="remove-team-member-error">
+            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+              <h3 class="govuk-fieldset__heading">Are you sure you want to remove this member from this organisation?</h3>
+            </legend>
+            <span id="remove-team-member-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> @fieldError(form.errors, "confirm")
+            </span>
+            <div class="govuk-radios govuk-radios--inline">
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="yes" type="radio" name="confirm" value="Yes">
+                <label class="govuk-label govuk-radios__label" for="yes">Yes</label>
+              </div>
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="no" type="radio" name="confirm" value="No">
+                <label class="govuk-label govuk-radios__label" for="no">No</label>
+              </div>
+            </div>
+          </fieldset>
+          <br>
+        </div>
+
+        @govukButton(Button(
+            id = Some("removeMember"), 
+            isStartButton = false,
+            content = Text("Remove member")))
+
+        <a href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
+    }
+}

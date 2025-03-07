@@ -30,10 +30,12 @@ import play.api.test.{CSRFTokenHelper, FakeRequest}
 
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
@@ -55,11 +57,13 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       with LocalUserIdTracker {
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
-    val landingPage                   = app.injector.instanceOf[OrganisationLandingPage]
-    val mainLandingPage               = app.injector.instanceOf[MainLandingPage]
+    val landingPage                   = app.injector.instanceOf[BeforeYouStartPage]
+    val mainLandingPage               = app.injector.instanceOf[LandingPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
+    val mockOrganisationConnector = mock[OrganisationConnector]
 
     val underTest =
       new OrganisationController(
@@ -67,29 +71,30 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         landingPage,
         mainLandingPage,
         SubmissionServiceMock.aMock,
+        mockOrganisationConnector,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
       )
 
-    implicit val loggedInUser = user
+    implicit val loggedInUser: User = user
 
   }
 
-  "GET /landing" should {
+  "GET /before-you-start" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
 
-      val result = underTest.organisationLandingView(fakeRequest)
+      val result = underTest.beforeYouStartView(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return HTML" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
 
-      val result = underTest.organisationLandingView(fakeRequest)
+      val result = underTest.beforeYouStartView(fakeRequest)
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Get verified on the Developer Hub")
@@ -99,39 +104,39 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       ThirdPartyDeveloperConnectorMock.FetchSession.fails()
       val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
 
-      val result = underTest.organisationLandingView(loggedOutRequest)
+      val result = underTest.beforeYouStartView(loggedOutRequest)
       status(result) shouldBe Status.SEE_OTHER
     }
   }
 
-  "POST /landing" should {
+  "POST /before-you-start" should {
     "return 303" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
       SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
 
-      val result = underTest.organisationLandingAction(fakeRequest)
+      val result = underTest.beforeYouStartAction(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/checklist")
     }
 
     "return 400 if fails" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
       SubmissionServiceMock.CreateSubmission.thenReturnsNone()
 
-      val result = underTest.organisationLandingAction(fakeRequest)
+      val result = underTest.beforeYouStartAction(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
 
-  "GET /main-landing" should {
+  "GET /landing" should {
     "return landing page with button to continue submission if submission for user found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(aSubmission)
 
-      val result = underTest.mainLandingView(fakeRequest)
+      val result = underTest.landingView(fakeRequest)
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Main organisations landing page")
@@ -143,7 +148,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturnsNone()
 
-      val result = underTest.mainLandingView(fakeRequest)
+      val result = underTest.landingView(fakeRequest)
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Main organisations landing page")

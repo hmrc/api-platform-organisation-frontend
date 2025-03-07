@@ -33,6 +33,7 @@ import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.{Completed, InProgress}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, QuestionnaireProgress}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
@@ -95,8 +96,8 @@ class CheckAnswersControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest       = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
-    implicit val loggedInUser = user
+    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    implicit val loggedInUser: User = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }

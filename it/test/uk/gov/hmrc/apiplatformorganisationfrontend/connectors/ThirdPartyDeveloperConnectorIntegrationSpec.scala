@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress.StringSyntax
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, RegisteredOrUnregisteredUser}
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{LoggedInState, UserSession, UserSessionId}
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
@@ -52,6 +53,7 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
     val userEmail: LaxEmailAddress = "thirdpartydeveloper@example.com".toLaxEmail
     val userId: UserId             = idOf(userEmail)
     val sessionId: UserSessionId   = UserSessionId.random
+    val userDetails                = RegisteredOrUnregisteredUser(userId, userEmail, true, true)
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
   }
@@ -78,6 +80,42 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
 
       intercept[UpstreamErrorResponse] {
         await(underTest.fetchSession(sessionId))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "getOrCreateUserId" should {
+    "return a user id" in new Setup {
+      ThirdPartyDeveloperStub.GetOrCreateUserId.succeeds(userId)
+
+      private val result = await(underTest.getOrCreateUserId(userEmail))
+
+      result shouldBe userId
+    }
+
+    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
+      ThirdPartyDeveloperStub.GetOrCreateUserId.throwsAnException()
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.getOrCreateUserId(userEmail))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "getRegisteredOrUnregisteredUsers" should {
+    "return a list of user details" in new Setup {
+      ThirdPartyDeveloperStub.GetRegisteredOrUnregisteredUsers.succeeds(userId, userEmail)
+
+      private val result = await(underTest.getRegisteredOrUnregisteredUsers(List(userId)))
+
+      result shouldBe GetRegisteredOrUnregisteredUsersResponse(List(userDetails))
+    }
+
+    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
+      ThirdPartyDeveloperStub.GetRegisteredOrUnregisteredUsers.throwsAnException()
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.getRegisteredOrUnregisteredUsers(List(userId)))
       }.statusCode shouldBe INTERNAL_SERVER_ERROR
     }
   }

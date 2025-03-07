@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, post, stubFor, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Question, Submission, SubmissionId}
 
 object ApiPlatformOrganisationStub {
@@ -171,6 +172,81 @@ object ApiPlatformOrganisationStub {
     def fails(submissionId: SubmissionId, questionId: Question.Id, status: Int): StubMapping = {
       stubFor(
         post(urlEqualTo(s"/submission/$submissionId/question/${questionId.value}"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object FetchOrganisation {
+
+    def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/organisation/$orgId"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(organisation).toString())
+          )
+      )
+    }
+
+    def fails(orgId: OrganisationId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/organisation/$orgId"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object AddMemberToOrganisation {
+
+    def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {
+      stubFor(
+        put(urlEqualTo(s"/organisation/$orgId/member"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(organisation).toString())
+          )
+      )
+    }
+
+    def fails(orgId: OrganisationId, status: Int): StubMapping = {
+      stubFor(
+        put(urlEqualTo(s"/organisation/$orgId/member"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object RemoveMemberFromOrganisation {
+
+    def succeeds(orgId: OrganisationId, userId: UserId, organisation: Organisation): StubMapping = {
+      stubFor(
+        delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(organisation).toString())
+          )
+      )
+    }
+
+    def fails(orgId: OrganisationId, userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(status)
