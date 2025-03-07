@@ -100,6 +100,15 @@ class ChecklistControllerSpec
       contentAsString(result) should include("Get verified on the Developer Hub")
     }
 
+    "succeed with completed submission" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withCompletedProgress())
+
+      val result = controller.checklistPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) should include("Get verified on the Developer Hub")
+    }
+
     "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {
       SubmissionServiceMock.Fetch.thenReturnsWrongUser(partiallyAnsweredExtendedSubmission)
 
