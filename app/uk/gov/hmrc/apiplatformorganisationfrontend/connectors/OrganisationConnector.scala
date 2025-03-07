@@ -124,7 +124,7 @@ class OrganisationConnector @Inject() (
     val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
 
     metrics.record(api) {
-      http.post(url"${config.serviceBaseUrl}/organisation/${id.value}/add-member")
+      http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
         .withBody(Json.toJson(UpdateMembersRequest(userId)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
@@ -136,7 +136,7 @@ class OrganisationConnector @Inject() (
     val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
 
     metrics.record(api) {
-      http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/remove-member/$userId")
+      http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/member/$userId")
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }

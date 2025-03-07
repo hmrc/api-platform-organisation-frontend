@@ -209,7 +209,7 @@ object ApiPlatformOrganisationStub {
 
     def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {
       stubFor(
-        post(urlEqualTo(s"/organisation/$orgId/add-member"))
+        put(urlEqualTo(s"/organisation/$orgId/member"))
           .willReturn(
             aResponse()
               .withStatus(OK)
@@ -221,7 +221,7 @@ object ApiPlatformOrganisationStub {
 
     def fails(orgId: OrganisationId, status: Int): StubMapping = {
       stubFor(
-        post(urlEqualTo(s"/organisation/$orgId/add-member"))
+        put(urlEqualTo(s"/organisation/$orgId/member"))
           .willReturn(
             aResponse()
               .withStatus(status)
@@ -234,7 +234,7 @@ object ApiPlatformOrganisationStub {
 
     def succeeds(orgId: OrganisationId, userId: UserId, organisation: Organisation): StubMapping = {
       stubFor(
-        delete(urlEqualTo(s"/organisation/$orgId/remove-member/$userId"))
+        delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(OK)
@@ -246,7 +246,7 @@ object ApiPlatformOrganisationStub {
 
     def fails(orgId: OrganisationId, userId: UserId, status: Int): StubMapping = {
       stubFor(
-        delete(urlEqualTo(s"/organisation/$orgId/remove-member/$userId"))
+        delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(status)
