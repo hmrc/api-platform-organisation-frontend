@@ -40,6 +40,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
     val orgId        = OrganisationId.random
     val organisation = Organisation(orgId, OrganisationName("Org name"), Set(Member(userId)))
+    val email        = LaxEmailAddress("bill@example.com")
   }
 
   override def fakeApplication(): PlayApplication =
@@ -213,7 +214,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "successfully add one" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.succeeds(orgId, organisation)
 
-      val result = await(underTest.addMemberToOrganisation(orgId, userId))
+      val result = await(underTest.addMemberToOrganisation(orgId, userId, email))
 
       result shouldBe Right(organisation)
     }
@@ -221,7 +222,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "fail when the call returns an error" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.addMemberToOrganisation(orgId, userId))
+      val result = await(underTest.addMemberToOrganisation(orgId, userId, email))
 
       result shouldBe Left(s"Failed to add user $userId to organisation $orgId")
     }
@@ -231,7 +232,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "successfully remove one" in new Setup {
       ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.succeeds(orgId, userId, organisation)
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
 
       result shouldBe Right(organisation)
     }
@@ -239,7 +240,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "fail when the call returns an error" in new Setup {
       ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, userId, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
 
       result shouldBe Left(s"Failed to remove user $userId from organisation $orgId")
     }

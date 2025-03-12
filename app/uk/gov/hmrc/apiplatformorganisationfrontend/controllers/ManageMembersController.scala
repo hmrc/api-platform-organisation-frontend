@@ -50,12 +50,13 @@ object ManageMembersController {
     )
   }
 
-  case class RemoveMemberForm(confirm: Option[String] = Some(""))
+  case class RemoveMemberForm(email: String, confirm: Option[String] = Some(""))
 
   object RemoveMemberForm {
 
     def form: Form[RemoveMemberForm] = Form(
       mapping(
+        "email"   -> text,
         "confirm" -> optional(text)
           .verifying("member.error.confirmation.no.choice.field", _.isDefined)
       )(RemoveMemberForm.apply)(RemoveMemberForm.unapply)
@@ -144,7 +145,7 @@ class ManageMembersController @Inject() (
       confirmData => {
         confirmData.confirm match {
           case Some("Yes") => {
-            organisationService.removeMemberFromOrganisation(organisationId, userId)
+            organisationService.removeMemberFromOrganisation(organisationId, userId, LaxEmailAddress(confirmData.email))
               .map(_ match {
                 case Right(org) => Redirect(routes.ManageMembersController.manageMembers(organisationId))
                 case Left(msg)  => BadRequest(msg)

@@ -78,11 +78,11 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
     object RemoveMemberFromOrganisation {
 
       def thenReturns(out: Organisation) = {
-        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Right(out)))
+        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
   }

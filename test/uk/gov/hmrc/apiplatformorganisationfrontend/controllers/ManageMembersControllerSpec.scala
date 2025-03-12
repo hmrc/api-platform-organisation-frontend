@@ -219,7 +219,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("confirm" -> "Yes"))
+        .withFormUrlEncodedBody("confirm" -> "Yes", "email" -> "bob@example.com"))
       OrganisationServiceMock.RemoveMemberFromOrganisation.thenReturns(organisation)
 
       val result = underTest.removeMemberAction(orgId, userId)(fakeRequest)
@@ -231,7 +231,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("confirm" -> "No"))
+        .withFormUrlEncodedBody("confirm" -> "No", "email" -> "bob@example.com"))
 
       val result = underTest.removeMemberAction(orgId, userId)(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
