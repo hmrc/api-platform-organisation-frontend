@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
 
 @Singleton
@@ -95,6 +96,51 @@ class OrganisationConnector @Inject() (
         .execute[Option[ExtendedSubmission]]
     }
   }
+
+  def fetchOrganisation(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Option[Organisation]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/organisation/${id.value}")
+        .execute[Option[Organisation]]
+    }
+  }
+
+  def fetchLatestOrganisationByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Organisation]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/organisation/user/$userId")
+        .execute[Option[Organisation]]
+    }
+  }
+
+  def createOrganisation(organisationName: OrganisationName, userId: UserId)(implicit hc: HeaderCarrier): Future[Organisation] = {
+    metrics.record(api) {
+      http.post(url"${config.serviceBaseUrl}/organisation/create")
+        .withBody(Json.toJson(CreateOrganisationRequest(organisationName, userId)))
+        .execute[Organisation]
+    }
+  }
+
+  def addMemberToOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
+
+    metrics.record(api) {
+      http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
+        .withBody(Json.toJson(UpdateMembersRequest(userId)))
+        .execute[Either[UpstreamErrorResponse, Organisation]]
+        .map(_.leftMap(failed))
+    }
+  }
+
+  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    import cats.implicits._
+    val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
+
+    metrics.record(api) {
+      http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/member/$userId")
+        .execute[Either[UpstreamErrorResponse, Organisation]]
+        .map(_.leftMap(failed))
+    }
+  }
 }
 
 object OrganisationConnector {
@@ -104,8 +150,14 @@ object OrganisationConnector {
   implicit val writesOutboundRecordAnswersRequest: Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val readsCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
+  implicit val writesCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
 
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val readsSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
+  implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
+
+  case class UpdateMembersRequest(userId: UserId)
+  implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
+
+  case class CreateOrganisationRequest(organisationName: OrganisationName, requestedBy: UserId)
+  implicit val writesCreateOrganisationRequest: Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
 }

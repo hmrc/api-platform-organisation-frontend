@@ -24,6 +24,7 @@ import play.api.{Application => PlayApplication, Configuration, Mode}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationId, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
 
@@ -36,6 +37,9 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
   trait Setup extends SubmissionsTestData {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val underTest                  = app.injector.instanceOf[OrganisationConnector]
+
+    val orgId        = OrganisationId.random
+    val organisation = Organisation(orgId, OrganisationName("Org name"), Set(Member(userId)))
   }
 
   override def fakeApplication(): PlayApplication =
@@ -176,6 +180,68 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
 
       result.isLeft shouldBe true
+    }
+  }
+
+  "fetchOrganisation" should {
+    "successfully get one" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisation.succeeds(orgId, organisation)
+
+      val result = await(underTest.fetchOrganisation(orgId))
+
+      result shouldBe Some(organisation)
+    }
+
+    "return None when not found" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisation.fails(orgId, NOT_FOUND)
+
+      val result = await(underTest.fetchOrganisation(orgId))
+
+      result shouldBe None
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.fetchOrganisation(orgId))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "addMemberToOrganisation" should {
+    "successfully add one" in new Setup {
+      ApiPlatformOrganisationStub.AddMemberToOrganisation.succeeds(orgId, organisation)
+
+      val result = await(underTest.addMemberToOrganisation(orgId, userId))
+
+      result shouldBe Right(organisation)
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.AddMemberToOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
+
+      val result = await(underTest.addMemberToOrganisation(orgId, userId))
+
+      result shouldBe Left(s"Failed to add user $userId to organisation $orgId")
+    }
+  }
+
+  "removeMemberFromOrganisation" should {
+    "successfully remove one" in new Setup {
+      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.succeeds(orgId, userId, organisation)
+
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+
+      result shouldBe Right(organisation)
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, userId, INTERNAL_SERVER_ERROR)
+
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+
+      result shouldBe Left(s"Failed to remove user $userId from organisation $orgId")
     }
   }
 }

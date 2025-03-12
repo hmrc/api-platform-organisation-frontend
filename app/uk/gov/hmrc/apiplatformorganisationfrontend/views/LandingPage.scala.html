@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
@@ -31,7 +32,7 @@
     loggedInSession = loggedInSession
 ) {
 
-    <h1 class="govuk-heading-l">Main organisations landing page </h1>
+    <h1 class="govuk-heading-l">Organisations landing page </h1>
 
     @if(existingSubmissionId.isDefined) {
         @if(isOpenToAnswers) {
@@ -49,9 +50,12 @@
         }
     } else {
         @govukButton(Button(
-            href = Some(controllers.routes.OrganisationController.organisationLandingView.url),
+            href = Some(controllers.routes.OrganisationController.beforeYouStartView.url),
             isStartButton = true,
             content = Text("Create New Organisation")
         ))
     }
+
+    <br><br>
+    <a href="@routes.OrganisationController.forwardToManageMembers" class="govuk-link">Manage Organisation Members</a>
 }

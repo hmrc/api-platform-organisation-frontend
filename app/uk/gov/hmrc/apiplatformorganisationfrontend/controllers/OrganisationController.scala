@@ -22,17 +22,19 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 @Singleton
 class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
-    landingPage: OrganisationLandingPage,
-    mainlandingPage: MainLandingPage,
+    beforeYouStartPage: BeforeYouStartPage,
+    landingPage: LandingPage,
     submissionService: SubmissionService,
+    organisationConnector: OrganisationConnector,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -40,21 +42,37 @@ class OrganisationController @Inject() (
     val appConfig: AppConfig
   ) extends BaseController(mcc) {
 
-  val organisationLandingView: Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Ok(landingPage(Some(request.userSession))))
-  }
-
-  val mainLandingView: Action[AnyContent] = loggedInAction { implicit request =>
+  val landingView: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
-      case Some(submission) => Future.successful(Ok(mainlandingPage(Some(request.userSession), Some(submission.id), submission.status.isOpenToAnswers)))
-      case _                => Future.successful(Ok(mainlandingPage(Some(request.userSession), None)))
+      case Some(submission) => Future.successful(Ok(landingPage(Some(request.userSession), Some(submission.id), submission.status.isOpenToAnswers)))
+      case _                => Future.successful(Ok(landingPage(Some(request.userSession), None)))
     }
   }
 
-  val organisationLandingAction: Action[AnyContent] = loggedInAction { implicit request =>
+  val beforeYouStartView: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(beforeYouStartPage(Some(request.userSession))))
+  }
+
+  val beforeYouStartAction: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.createSubmission(request.userId, request.email).map {
       case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
       case _                => BadRequest("No submission created")
     }
+  }
+
+  def forwardToManageMembers: Action[AnyContent] = loggedInAction { implicit request =>
+    def createOrg(): Future[OrganisationId] = {
+      organisationConnector.createOrganisation(OrganisationName(request.userSession.developer.firstName + "'s Organisation"), request.userSession.developer.userId).map {
+        org => org.id
+      }
+    }
+
+    def getOrgId(): Future[OrganisationId] = {
+      organisationConnector.fetchLatestOrganisationByUserId(request.userSession.developer.userId).flatMap {
+        maybeOrg: Option[Organisation] => maybeOrg.fold(createOrg())(org => Future.successful(org.id))
+      }
+    }
+
+    getOrgId().map(orgId => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ManageMembersController.manageMembers(orgId)))
   }
 }
