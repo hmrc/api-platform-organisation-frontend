@@ -28,6 +28,8 @@
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.SubmissionRequest
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ActualAnswersAsText
 
 @this(layout: Layout,
         govukRadios: GovukRadios,
@@ -36,12 +38,13 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ViewErrorInfo])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ViewErrorInfo])(implicit request: SubmissionRequest[AnyContent], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
 @choiceAsId(choice: PossibleAnswer) = {question-@{choice.htmlValue}-id}
 
+@renderReplaceText(rt:ReplacementText) = @{Html(request.submission.latestInstance.answersToQuestions.get(rt.questionId).fold(rt.default)(ans => ActualAnswersAsText(ans)))}
 @renderStatementText(st: StatementText) = @{Html(st.text)}
 
 @renderStatementLink(sl: StatementLink) = {<a class="govuk-link" href="@{sl.url}" target="_blank">@{sl.text}</a>}
@@ -49,6 +52,7 @@
 @renderCompoundFragment(cs: CompoundFragment) = @{
  HtmlFormat.fill(cs.fragments.map( fragment =>
     fragment match {
+        case rt: ReplacementText => renderReplaceText(rt)
       case st: StatementText => renderStatementText(st)
       case sl: StatementLink => renderStatementLink(sl)
       case _ => Html("<p />")
@@ -58,7 +62,8 @@
 
 @renderNonBulletStatementFragment(nbsf: NonBulletStatementFragment) = @{
   nbsf match {
-    case st: StatementText => renderStatementText(st)
+      case rt: ReplacementText => renderReplaceText(rt)
+      case st: StatementText => renderStatementText(st)
     case sl: StatementLink => renderStatementLink(sl)
     case cs: CompoundFragment => renderCompoundFragment(cs)
   }
@@ -72,6 +77,8 @@
   </ul>
 }
 
+@renderParagraphReplaceText(rt: ReplacementText) = { <p class="govuk-body">@renderReplaceText(rt)</p> }
+
 @renderParagraphStatementText(st: StatementText) = { <p class="govuk-body">@renderStatementText(st)</p> }
 
 @renderParagraphStatementLink(sl: StatementLink) = { <p class="govuk-body">@renderStatementLink(sl)</p> }
@@ -82,7 +89,8 @@
   <p class="govuk-body">
     @{
       statement.fragments.map( fragment => fragment match {
-        case st: StatementText => renderParagraphStatementText(st)
+          case rt: ReplacementText => renderParagraphReplaceText(rt)
+          case st: StatementText => renderParagraphStatementText(st)
         case sl: StatementLink => renderParagraphStatementLink(sl)
         case cs: CompoundFragment => renderParagraphCompoundFragment(cs)
         case sb: StatementBullets => renderStatementBullets(sb)
@@ -198,6 +206,24 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
+@renderCompaniesHouseInputQuestion(question: Question.CompaniesHouseQuestion) = {
+@govukInput(Input(id = questionId,
+    label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
+    name = "answer",
+    inputType = "text",
+    value = currentAnswers match {
+        case Some(ActualAnswer.CompaniesHouseAnswer(value)) => Some(value)
+        case _ => None
+    },
+    hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+    errorMessage = errorInfo.map(err => ErrorMessage(content = Text(err.message)))
+))
+
+@renderMaybeStatement(question.afterStatement)
+
+@renderButtonOrButtons(question.absenceText)
+}
+
 @renderAcknowledgementOnly(question: Question.AcknowledgementOnly) = {
     <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
 }
@@ -208,6 +234,7 @@
     case q: Question.SingleChoiceQuestion => renderSingleChoiceQuestion(q, false)
     case q: Question.MultiChoiceQuestion  => renderMultiChoiceQuestion(q)
     case q: Question.TextQuestion         => renderTextInputQuestion(q)
+    case q: Question.CompaniesHouseQuestion => renderCompaniesHouseInputQuestion(q)
     case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
     case q: Question.DateQuestion  => renderDateQuestion(q)
     case _ => <p>TODO</p>

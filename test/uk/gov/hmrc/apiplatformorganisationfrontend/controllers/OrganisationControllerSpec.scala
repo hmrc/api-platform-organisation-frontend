@@ -138,6 +138,18 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("Continue Organisation entry")
     }
 
+    "return checkAnswers page with button to confirm and send submission" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
+      SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(failSubmission)
+
+      val result = underTest.mainLandingView(fakeRequest)
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Check your answers before you send them")
+      contentAsString(result) should include("Confirm and send")
+    }
+
     "return landing page with button to create new submission if submission for user not found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))

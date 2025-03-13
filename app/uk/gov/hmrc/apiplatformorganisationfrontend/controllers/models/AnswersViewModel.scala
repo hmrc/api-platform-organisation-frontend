@@ -31,6 +31,7 @@ object AnswersViewModel {
   private def convertAnswer(answer: ActualAnswer): Option[String] = answer match {
     case ActualAnswer.SingleChoiceAnswer(value)    => Some(value)
     case ActualAnswer.TextAnswer(value)            => Some(value)
+    case ActualAnswer.CompaniesHouseAnswer(value)  => Some(value)
     case ActualAnswer.DateAnswer(value)            => Some(value.format(dateTimeFormatter))
     case ActualAnswer.MultipleChoiceAnswer(values) => Some(values.mkString)
     case ActualAnswer.NoAnswer                     => Some("n/a")

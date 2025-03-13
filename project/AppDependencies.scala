@@ -4,7 +4,7 @@ object AppDependencies {
 
   private val bootstrapVersion = "9.7.0"
   private val tpdDomainVersion = "0.12.0"
-  private val orgDomainVersion = "0.1.0"
+  private val orgDomainVersion = "0.3.0-SNAPSHOT"
 
   val compile = Seq(
     "uk.gov.hmrc"        %% "bootstrap-frontend-play-30" % bootstrapVersion,

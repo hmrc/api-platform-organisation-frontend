@@ -100,7 +100,19 @@ class QuestionControllerSpec
       contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
     }
 
-    "succeed and check for label, hintText, text question" in new Setup {
+    "succeed and check for label, text question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgName.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result) contains ("What is your organisation’s name?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result) contains ("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, companies house question" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionCompanyNumber.id.value}"
@@ -206,6 +218,14 @@ class QuestionControllerSpec
 
     "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {
       SubmissionServiceMock.Fetch.thenReturnsWrongUser(aSubmission.withIncompleteProgress())
+
+      val result = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe NOT_FOUND
+    }
+
+    "fail with NOT FOUND if submission not found" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturnsNone()
 
       val result = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
 
