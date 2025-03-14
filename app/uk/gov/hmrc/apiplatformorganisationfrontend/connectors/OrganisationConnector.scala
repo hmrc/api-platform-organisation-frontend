@@ -119,24 +119,25 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def addMemberToOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def addMemberToOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
 
     metrics.record(api) {
       http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
-        .withBody(Json.toJson(UpdateMembersRequest(userId)))
+        .withBody(Json.toJson(UpdateMembersRequest(userId, email)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
   }
 
-  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
 
     metrics.record(api) {
       http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/member/$userId")
+        .withBody(Json.toJson(UpdateMembersRequest(userId, email)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
@@ -155,7 +156,7 @@ object OrganisationConnector {
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
   implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 
-  case class UpdateMembersRequest(userId: UserId)
+  case class UpdateMembersRequest(userId: UserId, email: LaxEmailAddress)
   implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
 
   case class CreateOrganisationRequest(organisationName: OrganisationName, requestedBy: UserId)

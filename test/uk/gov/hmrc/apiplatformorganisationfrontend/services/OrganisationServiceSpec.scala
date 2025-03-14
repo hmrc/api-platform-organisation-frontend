@@ -121,7 +121,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
   "addMemberToOrganisation" should {
     "get or create user in TPD, then call back end connector to add user id to org" in new Setup {
       ThirdPartyDeveloperConnectorMock.GetOrCreateUserId.succeeds(userId)
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Right(organisation)))
+      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
 
       val result = await(underTest.addMemberToOrganisation(orgId, email))
 
@@ -131,7 +131,9 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
     "return left if fails to add new member" in new Setup {
       ThirdPartyDeveloperConnectorMock.GetOrCreateUserId.succeeds(userId)
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Left(s"Failed to add user $userId to organisation $orgId")))
+      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
+        Left(s"Failed to add user $userId to organisation $orgId")
+      ))
 
       val result = await(underTest.addMemberToOrganisation(orgId, email))
 
@@ -142,20 +144,20 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
   "removeMemberFromOrganisation" should {
     "call back end connector to remove user id from org" in new Setup {
-      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(Right(organisation)))
+      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
 
       result.isRight shouldBe true
       result.value.id shouldBe orgId
     }
 
     "return left if fails to remove member" in new Setup {
-      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId])(*)).thenReturn(successful(
+      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
         Left(s"Failed to remove user $userId from organisation $orgId")
       ))
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId))
+      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
 
       result.isLeft shouldBe true
       result.left.value shouldBe s"Failed to remove user $userId from organisation $orgId"

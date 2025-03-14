@@ -60,11 +60,11 @@ class OrganisationService @Inject() (
   def addMemberToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     for {
       userId <- thirdPartyDeveloperConnector.getOrCreateUserId(emailAddress)
-      org    <- organisationConnector.addMemberToOrganisation(id, userId)
+      org    <- organisationConnector.addMemberToOrganisation(id, userId, emailAddress)
     } yield org
   }
 
-  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
-    organisationConnector.removeMemberFromOrganisation(id, userId)
+  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    organisationConnector.removeMemberFromOrganisation(id, userId, emailAddress)
   }
 }

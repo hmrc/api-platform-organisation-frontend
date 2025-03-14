@@ -56,6 +56,7 @@
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
               <h3 class="govuk-fieldset__heading">Are you sure you want to remove this member from this organisation?</h3>
             </legend>
+            <input id="email" name="email" type="hidden" value="@viewModel.member.email.text"/>
             <span id="remove-team-member-error" class="govuk-error-message">
               <span class="govuk-visually-hidden">Error:</span> @fieldError(form.errors, "confirm")
             </span>
