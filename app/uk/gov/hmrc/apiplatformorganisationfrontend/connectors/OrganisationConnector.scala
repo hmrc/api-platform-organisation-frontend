@@ -27,7 +27,8 @@ import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId, OrganisationName}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
 
 @Singleton
 class OrganisationConnector @Inject() (
@@ -42,16 +43,22 @@ class OrganisationConnector @Inject() (
 
   val api = API("api-platfrom-organisation")
 
-  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] = {
+  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier)
+      : Future[Either[ValidationErrors, ExtendedSubmission]] = {
     import cats.implicits._
-    val failed = (err: UpstreamErrorResponse) => s"Failed to record answer for submission $submissionId and question ${questionId.value}"
 
     metrics.record(api) {
       http
         .post(url"${config.serviceBaseUrl}/submission/$submissionId/question/${questionId.value}")
         .withBody(Json.toJson(OutboundRecordAnswersRequest(rawAnswers)))
-        .execute[Either[UpstreamErrorResponse, ExtendedSubmission]]
-        .map(_.leftMap(failed))
+        .execute[HttpResponse]
+        .map(resp =>
+          resp.status match {
+            case 200 => resp.json.as[ExtendedSubmission].asRight
+            case 400 => resp.json.as[ValidationErrors].asLeft
+            case _   => ValidationErrors(ValidationError(message = s"Failed to record answer for submission $submissionId and question ${questionId.value}")).asLeft
+          }
+        )
     }
   }
 
