@@ -41,7 +41,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     val orgId             = OrganisationId.random
     val userId            = UserId.random
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, Set(Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
     val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(userDetails))
 

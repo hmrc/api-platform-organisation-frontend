@@ -39,7 +39,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     val underTest                  = app.injector.instanceOf[OrganisationConnector]
 
     val orgId        = OrganisationId.random
-    val organisation = Organisation(orgId, OrganisationName("Org name"), Set(Member(userId)))
+    val organisation = Organisation(orgId, OrganisationName("Org name"), Organisation.OrganisationType.UkLimitedCompany, Set(Member(userId)))
     val email        = LaxEmailAddress("bill@example.com")
   }
 
