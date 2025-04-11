@@ -23,12 +23,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import cats.data.NonEmptyList
 
 import play.api.libs.crypto.CookieSigner
-import play.api.libs.json.{Json, OFormat, OWrites, Reads}
+import play.api.libs.json.{Json, OWrites, Reads}
 import play.api.mvc.{MessagesControllerComponents, _}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
@@ -41,16 +42,6 @@ object QuestionsController extends NonEmptyListFormatters {
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
   implicit val readsInboundRecordAnswersRequest: Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
 
-  case class ViewErrorInfo private (summary: String, message: String)
-
-  object ViewErrorInfo {
-    implicit val format: OFormat[ViewErrorInfo] = Json.format[ViewErrorInfo]
-
-    def apply(errorInfo: ErrorInfo): ViewErrorInfo = errorInfo match {
-      case ErrorInfo(summary, Some(message)) => new ViewErrorInfo(summary, message)
-      case ErrorInfo(summary, None)          => new ViewErrorInfo(summary, summary)
-    }
-  }
 }
 
 @Singleton
@@ -68,13 +59,11 @@ class QuestionsController @Inject() (
     with EitherTHelper[String] {
 
   import cats.instances.future.catsStdInstancesForFuture
-  import QuestionsController._
 
   private def processQuestion(
-      submissionId: SubmissionId,
       questionId: Question.Id,
       onFormAnswer: Option[ActualAnswer],
-      errorInfo: Option[ErrorInfo]
+      errorInfo: Option[ValidationErrors]
     )(
       submitAction: Call
     )(implicit request: SubmissionRequest[AnyContent]
@@ -90,22 +79,22 @@ class QuestionsController @Inject() (
       } yield {
         errorInfo.fold[Result](
           Ok(questionView(question, submitAction, persistedAnswer, None))
-        )(ei => BadRequest(questionView(question, submitAction, onFormAnswer, Some(ViewErrorInfo(ei)))))
+        )(ei => BadRequest(questionView(question, submitAction, onFormAnswer, Some(ei))))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
   }
 
-  def showQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ErrorInfo] = None): Action[AnyContent] =
+  def showQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
       val submitAction = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.recordAnswer(submissionId, questionId)
-      processQuestion(submissionId, questionId, onFormAnswer, errorInfo)(submitAction)
+      processQuestion(questionId, onFormAnswer, errorInfo)(submitAction)
     }
 
-  def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ErrorInfo] = None): Action[AnyContent] =
+  def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
       val submitAction = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.updateAnswer(submissionId, questionId)
-      processQuestion(submissionId, questionId, onFormAnswer, errorInfo)(submitAction)
+      processQuestion(questionId, onFormAnswer, errorInfo)(submitAction)
     }
 
   private def processAnswer(
@@ -115,24 +104,17 @@ class QuestionsController @Inject() (
       success: (ExtendedSubmission) => Future[Result]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    def failed(answers: List[String]) = (msg: String) => {
-      val defaultMessage = "Please provide an answer to the question"
+    def failed(answers: List[String]) = (errors: ValidationErrors) => {
       import cats.implicits._
 
       val question = request.submission.findQuestion(questionId).get
-
-      val errorInfo = (question match {
-        case q: Question with ErrorMessaging => q.errorInfo
-        case _                               => None
-      })
-        .getOrElse(ErrorInfo(defaultMessage, defaultMessage))
 
       val onFormAnswer = question match {
         case q: Question.TextQuestion => answers.headOption.map(ActualAnswer.TextAnswer)
         case _                        => None
       }
 
-      showQuestion(submissionId, questionId, onFormAnswer, errorInfo.some)(request)
+      showQuestion(submissionId, questionId, onFormAnswer, errors.some)(request)
     }
 
     val formValues     = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
@@ -140,14 +122,8 @@ class QuestionsController @Inject() (
     val rawAnswers     = formValues.get("answer").fold(List.empty[String])(_.toList.filter(_.nonEmpty))
     val answers        = rawAnswers.map(a => a.trim())
 
-    import cats.instances.future.catsStdInstancesForFuture
-
-    (
-      for {
-        result <- fromEitherF(submissionService.recordAnswer(submissionId, questionId, trimmedAnswers))
-      } yield result
-    )
-      .fold(failed(answers), success)
+    submissionService.recordAnswer(submissionId, questionId, trimmedAnswers)
+      .map(_.fold(failed(answers), success))
       .flatten
   }
 

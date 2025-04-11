@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 import play.api.http.Status.OK
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId}
@@ -169,12 +169,13 @@ object ApiPlatformOrganisationStub {
       )
     }
 
-    def fails(submissionId: SubmissionId, questionId: Question.Id, status: Int): StubMapping = {
+    def fails(submissionId: SubmissionId, questionId: Question.Id, status: Int, body: JsValue = Json.obj()): StubMapping = {
       stubFor(
         post(urlEqualTo(s"/submission/$submissionId/question/${questionId.value}"))
           .willReturn(
             aResponse()
               .withStatus(status)
+              .withBody(body.toString())
           )
       )
     }

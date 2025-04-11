@@ -19,12 +19,11 @@
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 @import play.api.mvc.Call
 @import play.api.mvc.Request
-@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.ViewErrorInfo
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
-@import uk.gov.hmrc.govukfrontend.views.html.components.GovukBackLink
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
@@ -37,7 +36,7 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ViewErrorInfo])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -118,7 +117,9 @@
 }
 
 @renderMultiChoiceQuestion(question: Question.MultiChoiceQuestion) = {
-  @govukCheckboxes(Checkboxes(name = "answer",
+  @govukCheckboxes(Checkboxes(name = Question.answerKey,
+      idPrefix = Some(Question.answerKey),
+      errorMessage = errorInfo.flatMap(_.errors.find(_.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message))),
       fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
       hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
       items = question.choices.map(choice => CheckboxItem(content = Text(choice.value),
@@ -136,7 +137,8 @@
 }
 
 @renderSingleChoiceQuestion(question: Question.SingleChoiceQuestion, inline: Boolean) = {
-  @govukRadios(Radios(name = "answer",
+  @govukRadios(Radios(name = Question.answerKey,
+      errorMessage = errorInfo.flatMap(_.errors.find(_.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message))),
       fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
       hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
       classes = if(inline) "govuk-radios--inline" else "",
@@ -155,22 +157,29 @@
 @renderDateQuestion(question: Question.DateQuestion) = {
     @govukDateInput(DateInput(
         id = questionId,
+        errorMessage = errorInfo.flatMap(_.errors.find(_.key == "day")).map(err => ErrorMessage(content = Text(err.message))),
         hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
         items = Seq(
             InputItem(name = "day", value = currentAnswers match {
                 case Some(ActualAnswer.DateAnswer(value)) => Some(value.getDayOfMonth.toString)
                 case _ => None
-            }, classes = "govuk-input--width-2"
+            }, classes = "govuk-input--width-2" + errorInfo
+            .flatMap(_.errors.find(e => e.key == "day" || e.key == Question.answerKey))
+            .fold("")(_ => " govuk-input--error")
             ),
             InputItem(name = "month", value = currentAnswers match {
                 case Some(ActualAnswer.DateAnswer(value)) => Some(value.getMonthValue.toString)
                 case _ => None
-            }, classes = "govuk-input--width-2"
+            }, classes = "govuk-input--width-2" + errorInfo
+            .flatMap(_.errors.find(e => e.key == "month" || e.key == Question.answerKey))
+            .fold("")(_ => " govuk-input--error")
             ),
             InputItem(name = "year", value = currentAnswers match {
                 case Some(ActualAnswer.DateAnswer(value)) => Some(value.getYear.toString)
                 case _ => None
-            }, classes = "govuk-input--width-4"
+            }, classes = "govuk-input--width-4" + errorInfo
+            .flatMap(_.errors.find(e => e.key == "year" || e.key == Question.answerKey))
+            .fold("")(_ => " govuk-input--error")
             )
         )
 
@@ -186,23 +195,25 @@
         legend = None,
         html = HtmlFormat.fill(Seq(
             govukInput(Input(
-                id = "address-line-1",
+                id = "addressLineOne",
                 name = "addressLineOne",
                 label = Label(
                     content = Text("Address line 1")
                 ),
-              value = currentAnswers match {
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "addressLineOne")).map(err => ErrorMessage(content = Text(err.message))),
+                value = currentAnswers match {
                   case Some(ActualAnswer.AddressAnswer(add)) => add.addressLineOne
                   case _ => None
               },
                 autocomplete = Some("address-line1")
             )),
             govukInput(Input(
-                id = "address-line-2",
+                id = "addressLineTwo",
                 name = "addressLineTwo",
                 label = Label(
                     content = Text("Address line 2 (optional)")
                 ),
+
                 value = currentAnswers match {
                     case Some(ActualAnswer.AddressAnswer(add)) => add.addressLineTwo
                     case _ => None
@@ -210,7 +221,7 @@
                 autocomplete = Some("address-line2")
             )),
             govukInput(Input(
-                id = "address-town",
+                id = "town",
                 name = "locality",
                 label = Label(
                     content = Text("Town or city")
@@ -223,7 +234,7 @@
                 autocomplete = Some("address-level2")
             )),
             govukInput(Input(
-                id = "address-region",
+                id = "region",
                 name = "region",
                 label = Label(
                     content = Text("Region")
@@ -236,8 +247,9 @@
                 autocomplete = Some("address-level1")
             )),
             govukInput(Input(
-                id = "address-postcode",
+                id = "postcode",
                 name = "postcode",
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "postcode")).map(err => ErrorMessage(content = Text(err.message))),
                 label = Label(
                     content = Text("Postcode")
                 ),
@@ -257,16 +269,16 @@
 }
 
 @renderTextInputQuestion(question: Question.TextQuestion) = {
-    @govukInput(Input(id = questionId,
+    @govukInput(Input(id = Question.answerKey,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
-        name = "answer",
+        name = Question.answerKey,
         inputType = "text",
         value = currentAnswers match {
             case Some(ActualAnswer.TextAnswer(value)) => Some(value)
             case _ => None
         },
         hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
-        errorMessage = errorInfo.map(err => ErrorMessage(content = Text(err.message)))
+        errorMessage = errorInfo.flatMap(ei => ei.errors.find(e => e.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message)))
     ))
 
     @renderMaybeStatement(question.afterStatement)
@@ -285,8 +297,8 @@
     case q: Question.MultiChoiceQuestion  => renderMultiChoiceQuestion(q)
     case q: Question.TextQuestion         => renderTextInputQuestion(q)
     case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
-    case q: Question.DateQuestion  => renderDateQuestion(q)
-    case q: Question.AddressQuestion  => renderAddressQuestion(q)
+    case q: Question.DateQuestion         => renderDateQuestion(q)
+    case q: Question.AddressQuestion      => renderAddressQuestion(q)
     case _ => <p>TODO</p>
   }
 }
@@ -312,9 +324,9 @@
       </h2>
       <div class="govuk-error-summary__body">
         <ul class="govuk-list govuk-error-summary__list">
-          <li>
-            <a href="#@questionId">@{errorInfo.get.summary}</a>
-          </li>
+        @errorInfo.map(ei=>ei.errors.map(err=> {
+                <li><a href={s"#${err.key}"}>{err.message}</a></li>
+        }))
         </ul>
       </div>
     </div>

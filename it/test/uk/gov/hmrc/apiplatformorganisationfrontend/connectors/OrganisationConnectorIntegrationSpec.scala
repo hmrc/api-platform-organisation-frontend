@@ -20,11 +20,13 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.{Application => PlayApplication, Configuration, Mode}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationId, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
 
@@ -181,6 +183,16 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
 
       result.isLeft shouldBe true
+    }
+
+    "fail when the creation call returns a validation error" in new Setup {
+      private val errors: ValidationErrors = ValidationErrors(ValidationError(message = "Your answer is wrong"))
+      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, BAD_REQUEST, Json.toJson(errors))
+
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
+
+      result.isLeft shouldBe true
+      result shouldBe Left(errors)
     }
   }
 

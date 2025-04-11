@@ -33,13 +33,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithCSRFAddToken
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, QuestionView}
@@ -113,7 +113,7 @@ class QuestionControllerSpec
       contentAsString(result) contains ("It is 8 characters. For example, 01234567 or AC012345.") shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(
         result
-      ) contains (s"""aria-describedby="question-${OrganisationDetails.questionCompanyNumber.id.value}-id-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      ) contains (s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
       contentAsString(result) contains ("<title>") shouldBe true
     }
 
@@ -180,17 +180,9 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val result =
-        controller.showQuestion(aSubmission.id, testQuestionIdsOfInterest.organisationTypeId, None, Some(ErrorInfo("blah", "message")))(loggedInRequest.withCSRFToken)
-
-      status(result) shouldBe BAD_REQUEST
-      contentAsString(result) contains ("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
-    }
-
-    "display fail and show error summary" in new Setup {
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-
-      val result =
-        controller.showQuestion(aSubmission.id, testQuestionIdsOfInterest.organisationTypeId, None, Some(ErrorInfo("blah", None)))(loggedInRequest.withCSRFToken)
+        controller.showQuestion(aSubmission.id, testQuestionIdsOfInterest.organisationTypeId, None, Some(ValidationErrors(ValidationError(message = "blah"))))(
+          loggedInRequest.withCSRFToken
+        )
 
       status(result) shouldBe BAD_REQUEST
       contentAsString(result) contains ("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
@@ -247,7 +239,7 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturns(aSubmission.withIncompleteProgress())
       private val answer1 = "Bobs Burgers"
-      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer1, "submit-action" -> "save")
 
       val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 
@@ -257,10 +249,10 @@ class QuestionControllerSpec
 
     "succeed when answer given and trim answer" in new Setup {
       private val answer1 = "  Bob's application  "
-      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer1, "submit-action" -> "save")
 
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map("answer" -> Seq(answer1.trim()), "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map(Question.answerKey -> Seq(answer1.trim()), "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
 
       val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 
@@ -270,10 +262,10 @@ class QuestionControllerSpec
 
     "succeed when empty answer given" in new Setup {
       private val answer1 = "   "
-      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer1, "submit-action" -> "save")
 
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map("answer" -> Seq.empty, "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsForAnswer(Map(Question.answerKey -> Seq.empty, "submit-action" -> Seq("save")), aSubmission.withIncompleteProgress())
 
       val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(request.withCSRFToken)
 
@@ -281,11 +273,11 @@ class QuestionControllerSpec
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgAddress.id.value}")
     }
 
-    "fail if invalid answer provided and returns custom error message" in new Setup {
+    "fail if invalid answer provided and returns downstream error" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturnsError()
       private val invalidEmailAnswer = "bob"
-      private val request            = loggedInRequest.withFormUrlEncodedBody("answer" -> invalidEmailAnswer, "submit-action" -> "save")
+      private val request            = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidEmailAnswer, "submit-action" -> "save")
 
       val result = controller.recordAnswer(aSubmission.id, ResponsibleIndividualDetails.question2.id)(request.withCSRFToken)
 
@@ -293,13 +285,7 @@ class QuestionControllerSpec
 
       val body = contentAsString(result)
 
-      val errorInfo = ResponsibleIndividualDetails.question2.errorInfo.get
-
-      val expectedErrorSummary = errorInfo.summary
-      body should include(expectedErrorSummary)
-
-      val expectedErrorMessage = errorInfo.message.getOrElse(errorInfo.summary)
-      body should include(expectedErrorMessage)
+      body should include("Failed to record answer for submission")
     }
 
   }
@@ -323,7 +309,7 @@ class QuestionControllerSpec
       SubmissionServiceMock.RecordAnswer.thenReturns(fullyAnsweredSubmission)
 
       private val answer1 = "Yes"
-      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer1, "submit-action" -> "save")
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer1, "submit-action" -> "save")
 
       val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
 
@@ -400,7 +386,7 @@ class QuestionControllerSpec
       SubmissionServiceMock.RecordAnswer.thenReturns(modifiedSubmission)
 
       private val answer  = "Partnership"
-      private val request = loggedInRequest.withFormUrlEncodedBody("answer" -> answer, "submit-action" -> "save")
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save")
 
       private val firstQuestionId    = OrganisationDetails.questionOrgType.id
       private val followUpQuestionId = OrganisationDetails.questionPartnershipType.id

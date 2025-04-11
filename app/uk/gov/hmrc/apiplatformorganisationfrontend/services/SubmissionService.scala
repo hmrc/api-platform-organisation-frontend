@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 
 @Singleton
@@ -41,6 +42,7 @@ class SubmissionService @Inject() (organisationConnector: OrganisationConnector)
 
   def fetch(id: SubmissionId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = organisationConnector.fetchSubmission(id)
 
-  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[Either[String, ExtendedSubmission]] =
+  def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier)
+      : Future[Either[ValidationErrors, ExtendedSubmission]] =
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
 }
