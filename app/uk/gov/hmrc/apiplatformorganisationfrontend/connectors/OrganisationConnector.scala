@@ -111,10 +111,10 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def createOrganisation(organisationName: OrganisationName, userId: UserId)(implicit hc: HeaderCarrier): Future[Organisation] = {
+  def createOrganisation(organisationName: OrganisationName, organisationType: Organisation.OrganisationType, userId: UserId)(implicit hc: HeaderCarrier): Future[Organisation] = {
     metrics.record(api) {
       http.post(url"${config.serviceBaseUrl}/organisation/create")
-        .withBody(Json.toJson(CreateOrganisationRequest(organisationName, userId)))
+        .withBody(Json.toJson(CreateOrganisationRequest(organisationName, organisationType, userId)))
         .execute[Organisation]
     }
   }
@@ -159,6 +159,6 @@ object OrganisationConnector {
   case class UpdateMembersRequest(userId: UserId, email: LaxEmailAddress)
   implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
 
-  case class CreateOrganisationRequest(organisationName: OrganisationName, requestedBy: UserId)
+  case class CreateOrganisationRequest(organisationName: OrganisationName, organisationType: Organisation.OrganisationType, requestedBy: UserId)
   implicit val writesCreateOrganisationRequest: Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
 }

@@ -62,7 +62,11 @@ class OrganisationController @Inject() (
 
   def forwardToManageMembers: Action[AnyContent] = loggedInAction { implicit request =>
     def createOrg(): Future[OrganisationId] = {
-      organisationConnector.createOrganisation(OrganisationName(request.userSession.developer.firstName + "'s Organisation"), request.userSession.developer.userId).map {
+      organisationConnector.createOrganisation(
+        OrganisationName(request.userSession.developer.firstName + "'s Organisation"),
+        Organisation.OrganisationType.UkLimitedCompany,
+        request.userSession.developer.userId
+      ).map {
         org => org.id
       }
     }

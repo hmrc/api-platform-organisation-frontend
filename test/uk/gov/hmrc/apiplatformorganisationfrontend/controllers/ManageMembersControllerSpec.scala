@@ -79,7 +79,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val orgId             = OrganisationId.random
     val userId            = UserId.random
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, Set(Member(userId)))
     val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(RegisteredOrUnregisteredUser(userId, email, true, true)))
     val orgWithMember     = OrganisationWithMemberDetails(organisation, RegisteredOrUnregisteredUser(userId, email, true, true))
 

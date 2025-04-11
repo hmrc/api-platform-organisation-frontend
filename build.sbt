@@ -3,7 +3,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 Global / bloopAggregateSourceDependencies := true
 Global / bloopExportJarClassifiers := Some(Set("sources"))
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.16"
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 ThisBuild / semanticdbEnabled := true
