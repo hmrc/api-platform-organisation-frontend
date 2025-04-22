@@ -113,7 +113,7 @@ class QuestionControllerSpec
       contentAsString(result) contains ("It is 8 characters. For example, 01234567 or AC012345.") shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(
         result
-      ) contains (s"""aria-describedby="question-${OrganisationDetails.questionCompanyNumber.id.value}-id-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      ) contains (s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
       contentAsString(result) contains ("<title>") shouldBe true
     }
 
