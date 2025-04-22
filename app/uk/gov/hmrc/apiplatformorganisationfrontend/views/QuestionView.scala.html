@@ -269,7 +269,7 @@
 }
 
 @renderTextInputQuestion(question: Question.TextQuestion) = {
-    @govukInput(Input(id = questionId,
+    @govukInput(Input(id = Question.answerKey,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
         name = Question.answerKey,
         inputType = "text",
