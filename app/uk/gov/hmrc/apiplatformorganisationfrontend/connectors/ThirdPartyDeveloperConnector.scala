@@ -25,13 +25,8 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
 
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
-import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{
-  FindOrCreateUserIdRequest,
-  FindUserIdResponse,
-  GetRegisteredOrUnregisteredUsersRequest,
-  GetRegisteredOrUnregisteredUsersResponse
-}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersRequest, GetRegisteredOrUnregisteredUsersResponse}
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{UserSession, UserSessionId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
@@ -52,10 +47,4 @@ class ThirdPartyDeveloperConnector @Inject() (
     http.post(url"$serviceBaseUrl/developers/get-registered-and-unregistered")
       .withBody(Json.toJson(GetRegisteredOrUnregisteredUsersRequest(users)))
       .execute[GetRegisteredOrUnregisteredUsersResponse]
-
-  def getOrCreateUserId(emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[UserId] =
-    http.post(url"$serviceBaseUrl/developers/user-id")
-      .withBody(Json.toJson(FindOrCreateUserIdRequest(emailAddress)))
-      .execute[FindUserIdResponse]
-      .map(_.userId)
 }
