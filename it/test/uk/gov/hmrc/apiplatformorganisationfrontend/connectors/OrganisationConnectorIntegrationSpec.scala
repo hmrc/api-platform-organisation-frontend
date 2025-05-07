@@ -226,7 +226,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "successfully add one" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.succeeds(orgId, organisation)
 
-      val result = await(underTest.addMemberToOrganisation(orgId, userId, email))
+      val result = await(underTest.addMemberToOrganisation(orgId, email))
 
       result shouldBe Right(organisation)
     }
@@ -234,9 +234,9 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     "fail when the call returns an error" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.addMemberToOrganisation(orgId, userId, email))
+      val result = await(underTest.addMemberToOrganisation(orgId, email))
 
-      result shouldBe Left(s"Failed to add user $userId to organisation $orgId")
+      result shouldBe Left(s"Failed to add user $email to organisation $orgId")
     }
   }
 
