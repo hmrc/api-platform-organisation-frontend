@@ -126,13 +126,13 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def addMemberToOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def addMemberToOrganisation(id: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
-    val failed = (err: UpstreamErrorResponse) => s"Failed to add user $userId to organisation $id"
+    val failed = (err: UpstreamErrorResponse) => s"Failed to add user $email to organisation $id"
 
     metrics.record(api) {
       http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
-        .withBody(Json.toJson(UpdateMembersRequest(userId, email)))
+        .withBody(Json.toJson(AddMemberRequest(email)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
@@ -144,7 +144,7 @@ class OrganisationConnector @Inject() (
 
     metrics.record(api) {
       http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/member/$userId")
-        .withBody(Json.toJson(UpdateMembersRequest(userId, email)))
+        .withBody(Json.toJson(RemoveMemberRequest(userId, email)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
@@ -163,8 +163,11 @@ object OrganisationConnector {
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
   implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 
-  case class UpdateMembersRequest(userId: UserId, email: LaxEmailAddress)
-  implicit val writesUpdateMembersRequest: Writes[UpdateMembersRequest] = Json.writes[UpdateMembersRequest]
+  case class AddMemberRequest(email: LaxEmailAddress)
+  implicit val writesAddMembersRequest: Writes[AddMemberRequest] = Json.writes[AddMemberRequest]
+
+  case class RemoveMemberRequest(userId: UserId, email: LaxEmailAddress)
+  implicit val writesRemoveMemberRequest: Writes[RemoveMemberRequest] = Json.writes[RemoveMemberRequest]
 
   case class CreateOrganisationRequest(organisationName: OrganisationName, organisationType: Organisation.OrganisationType, requestedBy: UserId)
   implicit val writesCreateOrganisationRequest: Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
