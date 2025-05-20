@@ -120,8 +120,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
   "addMemberToOrganisation" should {
     "get or create user in TPD, then call back end connector to add user id to org" in new Setup {
-      ThirdPartyDeveloperConnectorMock.GetOrCreateUserId.succeeds(userId)
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
+      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
 
       val result = await(underTest.addMemberToOrganisation(orgId, email))
 
@@ -130,8 +129,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     }
 
     "return left if fails to add new member" in new Setup {
-      ThirdPartyDeveloperConnectorMock.GetOrCreateUserId.succeeds(userId)
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
+      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(
         Left(s"Failed to add user $userId to organisation $orgId")
       ))
 

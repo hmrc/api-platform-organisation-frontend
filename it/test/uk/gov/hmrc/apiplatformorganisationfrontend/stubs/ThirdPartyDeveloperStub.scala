@@ -76,33 +76,6 @@ object ThirdPartyDeveloperStub {
     }
   }
 
-  object GetOrCreateUserId {
-
-    def succeeds(userId: UserId): StubMapping = {
-      stubFor(
-        post(urlPathEqualTo("/developers/user-id"))
-          .willReturn(
-            aResponse()
-              .withStatus(OK)
-              .withHeader("Content-Type", "application/json")
-              .withBody(s"""{
-                           |  "userId": "$userId"
-                           |}""".stripMargin)
-          )
-      )
-    }
-
-    def throwsAnException() = {
-      stubFor(
-        post(urlPathEqualTo("/developers/user-id"))
-          .willReturn(
-            aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR)
-          )
-      )
-    }
-  }
-
   object GetRegisteredOrUnregisteredUsers {
 
     def succeeds(userId: UserId, email: LaxEmailAddress): StubMapping = {

@@ -84,24 +84,6 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
     }
   }
 
-  "getOrCreateUserId" should {
-    "return a user id" in new Setup {
-      ThirdPartyDeveloperStub.GetOrCreateUserId.succeeds(userId)
-
-      private val result = await(underTest.getOrCreateUserId(userEmail))
-
-      result shouldBe userId
-    }
-
-    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
-      ThirdPartyDeveloperStub.GetOrCreateUserId.throwsAnException()
-
-      intercept[UpstreamErrorResponse] {
-        await(underTest.getOrCreateUserId(userEmail))
-      }.statusCode shouldBe INTERNAL_SERVER_ERROR
-    }
-  }
-
   "getRegisteredOrUnregisteredUsers" should {
     "return a list of user details" in new Setup {
       ThirdPartyDeveloperStub.GetRegisteredOrUnregisteredUsers.succeeds(userId, userEmail)
