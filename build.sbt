@@ -40,7 +40,6 @@ lazy val microservice = Project("api-platform-organisation-frontend", file("."))
       "uk.gov.hmrc.apiplatformorganisationfrontend.controllers"
     )
   )
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
 
 lazy val it = (project in file("it"))
