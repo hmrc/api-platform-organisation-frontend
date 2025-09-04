@@ -25,8 +25,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 @Singleton
 class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) {
   val thirdPartyDeveloperUrl: String = baseUrl("third-party-developer")
-  val devhubSupportFrontendBaseUrl   = baseUrl("devhub-support-frontend")
-  val devhubSupportFrontendUrl       = s"$devhubSupportFrontendBaseUrl/devhub-support"
 
   val serviceName = "HMRC Developer Hub"
 
@@ -39,7 +37,9 @@ class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config)
   lazy val apiDocumentationFrontendUrl: String     = internalPlatformHost.getOrElse("http://localhost:9680")
   lazy val thirdPartyDeveloperFrontendUrl: String  = internalPlatformHost.getOrElse("http://localhost:9685")
   lazy val reportProblemHost: String               = internalPlatformHost.getOrElse("http://localhost:9250")
-  val securedCookie: Boolean                       = getConfigDefaulted("cookie.secure", true)
+  lazy val securedCookie: Boolean                  = getConfigDefaulted("cookie.secure", true)
+  lazy val devhubSupportFrontendBaseUrl            = internalPlatformHost.getOrElse(baseUrl("devhub-support-frontend"))
+  lazy val devhubSupportFrontendUrl                = s"$devhubSupportFrontendBaseUrl/devhub-support"
 
   lazy val keepAliveUrl: String = s"$thirdPartyDeveloperFrontendUrl/developer/keep-alive"
   lazy val logOutUrl: String    = s"$thirdPartyDeveloperFrontendUrl/developer/logout"
