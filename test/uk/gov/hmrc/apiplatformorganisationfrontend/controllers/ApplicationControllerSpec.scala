@@ -24,14 +24,17 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.Helpers._
 import play.api.test.{CSRFTokenHelper, FakeRequest}
+import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaboratorsFixtures
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationIdFixtures
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.AddApplicationsView
 
@@ -42,6 +45,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with UserBuilder
     with LocalUserIdTracker
     with OrganisationIdFixtures
+  with ApplicationWithCollaboratorsFixtures
     with FixedClock {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -49,11 +53,11 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
   trait Setup
   extends ThirdPartyDeveloperConnectorMockModule
+    with OrganisationServiceMockModule
+    with ApplicationServiceMockModule
       with LocalUserIdTracker {
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
-    val applicationService                   = app.injector.instanceOf[ApplicationService]
-    val organisationService               = app.injector.instanceOf[OrganisationService]
     val addApplicationsView               = app.injector.instanceOf[AddApplicationsView]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
@@ -62,13 +66,15 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val underTest =
       new ApplicationController(
         mcc,
-        applicationService,
-        organisationService,
+        ApplicationServiceMock.aMock,
+        OrganisationServiceMock.aMock,
         addApplicationsView,
         ThirdPartyDeveloperConnectorMock.aMock,
         errorHandler,
         cookieSigner
       )
+
+    val organisation      = Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(user.userId)))
 
     implicit val loggedInUser: User = user
 
@@ -77,6 +83,9 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "GET /organisation/:oid/add-applications" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
 
       val result = underTest.addApplications(organisationIdOne)(fakeRequest)

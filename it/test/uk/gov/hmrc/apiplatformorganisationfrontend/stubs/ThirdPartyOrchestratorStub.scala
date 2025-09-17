@@ -20,12 +20,14 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
+import play.api.test.Helpers.OK
+import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators._
+import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.{ApplicationWithCollaborators, ApplicationWithCollaboratorsFixtures}
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.WireMockExtensions.withJsonRequestBodySyntax
 
-object ThirdPartyOrchestratorStub {
+object ThirdPartyOrchestratorStub extends ApplicationWithCollaboratorsFixtures {
 
   object GetAppsForResponsibleIndividualOrAdmin {
 
@@ -63,7 +65,6 @@ object ThirdPartyOrchestratorStub {
           .willReturn(
             aResponse()
               .withStatus(OK)
-              .withHeader("Content-Type", "application/json")
           )
       )
     }

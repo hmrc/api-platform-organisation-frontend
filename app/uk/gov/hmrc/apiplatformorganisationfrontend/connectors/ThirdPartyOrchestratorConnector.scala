@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
 import play.api.Logging
+import play.api.http.Status.OK
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
@@ -47,5 +48,13 @@ class ThirdPartyOrchestratorConnector @Inject()(
   def applicationCommandDispatch(applicationId: String, request: DispatchRequest)(implicit hc: HeaderCarrier): Future[Unit] =
     http.patch(url"$serviceBaseUrl/applications/$applicationId")
       .withBody(Json.toJson(request))
-      .execute[Unit]
+      .execute[HttpResponse]
+      .map(response =>
+        response.status match {
+          case OK          => ()
+          case status      =>
+            logger.error(s"Dispatch failed with status code: $status")
+            throw new InternalServerException(s"Failed calling dispatch $status")
+        })
+
 }

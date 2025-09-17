@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WireMockExtensions
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ThirdPartyOrchestratorStub
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, UpstreamErrorResponse}
 
 class ThirdPartyOrchestratorConnectorIntegrationSpec extends BaseConnectorIntegrationSpec
     with GuiceOneAppPerSuite with UserBuilder with LocalUserIdTracker with WireMockExtensions
@@ -85,13 +85,8 @@ class ThirdPartyOrchestratorConnectorIntegrationSpec extends BaseConnectorIntegr
   "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
     ThirdPartyOrchestratorStub.ApplicationCommandDispatch.throwsAnException(applicationIdOne.toString(), dispatchRequest)
 
-
-    private val result = await(underTest.applicationCommandDispatch(applicationIdOne.toString(), dispatchRequest))
-
-    println(s"****** $result")
-
-//    intercept[UpstreamErrorResponse] {
-//      await(underTest.applicationCommandDispatch(applicationIdOne.toString(), dispatchRequest))
-//    }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    intercept[InternalServerException] {
+      await(underTest.applicationCommandDispatch(applicationIdOne.toString(), dispatchRequest))
+    }.responseCode shouldBe INTERNAL_SERVER_ERROR
   }
 }
