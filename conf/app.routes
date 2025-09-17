@@ -26,4 +26,7 @@ POST        /organisation/:oid/remove-member/:uid  uk.gov.hmrc.apiplatformorgani
 GET         /organisation/:oid/add-member          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addMember(oid: OrganisationId)
 POST        /organisation/:oid/add-member          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addMemberAction(oid: OrganisationId)
 
+GET        /organisation/:oid/add-applications     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
+POST       /organisation/:oid/add-applications     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
+
 GET         /assets/*file                          controllers.Assets.versioned(path = "/public", file: Asset)

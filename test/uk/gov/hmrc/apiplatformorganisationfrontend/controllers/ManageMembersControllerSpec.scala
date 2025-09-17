@@ -17,9 +17,7 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import scala.concurrent.ExecutionContext
-
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-
 import play.api.Application
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -27,10 +25,9 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.Helpers._
 import play.api.test.{CSRFTokenHelper, FakeRequest}
-
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
-import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationId, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
+import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -46,7 +43,8 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with OrganisationServiceMockModule
     with ThirdPartyDeveloperConnectorMockModule
     with UserBuilder
-    with LocalUserIdTracker {
+    with LocalUserIdTracker
+    with FixedClock {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder().build()
@@ -79,7 +77,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val orgId             = OrganisationId.random
     val userId            = UserId.random
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(userId)))
     val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(RegisteredOrUnregisteredUser(userId, email, true, true)))
     val orgWithMember     = OrganisationWithMemberDetails(organisation, RegisteredOrUnregisteredUser(userId, email, true, true))
 
