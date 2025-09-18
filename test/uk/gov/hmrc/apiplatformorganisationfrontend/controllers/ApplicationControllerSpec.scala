@@ -37,6 +37,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDe
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.AddApplicationsView
+import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.ExecutionContext
 
@@ -74,7 +75,8 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         cookieSigner
       )
 
-    val organisation      = Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(user.userId)))
+    val organisation      = Organisation(organisationIdOne,
+      OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(user.userId)))
 
     implicit val loggedInUser: User = user
 
@@ -85,11 +87,68 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
-      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
 
       val result = underTest.addApplications(organisationIdOne)(fakeRequest)
       status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"Which of these software applications does ${organisation.organisationName.value} own?")
+    }
+
+    "return 400 if no organisation found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturnsNone()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
+
+      val result = underTest.addApplications(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return 500 if GetAppsForResponsibleIndividualOrAdmin throws an exception" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenThrowsException()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
+
+      intercept[InternalServerException]{
+        await(underTest.addApplications(organisationIdOne)(fakeRequest))
+      }.responseCode shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "POST /organisation/:oid/add-applications" should {
+    "return 200 when form has no errors and at least one application has been selected" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
+          .withFormUrlEncodedBody("selectedPrincipalApps" -> s"${standardApp.id.toString}")
+      )
+
+      val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/plain")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"was added to the following principal apps")
+    }
+
+    "return 400 when form has errors" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
+      )
+
+      val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"You must select at least one application")
     }
   }
 

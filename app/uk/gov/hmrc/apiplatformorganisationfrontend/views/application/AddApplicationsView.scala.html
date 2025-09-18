@@ -38,8 +38,8 @@ govukButton: GovukButton)
     @helper.form(action = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ApplicationController.addApplicationsAction(manageApplicationsViewModel.organisationId), Symbol("class") -> "form") {
         @helper.CSRF.formField
 
-        <div class="govuk-form-group">
-            <fieldset class="govuk-fieldset" aria-describedby="mass-hint">
+        <div class="govuk-form-group @if(form.errors.map(_.message).contains("You must select at least one application")) {govuk-form-group--error}">
+            <fieldset class="govuk-fieldset" aria-describedby="mass-hint app-not-selected-error">
                 <legend class="govuk-fieldset__legend govuk-fieldset__legend--l ">
                     <span class="govuk-caption-l">Your software applications</span>
                     <h1 class="govuk-fieldset__heading">
@@ -47,9 +47,9 @@ govukButton: GovukButton)
                     </h1>
                 </legend>
 
-                @if(form.errors.map(_.message).contains("You must select an application")) {
-                    <span id="specific-api-error" class="govuk-error-message">
-                        <span class="govuk-visually-hidden">Error:</span> Select at least 1 specific API
+                @if(form.errors.map(_.message).contains("You must select at least one application")) {
+                    <span id="app-not-selected-error" class="govuk-error-message">
+                        <span class="govuk-visually-hidden">Error:</span> You must select at least one application
                     </span>
                 }
 

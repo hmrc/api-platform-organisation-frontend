@@ -62,12 +62,10 @@ object ApplicationController {
       "selectedSubordinateApps"     -> seq(text)
     )(SelectedAppsForm.apply)(SelectedAppsForm.unapply)
       .verifying(
-        "You must select an application",
-        fields =>
-          fields match {
-            case data: SelectedAppsForm =>
+        "You must select at least one application",
+        data =>
               if (data.selectedPrincipalApps.isEmpty && data.selectedSubordinateApps.isEmpty) false else true
-          }
+
       ))
   }
 }

@@ -36,6 +36,9 @@ trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSug
       def thenReturns(out: List[ApplicationWithCollaborators]) = {
         when(aMock.getAppsForResponsibleIndividualOrAdmin(*[LaxEmailAddress])(*)).thenReturn(successful(out))
       }
+      def thenThrowsException() = {
+        when(aMock.getAppsForResponsibleIndividualOrAdmin(*[LaxEmailAddress])(*)).thenThrow(new InternalServerException("Error"))
+      }
     }
 
     object AddOrgToApps {
@@ -43,7 +46,6 @@ trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSug
       def thenReturnsSuccess() = {
         when(aMock.addOrgToApps(*[Actors.AppCollaborator], *[OrganisationId], *)(*)).thenReturn(successful(()))
       }
-
       def thenThrowsException() = {
         when(aMock.addOrgToApps(*[Actors.AppCollaborator], *[OrganisationId], *)(*)).thenThrow(new InternalServerException("Error"))
       }
