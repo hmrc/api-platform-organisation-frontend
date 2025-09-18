@@ -16,6 +16,12 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
+import java.time.Clock
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.ApplicationCommands.LinkToOrganisation
@@ -23,30 +29,24 @@ import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.Dispa
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, LaxEmailAddress, OrganisationId}
 import uk.gov.hmrc.apiplatform.modules.common.services.{ClockNow, EitherTHelper}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyOrchestratorConnector
-import uk.gov.hmrc.http.HeaderCarrier
-
-import java.time.Clock
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationService @Inject()
-  (thirdPartyOrchestratorConnector: ThirdPartyOrchestratorConnector,
-    val clock: Clock)
-  (implicit val ec: ExecutionContext) extends EitherTHelper[String] with ClockNow {
+class ApplicationService @Inject() (thirdPartyOrchestratorConnector: ThirdPartyOrchestratorConnector, val clock: Clock)(implicit val ec: ExecutionContext)
+    extends EitherTHelper[String] with ClockNow {
 
   def getAppsForResponsibleIndividualOrAdmin(emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] = {
 
     thirdPartyOrchestratorConnector.getAppsForResponsibleIndividualOrAdmin(GetAppsForAdminOrRIRequest(adminOrRespIndEmail = emailAddress))
   }
 
-  def addOrgToApps(actor: Actors.AppCollaborator,organisationId: OrganisationId, applicationIds: Seq[String])(implicit hc: HeaderCarrier): Future[Unit] = {
+  def addOrgToApps(actor: Actors.AppCollaborator, organisationId: OrganisationId, applicationIds: Seq[String])(implicit hc: HeaderCarrier): Future[Unit] = {
     Future.sequence(
       applicationIds map {
         applicationId =>
           thirdPartyOrchestratorConnector.applicationCommandDispatch(
             applicationId,
-            DispatchRequest(LinkToOrganisation(actor, organisationId, instant()), Set.empty))
+            DispatchRequest(LinkToOrganisation(actor, organisationId, instant()), Set.empty)
+          )
       }
     ).map(_ => ())
   }

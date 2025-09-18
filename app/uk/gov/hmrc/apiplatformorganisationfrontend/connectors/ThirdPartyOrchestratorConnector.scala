@@ -16,23 +16,24 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.http.Status.OK
 import play.api.libs.json.Json
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReadsInstances.readFromJson
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
+
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.HttpReadsInstances.readFromJson
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{StringContextOps, SessionId => _, _}
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ThirdPartyOrchestratorConnector @Inject()(
+class ThirdPartyOrchestratorConnector @Inject() (
     http: HttpClientV2,
     config: AppConfig
   )(implicit val ec: ExecutionContext
@@ -51,10 +52,11 @@ class ThirdPartyOrchestratorConnector @Inject()(
       .execute[HttpResponse]
       .map(response =>
         response.status match {
-          case OK          => ()
-          case status      =>
+          case OK     => ()
+          case status =>
             logger.error(s"Dispatch failed with status code: $status")
             throw new InternalServerException(s"Failed calling dispatch $status")
-        })
+        }
+      )
 
 }

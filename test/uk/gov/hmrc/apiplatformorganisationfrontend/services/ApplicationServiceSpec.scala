@@ -16,7 +16,12 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future.successful
+
 import play.api.http.Status._
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaboratorsFixtures
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
@@ -24,13 +29,9 @@ import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyOrchestratorConnector
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future.successful
 
 class ApplicationServiceSpec extends AsyncHmrcSpec with OrganisationIdFixtures
-  with ApplicationIdFixtures with ApplicationWithCollaboratorsFixtures with ActorFixtures {
+    with ApplicationIdFixtures with ApplicationWithCollaboratorsFixtures with ActorFixtures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -63,10 +64,9 @@ class ApplicationServiceSpec extends AsyncHmrcSpec with OrganisationIdFixtures
     }
   }
 
-
   "getAppsForResponsibleIndividualOrAdmin" should {
-    val email             = LaxEmailAddress("a@example.com")
-    val request = GetAppsForAdminOrRIRequest(adminOrRespIndEmail = email)
+    val email    = LaxEmailAddress("a@example.com")
+    val request  = GetAppsForAdminOrRIRequest(adminOrRespIndEmail = email)
     val response = List(standardApp, standardApp2)
 
     "return applications on success when found" in new Setup {

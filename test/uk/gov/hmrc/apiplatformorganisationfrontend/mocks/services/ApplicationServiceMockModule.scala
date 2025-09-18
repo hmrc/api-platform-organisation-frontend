@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services
 
+import scala.concurrent.Future.successful
+
 import org.mockito.quality.Strictness
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, LaxEmailAddress, OrganisationId}
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.ApplicationService
+
 import uk.gov.hmrc.http.InternalServerException
 
-import scala.concurrent.Future.successful
+import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, LaxEmailAddress, OrganisationId}
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.ApplicationService
 
 trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
 
@@ -36,6 +37,7 @@ trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSug
       def thenReturns(out: List[ApplicationWithCollaborators]) = {
         when(aMock.getAppsForResponsibleIndividualOrAdmin(*[LaxEmailAddress])(*)).thenReturn(successful(out))
       }
+
       def thenThrowsException() = {
         when(aMock.getAppsForResponsibleIndividualOrAdmin(*[LaxEmailAddress])(*)).thenThrow(new InternalServerException("Error"))
       }
@@ -46,11 +48,11 @@ trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSug
       def thenReturnsSuccess() = {
         when(aMock.addOrgToApps(*[Actors.AppCollaborator], *[OrganisationId], *)(*)).thenReturn(successful(()))
       }
+
       def thenThrowsException() = {
         when(aMock.addOrgToApps(*[Actors.AppCollaborator], *[OrganisationId], *)(*)).thenThrow(new InternalServerException("Error"))
       }
     }
-
 
   }
 

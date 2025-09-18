@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
+import scala.concurrent.ExecutionContext
+
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -24,6 +27,8 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.Helpers._
 import play.api.test.{CSRFTokenHelper, FakeRequest}
+import uk.gov.hmrc.http.InternalServerException
+
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaboratorsFixtures
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationIdFixtures
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
@@ -35,31 +40,27 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.AddApplicationsView
-import uk.gov.hmrc.http.InternalServerException
-
-import scala.concurrent.ExecutionContext
 
 class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with ThirdPartyDeveloperConnectorMockModule
     with UserBuilder
     with LocalUserIdTracker
     with OrganisationIdFixtures
-  with ApplicationWithCollaboratorsFixtures
+    with ApplicationWithCollaboratorsFixtures
     with FixedClock {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder().build()
 
   trait Setup
-  extends ThirdPartyDeveloperConnectorMockModule
-    with OrganisationServiceMockModule
-    with ApplicationServiceMockModule
+      extends ThirdPartyDeveloperConnectorMockModule
+      with OrganisationServiceMockModule
+      with ApplicationServiceMockModule
       with LocalUserIdTracker {
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
-    val addApplicationsView               = app.injector.instanceOf[AddApplicationsView]
+    val addApplicationsView           = app.injector.instanceOf[AddApplicationsView]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -75,8 +76,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         cookieSigner
       )
 
-    val organisation      = Organisation(organisationIdOne,
-      OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(user.userId)))
+    val organisation = Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(user.userId)))
 
     implicit val loggedInUser: User = user
 
@@ -111,21 +111,21 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenThrowsException()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
 
-      intercept[InternalServerException]{
+      intercept[InternalServerException] {
         await(underTest.addApplications(organisationIdOne)(fakeRequest))
       }.responseCode shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 
   "POST /organisation/:oid/add-applications" should {
-    "return 200 when form has no errors and at least one application has been selected" in new Setup {
+    "return 200 when form has no errors and one application has been selected" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
         FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
-          .withFormUrlEncodedBody("selectedPrincipalApps" -> s"${standardApp.id.toString}")
+          .withFormUrlEncodedBody("selectedPrincipalApps[0]" -> s"${standardApp.id.toString}")
       )
 
       val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
@@ -133,6 +133,24 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentType(result) shouldBe Some("text/plain")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include(s"was added to the following principal apps")
+    }
+
+    "return 200 when form has no errors and two applications has been selected" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
+          .withFormUrlEncodedBody("selectedPrincipalApps[0]" -> s"${standardApp.id.toString}", "selectedSubordinateApps[0]" -> s"${standardApp2.id.toString}")
+      )
+
+      val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/plain")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"was added to the following principal apps")
+      contentAsString(result) should include(s"and subordinate apps")
     }
 
     "return 400 when form has errors" in new Setup {
@@ -150,6 +168,36 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include(s"You must select at least one application")
     }
-  }
 
+    "return 400 when form has errors and org not found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturnsNone
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
+      )
+
+      val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentType(result) shouldBe Some("text/plain")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"Organisation not found")
+    }
+
+    "throws exception when valid form and add to apps fails" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
+      ApplicationServiceMock.AddOrgToApps.thenThrowsException()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId)
+          .withFormUrlEncodedBody("selectedPrincipalApps[0]" -> s"${standardApp.id.toString}")
+      )
+
+      intercept[InternalServerException] {
+        await(underTest.addApplicationsAction(organisationIdOne)(fakeRequest))
+      }.responseCode shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+  }
 }
