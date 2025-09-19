@@ -20,6 +20,7 @@ POST        /submission/:sid/submit-request        uk.gov.hmrc.apiplatformorgani
 GET         /submission/:sid/submit-success        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
 
 GET         /organisation/get-or-create            uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.forwardToManageMembers
+GET         /organisation/:oid                     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationHomePage(oid: OrganisationId)
 GET         /organisation/:oid/manage-members      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageMembers(oid: OrganisationId)
 GET         /organisation/:oid/remove-member/:uid  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeMember(oid: OrganisationId, uid: UserId)
 POST        /organisation/:oid/remove-member/:uid  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeMemberAction(oid: OrganisationId, uid: UserId)

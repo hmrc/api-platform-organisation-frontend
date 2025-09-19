@@ -50,6 +50,7 @@
   crumbs: Seq[Crumb] = Seq.empty,
   loggedInSession: Option[UserSession] = None,
   form: Option[Form[_]] = None,
+  twoThirds: Boolean = true
 )(
   contentBlock: Html
 )(implicit request: RequestHeader, messages: Messages)
@@ -131,10 +132,14 @@
 
 @mainContentBlock = {
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      @formErrorSummary(form)
-      @contentBlock 
-    </div>
+    @if(twoThirds){
+      <div class="govuk-grid-column-two-thirds">
+    } else {
+      <div class="govuk-grid-column-full">
+    }
+    @formErrorSummary(form)
+    @contentBlock
+  </div>
   </div>
   <br />
   <br />
