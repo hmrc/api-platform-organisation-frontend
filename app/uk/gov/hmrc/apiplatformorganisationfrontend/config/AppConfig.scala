@@ -24,8 +24,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) {
-  val thirdPartyDeveloperUrl: String    = baseUrl("third-party-developer")
-  val thirdPartyOrchestratorUrl: String = baseUrl("third-party-orchestrator")
+  val thirdPartyDeveloperUrl: String = baseUrl("third-party-developer")
 
   val serviceName = "HMRC Developer Hub"
 

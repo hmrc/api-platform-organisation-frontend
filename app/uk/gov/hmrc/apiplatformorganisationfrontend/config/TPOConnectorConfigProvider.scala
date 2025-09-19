@@ -16,18 +16,15 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
-import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment}
+import com.google.inject.{Inject, Provider, Singleton}
 
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors._
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class ConfigModule extends Module {
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyOrchestratorConnector
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
-    bind[AppConfig].toSelf.eagerly(),
-    bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
-    bind[ThirdPartyOrchestratorConnector.Config].toProvider[TPOConnectorConfigProvider],
-    bind[ConnectorMetrics].to[ConnectorMetricsImpl]
-  )
+@Singleton
+class TPOConnectorConfigProvider @Inject() (config: ServicesConfig) extends Provider[ThirdPartyOrchestratorConnector.Config] {
 
+  override def get(): ThirdPartyOrchestratorConnector.Config = ThirdPartyOrchestratorConnector.Config(
+    serviceBaseUrl = config.baseUrl("third-party-orchestrator"))
 }
