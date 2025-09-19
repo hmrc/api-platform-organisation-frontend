@@ -30,24 +30,21 @@ import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest
-import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
 @Singleton
 class ThirdPartyOrchestratorConnector @Inject() (
     http: HttpClientV2,
-    config: AppConfig
+    config: ThirdPartyOrchestratorConnector.Config
   )(implicit val ec: ExecutionContext
   ) extends Logging {
 
-  lazy val serviceBaseUrl: String = config.thirdPartyOrchestratorUrl
-
   def getAppsForResponsibleIndividualOrAdmin(request: GetAppsForAdminOrRIRequest)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] =
-    http.post(url"$serviceBaseUrl/responsible-ind-or-admin/applications")
+    http.post(url"${config.serviceBaseUrl}/responsible-ind-or-admin/applications")
       .withBody(Json.toJson(request))
       .execute[List[ApplicationWithCollaborators]]
 
   def applicationCommandDispatch(applicationId: String, request: DispatchRequest)(implicit hc: HeaderCarrier): Future[Unit] =
-    http.patch(url"$serviceBaseUrl/applications/$applicationId")
+    http.patch(url"${config.serviceBaseUrl}/applications/$applicationId")
       .withBody(Json.toJson(request))
       .execute[HttpResponse]
       .map(response =>
@@ -58,5 +55,8 @@ class ThirdPartyOrchestratorConnector @Inject() (
             throw new InternalServerException(s"Failed calling dispatch $status")
         }
       )
+}
 
+object ThirdPartyOrchestratorConnector {
+  case class Config(serviceBaseUrl: String)
 }
