@@ -19,14 +19,12 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
-
 import play.api.Logging
 import play.api.data.Form
 import play.api.data.Forms.{mapping, seq, text}
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, ApplicationId, Environment, OrganisationId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
@@ -35,7 +33,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.AppViewModel.fromApplicationWithCollaborators
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.{ManageApplicationsViewModel, SelectedAppsForm}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.AddApplicationsView
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsView, AddApplicationsSuccessView}
 
 object ApplicationController {
 
@@ -72,6 +70,7 @@ class ApplicationController @Inject() (
     val applicationService: ApplicationService,
     val organisationService: OrganisationService,
     val addApplicationsView: AddApplicationsView,
+    val addApplicationsSuccessView: AddApplicationsSuccessView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     val errorHandler: ErrorHandler,
     val cookieSigner: CookieSigner
@@ -86,7 +85,7 @@ class ApplicationController @Inject() (
       case Some(org: Organisation) =>
         for {
           apps     <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
-          viewModel = createManageApplicationsViewModel(organisationId, org.organisationName.value, apps)
+          viewModel = createViewModelForAddApplicationsPage(organisationId, org.organisationName.value, apps)
         } yield Ok(addApplicationsView(Some(request.userSession), selectedAppsForm, viewModel))
       case _                       => successful(BadRequest("Organisation not found"))
     }.flatten
@@ -96,12 +95,12 @@ class ApplicationController @Inject() (
   def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction {
 
     implicit request =>
-      def x(organisationId: OrganisationId): Future[Option[ManageApplicationsViewModel]] = {
+      def getOrgAndViewModel(organisationId: OrganisationId): Future[Option[ManageApplicationsViewModel]] = {
         organisationService.fetch(organisationId).flatMap {
           case Some(org: Organisation) =>
             for {
               apps                                  <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
-              viewModel: ManageApplicationsViewModel = createManageApplicationsViewModel(organisationId, org.organisationName.value, apps)
+              viewModel: ManageApplicationsViewModel = createViewModelForAddApplicationsPage(organisationId, org.organisationName.value, apps)
             } yield Some(viewModel)
           case _                       => successful(None)
         }
@@ -109,13 +108,13 @@ class ApplicationController @Inject() (
 
       selectedAppsForm.bindFromRequest().fold(
         formWithErrors => {
-          x(organisationId) map {
+          getOrgAndViewModel(organisationId) map {
             case Some(viewModel) => BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))
             case None            => BadRequest("Organisation not found")
           }
         },
         selectedApps =>
-          x(organisationId) flatMap {
+          getOrgAndViewModel(organisationId) flatMap {
             case Some(viewModel) =>
               for {
                 _ <- applicationService.addOrgToApps(
@@ -123,16 +122,22 @@ class ApplicationController @Inject() (
                        organisationId,
                        selectedApps.selectedPrincipalApps ++ selectedApps.selectedSubordinateApps
                      )
-
-              } yield Ok(
-                s"organisationId: ${organisationId.value} was added to the following principal apps: ${selectedApps.selectedPrincipalApps} and subordinate apps: ${selectedApps.selectedSubordinateApps}"
-              )
-
+              } yield Ok(s"organisationId: ${organisationId.value} was added to the following principal apps: ${selectedApps.selectedPrincipalApps} and subordinate apps: ${selectedApps.selectedSubordinateApps}")
+            case None            => successful(BadRequest("Organisation not found"))
           }
       )
   }
 
-  private def createManageApplicationsViewModel(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
+  private def createViewModelForAddApplicationsSuccessPage(manageApplicationsViewModel: ManageApplicationsViewModel,
+                                                           selectedPrincipalApps: Seq[String], selectedSubordinateApps: Seq[String]) = {
+
+//TODO filter the view model so it only contains the selected principal and subordinate apps.
+//    val principalApps   = manageApplicationsViewModel.principalApps.filter(selectedPrincipalApps.)
+
+//    ManageApplicationsViewModel(manageApplicationsViewModel.organisationId, manageApplicationsViewModel.organisationName, principalApps = principalApps, subordinateApps = subordinateApps)
+  }
+
+  private def createViewModelForAddApplicationsPage(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
 
     val partitioned: (List[ApplicationWithCollaborators], List[ApplicationWithCollaborators]) = apps.partitionMap {
       case principal: ApplicationWithCollaborators if principal.deployedTo == Environment.PRODUCTION  => Left(principal)
