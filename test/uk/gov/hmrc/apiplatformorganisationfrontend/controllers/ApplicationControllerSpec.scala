@@ -40,7 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.AddApplicationsView
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with ThirdPartyDeveloperConnectorMockModule
@@ -61,6 +61,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val addApplicationsView           = app.injector.instanceOf[AddApplicationsView]
+    val addApplicationsSuccessView    = app.injector.instanceOf[AddApplicationsSuccessView]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -71,6 +72,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         ApplicationServiceMock.aMock,
         OrganisationServiceMock.aMock,
         addApplicationsView,
+        addApplicationsSuccessView,
         ThirdPartyDeveloperConnectorMock.aMock,
         errorHandler,
         cookieSigner
@@ -130,9 +132,11 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
       status(result) shouldBe Status.OK
-      contentType(result) shouldBe Some("text/plain")
+      contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include(s"was added to the following principal apps")
+      contentAsString(result) should include(s"Applications that have been added")
+      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include(s"${standardApp.name}")
     }
 
     "return 200 when form has no errors and two applications has been selected" in new Setup {
@@ -147,10 +151,11 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addApplicationsAction(organisationIdOne)(fakeRequest)
       status(result) shouldBe Status.OK
-      contentType(result) shouldBe Some("text/plain")
+      contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include(s"was added to the following principal apps")
-      contentAsString(result) should include(s"and subordinate apps")
+      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include(s"${standardApp.name}")
+      contentAsString(result) should include(s"${standardApp2.name}")
     }
 
     "return 400 when form has errors" in new Setup {
