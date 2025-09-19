@@ -22,7 +22,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationId, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
