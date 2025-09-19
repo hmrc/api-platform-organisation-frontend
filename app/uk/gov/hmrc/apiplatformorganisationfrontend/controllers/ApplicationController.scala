@@ -19,12 +19,14 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.data.Form
 import play.api.data.Forms.{mapping, seq, text}
 import play.api.libs.crypto.CookieSigner
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, ApplicationId, Environment, OrganisationId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
@@ -32,8 +34,9 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.AppViewModel.fromApplicationWithCollaborators
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.{ManageApplicationsViewModel, SelectedAppsForm}
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsView, AddApplicationsSuccessView}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 object ApplicationController {
 
@@ -81,63 +84,62 @@ class ApplicationController @Inject() (
   val selectedAppsForm: Form[SelectedAppsForm] = SelectedAppsForm.form
 
   def addApplications(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
-    organisationService.fetch(organisationId).map {
+    maybeManageApplicationsViewModel(organisationId) map {
+      case Some(viewModel) => Ok(addApplicationsView(Some(request.userSession), selectedAppsForm, viewModel))
+      case None            => BadRequest("Organisation not found")
+    }
+
+  }
+
+  def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+    def handleInvalidForm(formWithErrors: Form[SelectedAppsForm]) = {
+      maybeManageApplicationsViewModel(organisationId) map {
+        case Some(viewModel) => BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))
+        case None            => BadRequest("Organisation not found")
+      }
+    }
+
+    def handleValidForm(validForm: SelectedAppsForm) = {
+      maybeManageApplicationsViewModel(organisationId) flatMap {
+        case Some(viewModel) =>
+          for {
+            _ <- applicationService.addOrgToApps(
+                   Actors.AppCollaborator(request.userSession.developer.email),
+                   organisationId,
+                   validForm.selectedPrincipalApps ++ validForm.selectedSubordinateApps
+                 )
+          } yield Ok(addApplicationsSuccessView(filterViewModelForSelectedApps(viewModel, validForm.selectedPrincipalApps, validForm.selectedSubordinateApps)))
+        case None            => successful(BadRequest("Organisation not found"))
+      }
+    }
+
+    selectedAppsForm.bindFromRequest().fold(handleInvalidForm, handleValidForm)
+  }
+
+  private def maybeManageApplicationsViewModel(organisationId: OrganisationId)(implicit hc: HeaderCarrier, request: UserRequest[AnyContent])
+      : Future[Option[ManageApplicationsViewModel]] = {
+    organisationService.fetch(organisationId).flatMap {
       case Some(org: Organisation) =>
         for {
           apps     <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
-          viewModel = createViewModelForAddApplicationsPage(organisationId, org.organisationName.value, apps)
-        } yield Ok(addApplicationsView(Some(request.userSession), selectedAppsForm, viewModel))
-      case _                       => successful(BadRequest("Organisation not found"))
-    }.flatten
-
+          viewModel = assembleModel(organisationId, org.organisationName.value, apps)
+        } yield Some(viewModel)
+      case _                       => successful(None)
+    }
   }
 
-  def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction {
-
-    implicit request =>
-      def getOrgAndViewModel(organisationId: OrganisationId): Future[Option[ManageApplicationsViewModel]] = {
-        organisationService.fetch(organisationId).flatMap {
-          case Some(org: Organisation) =>
-            for {
-              apps                                  <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
-              viewModel: ManageApplicationsViewModel = createViewModelForAddApplicationsPage(organisationId, org.organisationName.value, apps)
-            } yield Some(viewModel)
-          case _                       => successful(None)
-        }
-      }
-
-      selectedAppsForm.bindFromRequest().fold(
-        formWithErrors => {
-          getOrgAndViewModel(organisationId) map {
-            case Some(viewModel) => BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))
-            case None            => BadRequest("Organisation not found")
-          }
-        },
-        selectedApps =>
-          getOrgAndViewModel(organisationId) flatMap {
-            case Some(viewModel) =>
-              for {
-                _ <- applicationService.addOrgToApps(
-                       Actors.AppCollaborator(request.userSession.developer.email),
-                       organisationId,
-                       selectedApps.selectedPrincipalApps ++ selectedApps.selectedSubordinateApps
-                     )
-              } yield Ok(s"organisationId: ${organisationId.value} was added to the following principal apps: ${selectedApps.selectedPrincipalApps} and subordinate apps: ${selectedApps.selectedSubordinateApps}")
-            case None            => successful(BadRequest("Organisation not found"))
-          }
-      )
+  private def filterViewModelForSelectedApps(
+      manageApplicationsViewModel: ManageApplicationsViewModel,
+      selectedPrincipalAppIds: Seq[String],
+      selectedSubordinateAppIds: Seq[String]
+    ): ManageApplicationsViewModel = {
+    manageApplicationsViewModel.copy(
+      principalApps = manageApplicationsViewModel.principalApps.filter(app => selectedPrincipalAppIds.contains(app.appId.toString())),
+      subordinateApps = manageApplicationsViewModel.subordinateApps.filter(app => selectedSubordinateAppIds.contains(app.appId.toString()))
+    )
   }
 
-  private def createViewModelForAddApplicationsSuccessPage(manageApplicationsViewModel: ManageApplicationsViewModel,
-                                                           selectedPrincipalApps: Seq[String], selectedSubordinateApps: Seq[String]) = {
-
-//TODO filter the view model so it only contains the selected principal and subordinate apps.
-//    val principalApps   = manageApplicationsViewModel.principalApps.filter(selectedPrincipalApps.)
-
-//    ManageApplicationsViewModel(manageApplicationsViewModel.organisationId, manageApplicationsViewModel.organisationName, principalApps = principalApps, subordinateApps = subordinateApps)
-  }
-
-  private def createViewModelForAddApplicationsPage(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
+  private def assembleModel(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
 
     val partitioned: (List[ApplicationWithCollaborators], List[ApplicationWithCollaborators]) = apps.partitionMap {
       case principal: ApplicationWithCollaborators if principal.deployedTo == Environment.PRODUCTION  => Left(principal)
@@ -148,19 +150,5 @@ class ApplicationController @Inject() (
     val subordinateApps = partitioned._2.map(app => fromApplicationWithCollaborators(app))
 
     ManageApplicationsViewModel(organisationId, organisationName, principalApps = principalApps, subordinateApps = subordinateApps)
-  }
-
-  def recovery: PartialFunction[Throwable, Result] = {
-    case e: Throwable =>
-      logger.error(s"Error occurred: ${e.getMessage}", e)
-      handleException(e)
-  }
-
-  private[controllers] def handleException(e: Throwable) = {
-    logger.error(s"An unexpected error occurred: ${e.getMessage}", e)
-    InternalServerError(Json.obj(
-      "code"    -> "UNKNOWN_ERROR",
-      "message" -> "Unknown error occurred"
-    ))
   }
 }
