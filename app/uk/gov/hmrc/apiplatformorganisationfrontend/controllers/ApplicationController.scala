@@ -17,8 +17,8 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
 import play.api.data.Form
@@ -96,28 +96,39 @@ class ApplicationController @Inject() (
   def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction {
 
     implicit request =>
+      def x(organisationId: OrganisationId): Future[Option[ManageApplicationsViewModel]] = {
+        organisationService.fetch(organisationId).flatMap {
+          case Some(org: Organisation) =>
+            for {
+              apps                                  <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
+              viewModel: ManageApplicationsViewModel = createManageApplicationsViewModel(organisationId, org.organisationName.value, apps)
+            } yield Some(viewModel)
+          case _                       => successful(None)
+        }
+      }
+
       selectedAppsForm.bindFromRequest().fold(
         formWithErrors => {
-          organisationService.fetch(organisationId).map {
-            case Some(org: Organisation) =>
-              for {
-                apps     <- applicationService.getAppsForResponsibleIndividualOrAdmin(request.userSession.developer.email)
-                viewModel = createManageApplicationsViewModel(organisationId, org.organisationName.value, apps)
-              } yield BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))
-            case _                       => successful(BadRequest("Organisation not found"))
-          }.flatten
+          x(organisationId) map {
+            case Some(viewModel) => BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))
+            case None            => BadRequest("Organisation not found")
+          }
         },
         selectedApps =>
-          for {
-            _ <- applicationService.addOrgToApps(
-                   Actors.AppCollaborator(request.userSession.developer.email),
-                   organisationId,
-                   selectedApps.selectedPrincipalApps ++ selectedApps.selectedSubordinateApps
-                 )
+          x(organisationId) flatMap {
+            case Some(viewModel) =>
+              for {
+                _ <- applicationService.addOrgToApps(
+                       Actors.AppCollaborator(request.userSession.developer.email),
+                       organisationId,
+                       selectedApps.selectedPrincipalApps ++ selectedApps.selectedSubordinateApps
+                     )
 
-          } yield Ok(
-            s"organisationId: ${organisationId.value} was added to the following principal apps: ${selectedApps.selectedPrincipalApps} and subordinate apps: ${selectedApps.selectedSubordinateApps}"
-          )
+              } yield Ok(
+                s"organisationId: ${organisationId.value} was added to the following principal apps: ${selectedApps.selectedPrincipalApps} and subordinate apps: ${selectedApps.selectedSubordinateApps}"
+              )
+
+          }
       )
   }
 
