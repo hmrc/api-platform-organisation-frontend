@@ -26,15 +26,22 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+
+object OrganisationController {
+  case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
+
+}
 
 @Singleton
 class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
     beforeYouStartPage: BeforeYouStartPage,
     landingPage: LandingPage,
+    organisationHomePage: OrganisationHomePage,
     submissionService: SubmissionService,
+    organisationService: OrganisationService,
     organisationConnector: OrganisationConnector,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
@@ -42,6 +49,8 @@ class OrganisationController @Inject() (
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
   ) extends BaseController(mcc) {
+
+  import OrganisationController._
 
   val landingView: Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
@@ -79,5 +88,12 @@ class OrganisationController @Inject() (
     }
 
     getOrgId().map(orgId => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ManageMembersController.manageMembers(orgId)))
+  }
+
+  def organisationHomePage(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+    organisationService.fetch(organisationId).map {
+      case Some(org) => Ok(organisationHomePage(Some(request.userSession), OrganisationHomePageViewModel(org.id, org.organisationName)))
+      case _         => BadRequest("No organisation found")
+    }
   }
 }
