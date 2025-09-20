@@ -1,0 +1,55 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.Layout
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.ManageApplicationsViewModel
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+
+@this(layout: Layout,
+govukTable: GovukTable,
+govukPanel: GovukPanel)
+
+
+@(viewModel: ManageApplicationsViewModel)(implicit request: RequestHeader, messages: Messages)
+
+@layout(pageTitle = "We have received your request") {
+  @govukPanel(Panel(title=Text(s"We've received your request to add software applications to the ${viewModel.organisationName} dashboard")))
+
+ <h3 class="govuk-heading-m">Applications that have been added</h3>
+
+ <p class="govuk-body">The following software applications have been added to the @{viewModel.organisationName} dashboard:</p>
+
+ @govukTable(Table(
+  head = Some(Seq(
+   HeadCell(content = Text(messages("Application name")), classes = "govuk-!-width-one-half"),
+   HeadCell(content = Text(messages("Enviroment")))
+  )),
+  rows = (viewModel.principalApps ++ viewModel.subordinateApps).map(app => Seq(
+   TableRow(content = Text(app.appName)),
+   TableRow(content = Text(app.environment.toString))
+   ))
+ ))
+
+ <h2 class="govuk-heading-m govuk-!-margin-top-8">Next steps</h2>
+
+ <p class="govuk-body">
+  Return to the <a href="@routes.OrganisationController.organisationHomePage(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">@{viewModel.organisationName} dashboard</a> to check and manage team member access.</p>
+
+ <p class="govuk-body">
+  If @{viewModel.organisationName} owns other software applications that you do not have access to, you can search for them and request access.
+ </p>
+}
