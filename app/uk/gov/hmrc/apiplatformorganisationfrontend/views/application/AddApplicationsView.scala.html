@@ -30,7 +30,7 @@ govukButton: GovukButton)
 @(loggedInSession: Option[UserSession], form: Form[SelectedAppsForm], manageApplicationsViewModel: ManageApplicationsViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = s"Which of these software applications does ${manageApplicationsViewModel.organisationName} own?",
     loggedInSession = loggedInSession
 ) {
