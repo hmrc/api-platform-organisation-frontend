@@ -26,5 +26,6 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyOrchestr
 class TPOConnectorConfigProvider @Inject() (config: ServicesConfig) extends Provider[ThirdPartyOrchestratorConnector.Config] {
 
   override def get(): ThirdPartyOrchestratorConnector.Config = ThirdPartyOrchestratorConnector.Config(
-    serviceBaseUrl = config.baseUrl("third-party-orchestrator"))
+    serviceBaseUrl = config.baseUrl("third-party-orchestrator")
+  )
 }
