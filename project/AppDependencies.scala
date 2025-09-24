@@ -14,6 +14,7 @@ object AppDependencies {
     "uk.gov.hmrc"      %% "http-metrics"                     % "2.9.0",
     "uk.gov.hmrc"      %% "api-platform-organisation-domain" % orgDomainVersion,
     "commons-validator" % "commons-validator"                % "1.7",
+    "uk.gov.hmrc"      %% "api-platform-application-domain"  % appDomainVersion
   )
 
   val test = Seq(
