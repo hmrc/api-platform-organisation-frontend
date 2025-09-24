@@ -2,19 +2,18 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.13.0"
+  private val bootstrapVersion = "9.19.0"
   private val tpdDomainVersion = "0.14.0"
   private val orgDomainVersion = "0.11.0"
   private val appDomainVersion = "0.85.0"
 
   val compile = Seq(
     "uk.gov.hmrc"      %% "bootstrap-frontend-play-30"       % bootstrapVersion,
-    "uk.gov.hmrc"      %% "play-frontend-hmrc-play-30"       % "12.6.0",
+    "uk.gov.hmrc"      %% "play-frontend-hmrc-play-30"       % "12.12.0",
     "uk.gov.hmrc"      %% "api-platform-tpd-domain"          % tpdDomainVersion,
     "uk.gov.hmrc"      %% "http-metrics"                     % "2.9.0",
     "uk.gov.hmrc"      %% "api-platform-organisation-domain" % orgDomainVersion,
     "commons-validator" % "commons-validator"                % "1.7",
-    "uk.gov.hmrc"      %% "api-platform-application-domain"  % appDomainVersion,
   )
 
   val test = Seq(
