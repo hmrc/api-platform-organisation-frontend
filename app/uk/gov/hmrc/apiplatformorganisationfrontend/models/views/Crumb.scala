@@ -23,6 +23,6 @@ case class Crumb(name: String, url: String = "", dataAttribute: Option[String] =
 object Crumb {
 
   def home(implicit appConfig: AppConfig) =
-    Crumb("Home", s"${appConfig.apiDocumentationFrontendUrl}/api-documentation", Some("data-breadcrumb-home"))
+    Crumb("Home", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/dashboard", Some("data-breadcrumb-home"))
 
 }

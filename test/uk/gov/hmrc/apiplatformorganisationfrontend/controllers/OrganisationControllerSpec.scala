@@ -174,9 +174,16 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"${user.displayedName}")
+      contentAsString(result) should include("Sign out")
+      contentAsString(result) should include("Home")
       contentAsString(result) should include("Organisation home")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("Add your applications")
+      contentAsString(result) should include("View your organisation's sandbox and production applications.")
+      contentAsString(result) should include("Team member access")
+      contentAsString(result) should include("Manage your organisation's team members.")
+
     }
 
     "return bad request if no organisation found" in new Setup {
