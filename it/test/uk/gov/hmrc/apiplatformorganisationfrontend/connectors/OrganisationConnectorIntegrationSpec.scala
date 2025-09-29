@@ -222,6 +222,32 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     }
   }
 
+  "fetchOrganisationByUserId" should {
+    "successfully get one" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisationByUserId.succeeds(userId, List(organisation))
+
+      val result = await(underTest.fetchOrganisationsByUserId(userId))
+
+      result shouldBe List(organisation)
+    }
+
+    "return empty list when none found" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisationByUserId.succeeds(userId, List.empty)
+
+      val result = await(underTest.fetchOrganisationsByUserId(userId))
+
+      result shouldBe List.empty
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisationByUserId.fails(userId, INTERNAL_SERVER_ERROR)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.fetchOrganisationsByUserId(userId))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   "addMemberToOrganisation" should {
     "successfully add one" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.succeeds(orgId, organisation)

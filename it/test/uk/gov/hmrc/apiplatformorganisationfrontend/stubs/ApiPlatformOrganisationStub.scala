@@ -206,6 +206,31 @@ object ApiPlatformOrganisationStub {
     }
   }
 
+  object FetchOrganisationByUserId {
+
+    def succeeds(userId: UserId, organisations: List[Organisation]): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/organisation/user/${userId}/all"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(organisations).toString())
+          )
+      )
+    }
+
+    def fails(userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/organisation/user/${userId}/all"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
   object AddMemberToOrganisation {
 
     def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {

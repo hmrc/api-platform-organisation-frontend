@@ -38,6 +38,10 @@ class OrganisationService @Inject() (
     organisationConnector.fetchOrganisation(id)
   }
 
+  def fetchByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[List[Organisation]] = {
+    organisationConnector.fetchOrganisationsByUserId(userId)
+  }
+
   def fetchWithAllMembersDetails(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[String, OrganisationWithAllMembersDetails]] = {
     (
       for {

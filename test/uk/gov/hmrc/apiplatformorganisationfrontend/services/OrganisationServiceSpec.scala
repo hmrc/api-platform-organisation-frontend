@@ -64,6 +64,16 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     }
   }
 
+  "fetchByUserId" should {
+    "return organisations for given user id" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisationsByUserId(*[UserId])(*)).thenReturn(successful(List(organisation)))
+
+      val result = await(underTest.fetchByUserId(userId))
+
+      result shouldBe List(organisation)
+    }
+  }
+
   "fetchWithAllMembersDetails" should {
     "return organisation with members details for given org id" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
