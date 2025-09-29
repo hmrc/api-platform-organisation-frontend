@@ -43,7 +43,7 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-third">
-            <a class="app-card" href="@routes.ApplicationController.addApplications(viewModel.organisationId)">
+            <a id="application-tile" class="app-card" href="@routes.ApplicationController.addApplications(viewModel.organisationId)">
                 <h2 class="govuk-heading-s app-card__heading">
                     Add your applications
                 </h2>
@@ -51,7 +51,7 @@
             </a>
         </div>
         <div class="govuk-grid-column-one-third">
-            <a class="app-card" href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)">
+            <a id="team-member-tile" class="app-card" href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)">
                 <h2 class="govuk-heading-s app-card__heading">
                     Team member access
                 </h2>
