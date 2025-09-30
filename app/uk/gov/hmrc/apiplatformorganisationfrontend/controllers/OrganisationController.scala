@@ -23,7 +23,7 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationService, SubmissionService}
@@ -68,26 +68,6 @@ class OrganisationController @Inject() (
       case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
       case _                => BadRequest("No submission created")
     }
-  }
-
-  def forwardToManageMembers: Action[AnyContent] = loggedInAction { implicit request =>
-    def createOrg(): Future[OrganisationId] = {
-      organisationConnector.createOrganisation(
-        OrganisationName(request.userSession.developer.firstName + "'s Organisation"),
-        Organisation.OrganisationType.UkLimitedCompany,
-        request.userSession.developer.userId
-      ).map {
-        org => org.id
-      }
-    }
-
-    def getOrgId(): Future[OrganisationId] = {
-      organisationConnector.fetchLatestOrganisationByUserId(request.userSession.developer.userId).flatMap {
-        maybeOrg: Option[Organisation] => maybeOrg.fold(createOrg())(org => Future.successful(org.id))
-      }
-    }
-
-    getOrgId().map(orgId => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ManageMembersController.manageMembers(orgId)))
   }
 
   def organisationHomePage(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>

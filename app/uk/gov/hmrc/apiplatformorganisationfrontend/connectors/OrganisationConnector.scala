@@ -111,13 +111,6 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def fetchLatestOrganisationByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Organisation]] = {
-    metrics.record(api) {
-      http.get(url"${config.serviceBaseUrl}/organisation/user/$userId")
-        .execute[Option[Organisation]]
-    }
-  }
-
   def createOrganisation(organisationName: OrganisationName, organisationType: Organisation.OrganisationType, userId: UserId)(implicit hc: HeaderCarrier): Future[Organisation] = {
     metrics.record(api) {
       http.post(url"${config.serviceBaseUrl}/organisation/create")
