@@ -28,11 +28,11 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views._
 @import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include.{breadcrumbs, errorSummary, headerNavLinks}
-
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.servicenavigation.{ServiceNavigation, ServiceNavigationItem}
 @this(
   appConfig: AppConfig,
   govukLayout: GovukLayout,
-  hmrcHeader: HmrcHeader,
+        hmrcStandardHeader: HmrcStandardHeader,
   hmrcFooter: HmrcFooter,
   hmrcLanguageSelectHelper: HmrcLanguageSelectHelper,
   hmrcScripts: HmrcScripts,
@@ -78,17 +78,17 @@
 }
 
 @headerBlock = {
-  @hmrcHeader(Header(
-    homepageUrl = messages("header.govuk.url"),
+  @hmrcStandardHeader(
     serviceName = Some(appConfig.serviceName),
-    navigation = Some(navigation),
-    serviceUrl = "/api-documentation",
-    signOutHref = None,
-    language = En,
-    assetsPath = uk.gov.hmrc.hmrcfrontend.controllers.routes.Assets.at("govuk/images").url,
+    serviceUrl = Some("/api-documentation"),
     displayHmrcBanner = false,
+      serviceNavigation = Some(ServiceNavigation(
+          serviceName = Some(appConfig.serviceName),
+          serviceUrl = Some("/api-documentation"),
+          navigation = navigation
+      )),
     containerClasses = "govuk-width-container"
-  ))
+  )
 }
 
 @feedbackBannerBlock = {

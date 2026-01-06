@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 
 import play.api.libs.json._
+import uk.gov.hmrc.govukfrontend.views.Aliases.ServiceNavigationItem
 import uk.gov.hmrc.govukfrontend.views.html.components.Text
 import uk.gov.hmrc.hmrcfrontend.views.viewmodels.header.NavigationItem
 
@@ -32,11 +33,11 @@ case object StaticNavItems {
 
   def apply(apiDocumentationFrontendUrl: String, thirdPartyDeveloperFrontendUrl: String, devhubSupportUrl: String) = {
     Seq(
-      NavigationItem(Text("Getting started"), Some(s"$apiDocumentationFrontendUrl/api-documentation/docs/using-the-hub")),
-      NavigationItem(Text("API documentation"), Some(s"$apiDocumentationFrontendUrl/api-documentation/docs/api")),
-      NavigationItem(Text("Applications"), Some(s"$thirdPartyDeveloperFrontendUrl/developer/applications")),
-      NavigationItem(Text("Support"), Some(s"$devhubSupportUrl")),
-      NavigationItem(Text("Service availability"), Some("https://api-platform-status.production.tax.service.gov.uk/"), attributes = Map("target" -> "_blank"))
+      ServiceNavigationItem(Text("Getting started"), s"$apiDocumentationFrontendUrl/api-documentation/docs/using-the-hub"),
+      ServiceNavigationItem(Text("API documentation"), s"$apiDocumentationFrontendUrl/api-documentation/docs/api"),
+      ServiceNavigationItem(Text("Applications"), s"$thirdPartyDeveloperFrontendUrl/developer/applications"),
+      ServiceNavigationItem(Text("Support"), s"$devhubSupportUrl"),
+      ServiceNavigationItem(Text("Service availability"), "https://api-platform-status.production.tax.service.gov.uk/", attributes = Map("target" -> "_blank"))
     )
   }
 }
