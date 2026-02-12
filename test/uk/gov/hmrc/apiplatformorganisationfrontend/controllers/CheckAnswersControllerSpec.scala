@@ -135,6 +135,7 @@ class CheckAnswersControllerSpec
       val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
+      contentAsString(result) should include("Your answers")
       contentAsString(result) should include("to update submitted answers")
     }
 
