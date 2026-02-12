@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 @Singleton
@@ -36,6 +36,7 @@ class CheckAnswersController @Inject() (
     mcc: MessagesControllerComponents,
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
+    val organisationActionService: OrganisationActionService,
     checkAnswersView: CheckAnswersView,
     submittedAnswersView: SubmittedAnswersView,
     submitSubmissionSuccessPage: SubmitSubmissionSuccessPage,

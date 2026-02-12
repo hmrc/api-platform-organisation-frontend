@@ -40,7 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SubmitSubmissionSuccessPage, SubmittedAnswersView}
 import uk.gov.hmrc.apiplatformorganisationfrontend.{AsIdsHelpers, WithCSRFAddToken}
 
@@ -62,6 +62,7 @@ class CheckAnswersControllerSpec
       extends SubmissionServiceMockModule
       with HasSessionDeveloperFlow
       with ThirdPartyDeveloperConnectorMockModule
+      with OrganisationActionServiceMockModule
       with SubmissionsTestData
       with FixedClock
       with AsIdsHelpers
@@ -90,6 +91,7 @@ class CheckAnswersControllerSpec
       mcc,
       cookieSigner,
       SubmissionServiceMock.aMock,
+      OrganisationActionServiceMock.aMock,
       checkAnswersView,
       submittedAnswersView,
       submitSubmissionSuccessPage,

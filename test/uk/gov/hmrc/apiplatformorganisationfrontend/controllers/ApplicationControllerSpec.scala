@@ -39,7 +39,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationActionServiceMockModule, OrganisationServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -56,6 +56,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   trait Setup
       extends ThirdPartyDeveloperConnectorMockModule
       with OrganisationServiceMockModule
+      with OrganisationActionServiceMockModule
       with ApplicationServiceMockModule
       with LocalUserIdTracker {
 
@@ -71,6 +72,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         mcc,
         ApplicationServiceMock.aMock,
         OrganisationServiceMock.aMock,
+        OrganisationActionServiceMock.aMock,
         addApplicationsView,
         addApplicationsSuccessView,
         ThirdPartyDeveloperConnectorMock.aMock,
@@ -87,6 +89,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "GET /organisation/:oid/add-applications" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
@@ -100,6 +103,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 400 if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturnsNone()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
 
@@ -109,6 +113,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 500 if GetAppsForResponsibleIndividualOrAdmin throws an exception" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenThrowsException()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/add-applications").withUser(underTest)(sessionId))
@@ -122,6 +127,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "POST /organisation/:oid/add-applications" should {
     "return 200 when form has no errors and one application has been selected" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
@@ -141,6 +147,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 200 when form has no errors and two applications has been selected" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
@@ -160,6 +167,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 400 when form has errors" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
@@ -176,6 +184,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return 400 when form has errors and org not found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturnsNone
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
@@ -192,6 +201,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "throws exception when valid form and add to apps fails" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       OrganisationServiceMock.Fetch.thenReturns(organisation)
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenThrowsException()

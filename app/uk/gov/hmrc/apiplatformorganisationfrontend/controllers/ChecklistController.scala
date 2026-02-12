@@ -32,7 +32,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Q
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ChecklistController {
@@ -101,6 +101,7 @@ class ChecklistController @Inject() (
     mcc: MessagesControllerComponents,
     val cookieSigner: CookieSigner,
     val submissionService: SubmissionService,
+    val organisationActionService: OrganisationActionService,
     checklistView: ChecklistView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,

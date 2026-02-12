@@ -31,7 +31,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ManageMembersController {
@@ -71,6 +71,7 @@ class ManageMembersController @Inject() (
     addMemberPage: AddMemberPage,
     removeMemberPage: RemoveMemberPage,
     organisationService: OrganisationService,
+    val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -83,7 +84,7 @@ class ManageMembersController @Inject() (
   val addMemberForm: Form[AddMemberForm]       = AddMemberForm.form
   val removeMemberForm: Form[RemoveMemberForm] = RemoveMemberForm.form
 
-  def manageMembers(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+  def manageMembers(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetchWithAllMembersDetails(organisationId)
       .map(_ match {
         case Right(org) => {
@@ -94,14 +95,14 @@ class ManageMembersController @Inject() (
       })
   }
 
-  def addMember(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+  def addMember(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetch(organisationId) map {
       case Some(org) => Ok(addMemberPage(Some(request.userSession), addMemberForm, AddMemberViewModel(org.id, org.organisationName)))
       case _         => BadRequest("Organisation not found")
     }
   }
 
-  def addMemberAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+  def addMemberAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     addMemberForm.bindFromRequest().fold(
       formWithErrors => {
         organisationService.fetch(organisationId) map {
@@ -119,7 +120,7 @@ class ManageMembersController @Inject() (
     )
   }
 
-  def removeMember(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
+  def removeMember(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetchWithMemberDetails(organisationId, userId)
       .map(_ match {
         case Right(org) => {
@@ -130,7 +131,7 @@ class ManageMembersController @Inject() (
       })
   }
 
-  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = loggedInAction { implicit request =>
+  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     removeMemberForm.bindFromRequest().fold(
       formWithErrors => {
         organisationService.fetchWithMemberDetails(organisationId, userId)

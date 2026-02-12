@@ -37,7 +37,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.ChecklistView
 
 class ChecklistControllerSpec
@@ -57,6 +57,7 @@ class ChecklistControllerSpec
       extends SubmissionServiceMockModule
       with SubmissionsTestData
       with ThirdPartyDeveloperConnectorMockModule
+      with OrganisationActionServiceMockModule
       with HasSessionDeveloperFlow
       with LocalUserIdTracker {
 
@@ -72,6 +73,7 @@ class ChecklistControllerSpec
       mcc,
       cookieSigner,
       SubmissionServiceMock.aMock,
+      OrganisationActionServiceMock.aMock,
       productionCredentialsChecklistView,
       ThirdPartyDeveloperConnectorMock.aMock
     )
