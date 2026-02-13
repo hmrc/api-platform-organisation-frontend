@@ -41,7 +41,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithCSRFAddToken
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.SubmissionServiceMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, QuestionView}
 
 class QuestionControllerSpec
@@ -61,6 +61,7 @@ class QuestionControllerSpec
       extends SubmissionServiceMockModule
       with SubmissionsTestData
       with ThirdPartyDeveloperConnectorMockModule
+      with OrganisationActionServiceMockModule
       with HasSessionDeveloperFlow
       with AppendedClues
       with FixedClock
@@ -78,6 +79,7 @@ class QuestionControllerSpec
     val controller = new QuestionsController(
       errorHandler,
       SubmissionServiceMock.aMock,
+      OrganisationActionServiceMock.aMock,
       cookieSigner,
       questionView,
       mcc,

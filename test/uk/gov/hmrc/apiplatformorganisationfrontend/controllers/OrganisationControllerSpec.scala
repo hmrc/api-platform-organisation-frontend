@@ -39,7 +39,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationServiceMockModule, SubmissionServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, OrganisationServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -57,6 +57,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       extends SubmissionServiceMockModule
       with SubmissionsTestData
       with ThirdPartyDeveloperConnectorMockModule
+      with OrganisationActionServiceMockModule
       with LocalUserIdTracker {
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
@@ -78,6 +79,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         SubmissionServiceMock.aMock,
         OrganisationServiceMock.aMock,
         mockOrganisationConnector,
+        OrganisationActionServiceMock.aMock,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock

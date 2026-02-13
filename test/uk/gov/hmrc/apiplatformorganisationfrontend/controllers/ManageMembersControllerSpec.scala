@@ -38,7 +38,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.OrganisationServiceMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, OrganisationServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
@@ -54,6 +54,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
   trait Setup
       extends OrganisationServiceMockModule
+      with OrganisationActionServiceMockModule
       with ThirdPartyDeveloperConnectorMockModule
       with LocalUserIdTracker {
 
@@ -72,13 +73,14 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         addMemberPage,
         removeMemberPage,
         OrganisationServiceMock.aMock,
+        OrganisationActionServiceMock.aMock,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
       )
 
     val orgId             = OrganisationId.random
-    val userId            = UserId.random
+    val userId            = userSession.developer.userId
     val email             = LaxEmailAddress("bob@example.com")
     val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(userId)))
     val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(RegisteredOrUnregisteredUser(userId, email, true, true)))
@@ -90,6 +92,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "GET /manage-members" should {
     "return page with list of members" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-members").withUser(underTest)(sessionId))
       OrganisationServiceMock.FetchWithAllMembersDetails.thenReturns(orgWithAllMembers)
 
@@ -104,17 +107,31 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-members").withUser(underTest)(sessionId))
       OrganisationServiceMock.FetchWithAllMembersDetails.thenReturnsNone()
 
       val result = underTest.manageMembers(orgId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
+
+    "return not authorised if not a member of the organisation" in new Setup {
+      val orgNotMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(UserId.random)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotMember, userSession)
+      val fakeRequest  = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-members").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithAllMembersDetails.thenReturns(orgWithAllMembers)
+
+      val result = underTest.manageMembers(orgId)(fakeRequest)
+      status(result) shouldBe Status.SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId")
+    }
   }
 
   "GET /add-member" should {
     "return page to add new member's email address" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-member").withUser(underTest)(sessionId))
       OrganisationServiceMock.Fetch.thenReturns(organisation)
 
@@ -129,6 +146,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-member").withUser(underTest)(sessionId))
       OrganisationServiceMock.Fetch.thenReturnsNone()
 
@@ -140,6 +158,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "POST /add-member" should {
     "add new member and redirect to manage members page" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("email" -> "john@example.com"))
@@ -152,6 +171,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if no email address entered" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("email" -> ""))
@@ -166,6 +186,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if invalid email address entered" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("email" -> "fshdgfskjf"))
@@ -180,6 +201,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("email" -> "john@example.com"))
@@ -193,6 +215,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "GET /remove-member" should {
     "return page to remove existing member" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/remove-member").withUser(underTest)(sessionId))
       OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithMember)
 
@@ -207,6 +230,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/remove-member").withUser(underTest)(sessionId))
       OrganisationServiceMock.FetchWithMemberDetails.thenReturnsNone()
 
@@ -218,6 +242,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
   "POST /remove-member" should {
     "remove existing member and redirect to manage members page" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("confirm" -> "Yes", "email" -> "bob@example.com"))
@@ -230,6 +255,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "do not remove existing member if user selects No" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("confirm" -> "No", "email" -> "bob@example.com"))
@@ -241,6 +267,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     "return bad request if user doesn't select Yes or No" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-member")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("confirm" -> ""))

@@ -32,7 +32,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object QuestionsController extends NonEmptyListFormatters {
@@ -48,6 +48,7 @@ object QuestionsController extends NonEmptyListFormatters {
 class QuestionsController @Inject() (
     val errorHandler: ErrorHandler,
     override val submissionService: SubmissionService,
+    val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     questionView: QuestionView,
     mcc: MessagesControllerComponents,

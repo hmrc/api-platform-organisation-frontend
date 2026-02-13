@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationService, SubmissionService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object OrganisationController {
@@ -43,6 +43,7 @@ class OrganisationController @Inject() (
     submissionService: SubmissionService,
     organisationService: OrganisationService,
     organisationConnector: OrganisationConnector,
+    val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector

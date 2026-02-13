@@ -35,7 +35,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.AppViewModel.fromApplicationWithCollaborators
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.{ManageApplicationsViewModel, SelectedAppsForm}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationActionService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 object ApplicationController {
@@ -72,6 +72,7 @@ class ApplicationController @Inject() (
     mcc: MessagesControllerComponents,
     val applicationService: ApplicationService,
     val organisationService: OrganisationService,
+    val organisationActionService: OrganisationActionService,
     val addApplicationsView: AddApplicationsView,
     val addApplicationsSuccessView: AddApplicationsSuccessView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
@@ -83,7 +84,7 @@ class ApplicationController @Inject() (
 
   val selectedAppsForm: Form[SelectedAppsForm] = SelectedAppsForm.form
 
-  def addApplications(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+  def addApplications(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     maybeManageApplicationsViewModel(organisationId) map {
       case Some(viewModel) => Ok(addApplicationsView(Some(request.userSession), selectedAppsForm, viewModel))
       case None            => BadRequest("Organisation not found")
@@ -91,7 +92,7 @@ class ApplicationController @Inject() (
 
   }
 
-  def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
+  def addApplicationsAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     def handleInvalidForm(formWithErrors: Form[SelectedAppsForm]) = {
       maybeManageApplicationsViewModel(organisationId) map {
         case Some(viewModel) => BadRequest(addApplicationsView(Some(request.userSession), formWithErrors, viewModel))

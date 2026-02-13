@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models
 import play.api.mvc._
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{LoggedInState, UserSession}
 
@@ -41,3 +42,13 @@ class UserRequest[A](val userSession: UserSession, val msgRequest: MessagesReque
 }
 
 class MaybeUserRequest[A](val userSession: Option[UserSession], request: MessagesRequest[A]) extends MessagesRequest[A](request, request.messagesApi)
+
+trait HasOrganisation {
+  def organisation: Organisation
+}
+
+class OrganisationRequest[A](
+    val organisation: Organisation,
+    val member: Member,
+    val userRequest: UserRequest[A]
+  ) extends UserRequest[A](userRequest.userSession, userRequest.msgRequest) with HasOrganisation {}
