@@ -182,7 +182,7 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
       val result =
-        controller.showQuestion(aSubmission.id, testQuestionIdsOfInterest.organisationTypeId, None, Some(ValidationErrors(ValidationError(message = "blah"))))(
+        controller.showQuestion(aSubmission.id, aSubmission.getQuestionOfInterest("organisationTypeId").get, None, Some(ValidationErrors(ValidationError(message = "blah"))))(
           loggedInRequest.withCSRFToken
         )
 

@@ -170,26 +170,26 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
   "recordAnswer" should {
     "successfully record answer" in new Setup {
-      ApiPlatformOrganisationStub.RecordAnswer.succeeds(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, completelyAnswerExtendedSubmission)
+      ApiPlatformOrganisationStub.RecordAnswer.succeeds(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, completelyAnswerExtendedSubmission)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, Map("answer" -> Seq("answer"))))
 
       result shouldBe Right(completelyAnswerExtendedSubmission)
     }
 
     "fail when the creation call returns an error" in new Setup {
-      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, INTERNAL_SERVER_ERROR)
+      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, Map("answer" -> Seq("answer"))))
 
       result.isLeft shouldBe true
     }
 
     "fail when the creation call returns a validation error" in new Setup {
       private val errors: ValidationErrors = ValidationErrors(ValidationError(message = "Your answer is wrong"))
-      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, BAD_REQUEST, Json.toJson(errors))
+      ApiPlatformOrganisationStub.RecordAnswer.fails(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, BAD_REQUEST, Json.toJson(errors))
 
-      val result = await(underTest.recordAnswer(submissionId, aSubmission.questionIdsOfInterest.organisationNameLtdId, Map("answer" -> Seq("answer"))))
+      val result = await(underTest.recordAnswer(submissionId, aSubmission.getQuestionOfInterest("organisationNameLtdId").get, Map("answer" -> Seq("answer"))))
 
       result.isLeft shouldBe true
       result shouldBe Left(errors)
