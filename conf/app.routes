@@ -7,6 +7,9 @@ GET         /landing                               uk.gov.hmrc.apiplatformorgani
 GET         /before-you-start                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartView
 POST        /before-you-start                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartAction
 
+GET         /check-responsible-individual          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualView
+POST        /check-responsible-individual          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualAction
+
 GET         /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
 POST        /submission/:sid/checklist             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
 

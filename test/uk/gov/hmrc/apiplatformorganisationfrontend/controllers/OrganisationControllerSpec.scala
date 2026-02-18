@@ -60,20 +60,22 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       with OrganisationActionServiceMockModule
       with LocalUserIdTracker {
 
-    val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
-    val landingPage                   = app.injector.instanceOf[BeforeYouStartPage]
-    val mainLandingPage               = app.injector.instanceOf[LandingPage]
-    val organisationHomePage          = app.injector.instanceOf[OrganisationHomePage]
-    val cookieSigner                  = app.injector.instanceOf[CookieSigner]
-    val errorHandler                  = app.injector.instanceOf[ErrorHandler]
-    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+    val mcc                            = app.injector.instanceOf[MessagesControllerComponents]
+    val beforeYouStartPage             = app.injector.instanceOf[BeforeYouStartPage]
+    val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
+    val mainLandingPage                = app.injector.instanceOf[LandingPage]
+    val organisationHomePage           = app.injector.instanceOf[OrganisationHomePage]
+    val cookieSigner                   = app.injector.instanceOf[CookieSigner]
+    val errorHandler                   = app.injector.instanceOf[ErrorHandler]
+    implicit val appConfig: AppConfig  = app.injector.instanceOf[AppConfig]
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
     val underTest =
       new OrganisationController(
         mcc,
-        landingPage,
+        beforeYouStartPage,
+        checkResponsibleIndividualPage,
         mainLandingPage,
         organisationHomePage,
         SubmissionServiceMock.aMock,

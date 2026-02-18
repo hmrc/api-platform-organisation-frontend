@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import org.apache.commons.validator.routines.EmailValidator
 
 import play.api.data.{Forms, Mapping}
+import play.api.data.Forms._
 
 object FormUtils {
   lazy val DefaultMaxLength: Int = 320
@@ -30,5 +31,9 @@ object FormUtils {
       .verifying("emailAddress.error.maxLength.field", email => email.length <= maxLength)
       .verifying("emailAddress.error.required.field", email => email.nonEmpty)
   }
+
+  def oneOf(options: String*) =
+    default(text, "")
+      .verifying("please.select.an.option", s => options.contains(s))
 
 }
