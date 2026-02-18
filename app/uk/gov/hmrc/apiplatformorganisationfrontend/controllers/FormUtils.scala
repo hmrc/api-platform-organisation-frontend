@@ -18,8 +18,8 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import org.apache.commons.validator.routines.EmailValidator
 
-import play.api.data.{Forms, Mapping}
 import play.api.data.Forms._
+import play.api.data.{Forms, Mapping}
 
 object FormUtils {
   lazy val DefaultMaxLength: Int = 320

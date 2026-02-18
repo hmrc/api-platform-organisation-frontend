@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.Forms.mapping
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
@@ -28,9 +28,9 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
 
 object OrganisationController {
   case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
@@ -41,7 +41,7 @@ object OrganisationController {
 
     def form: Form[CheckResponsibleIndividualForm] = Form(
       mapping(
-        "confirmResponsibleIndividual"   -> oneOf("yes", "no")
+        "confirmResponsibleIndividual" -> oneOf("yes", "no")
       )(CheckResponsibleIndividualForm.apply)(CheckResponsibleIndividualForm.unapply)
     )
   }

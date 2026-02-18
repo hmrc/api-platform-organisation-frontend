@@ -125,21 +125,12 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     "return 303" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
-      SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
 
       val result = underTest.beforeYouStartAction(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/checklist")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/check-responsible-individual")
     }
 
-    "return 400 if fails" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
-      SubmissionServiceMock.CreateSubmission.thenReturnsNone()
-
-      val result = underTest.beforeYouStartAction(fakeRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-    }
   }
 
   "GET /landing" should {
