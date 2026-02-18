@@ -107,7 +107,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       val result = underTest.beforeYouStartView(fakeRequest)
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Get verified on the Developer Hub")
+      contentAsString(result) should include("Set up the Developer Hub dashboard for your business")
     }
 
     "returns 303 on logged out" in new Setup {
