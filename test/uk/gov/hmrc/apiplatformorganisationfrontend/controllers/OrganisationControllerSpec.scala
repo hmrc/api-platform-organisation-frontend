@@ -130,7 +130,16 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/check-responsible-individual")
     }
+  }
 
+  "GET /check-responsible-individual" should {
+    "return 200" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/check-responsible-individual").withUser(underTest)(sessionId))
+
+      val result = underTest.checkResponsibleIndividualView(fakeRequest)
+      status(result) shouldBe Status.OK
+    }
   }
 
   "GET /landing" should {
