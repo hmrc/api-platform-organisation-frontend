@@ -92,6 +92,12 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
       def thenReturnsNone() = {
         when(aMock.createSubmission(*[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(None))
       }
+
+      def verifyCalledWith(userId: UserId, requestedBy: LaxEmailAddress) =
+        verify(aMock).createSubmission(eqTo(userId), eqTo(requestedBy))(*)
+
+      def verifyNotCalled() =
+        verify(aMock, never).createSubmission(*[UserId], *[LaxEmailAddress])(*)
     }
 
     object SubmitSubmission {

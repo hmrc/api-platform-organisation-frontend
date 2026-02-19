@@ -35,7 +35,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 object OrganisationController {
   case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
 
-  case class CheckResponsibleIndividualForm(confirm: String)
+  case class CheckResponsibleIndividualForm(confirmResponsibleIndividual: String)
 
   object CheckResponsibleIndividualForm {
 
@@ -52,6 +52,7 @@ class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
     beforeYouStartPage: BeforeYouStartPage,
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
+    notResponsibleIndividualPage: NotResponsibleIndividualPage,
     landingPage: LandingPage,
     organisationHomePage: OrganisationHomePage,
     submissionService: SubmissionService,
@@ -93,13 +94,21 @@ class OrganisationController @Inject() (
       formWithErrors => {
         Future.successful(BadRequest(checkResponsibleIndividualPage(Some(request.userSession), formWithErrors)))
       },
-      data => {
-        submissionService.createSubmission(request.userId, request.email).map {
-          case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
-          case _                => BadRequest("No submission created")
+      formData => {
+        if (formData.confirmResponsibleIndividual == "yes") {
+          submissionService.createSubmission(request.userId, request.email).map {
+            case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
+            case _                => BadRequest("No submission created")
+          }
+        } else {
+          Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationController.notResponsibleIndividualView))
         }
       }
     )
+  }
+
+  val notResponsibleIndividualView: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(notResponsibleIndividualPage(Some(request.userSession))))
   }
 
   def organisationHomePage(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>

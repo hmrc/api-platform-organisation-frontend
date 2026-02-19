@@ -63,6 +63,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val mcc                            = app.injector.instanceOf[MessagesControllerComponents]
     val beforeYouStartPage             = app.injector.instanceOf[BeforeYouStartPage]
     val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
+    val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
     val mainLandingPage                = app.injector.instanceOf[LandingPage]
     val organisationHomePage           = app.injector.instanceOf[OrganisationHomePage]
     val cookieSigner                   = app.injector.instanceOf[CookieSigner]
@@ -76,6 +77,7 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         mcc,
         beforeYouStartPage,
         checkResponsibleIndividualPage,
+        notResponsibleIndividualPage,
         mainLandingPage,
         organisationHomePage,
         SubmissionServiceMock.aMock,
@@ -139,11 +141,14 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.checkResponsibleIndividualView(fakeRequest)
       status(result) shouldBe Status.OK
+      contentAsString(result) should include(
+        "Are you the person responsible for making sure that software products owned by the business you work for comply with our API terms of use?"
+      )
     }
   }
 
   "POST /check-responsible-individual" should {
-    "return 303" in new Setup {
+    "create new submission and redirect to it if user selected Yes" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
         FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "yes")
@@ -153,6 +158,31 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       val result = underTest.checkResponsibleIndividualAction(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/checklist")
+      SubmissionServiceMock.CreateSubmission.verifyCalledWith(loggedInUser.userId, loggedInUser.email)
+    }
+
+    "redirect to 'no' page if user selected No" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "no")
+      )
+
+      val result = underTest.checkResponsibleIndividualAction(fakeRequest)
+      status(result) shouldBe Status.SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/not-responsible-individual")
+      SubmissionServiceMock.CreateSubmission.verifyNotCalled()
+    }
+
+    "return bad request if no option selected" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(
+        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId)
+      )
+      SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
+
+      val result = underTest.checkResponsibleIndividualAction(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) should include("Please select an option")
     }
   }
 
