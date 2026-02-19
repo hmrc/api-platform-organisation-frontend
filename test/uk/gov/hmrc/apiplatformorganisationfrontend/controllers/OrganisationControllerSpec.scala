@@ -186,6 +186,17 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     }
   }
 
+  "GET /not-responsible-individual" should {
+    "return 200" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/not-responsible-individual").withUser(underTest)(sessionId))
+
+      val result = underTest.notResponsibleIndividualView(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentAsString(result) should include("Ask someone else to complete these checks instead")
+    }
+  }
+
   "GET /landing" should {
     "return landing page with button to continue submission if submission for user found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()

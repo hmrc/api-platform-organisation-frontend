@@ -29,7 +29,7 @@
 @(loggedInSession: Option[UserSession], form: Form[CheckResponsibleIndividualForm])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = "Are you the responsible individual?",
     loggedInSession = loggedInSession
 ) {

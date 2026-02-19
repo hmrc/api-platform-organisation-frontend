@@ -25,7 +25,7 @@
 @(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = "Ask someone else to complete these checks",
     loggedInSession = loggedInSession
 ) {
