@@ -6,3 +6,5 @@ emailAddress.error.not.valid.field = Provide a valid email address
 emailAddress.error.maxLength.field = Provide an email address with fewer than 320 characters
 
 member.error.confirmation.no.choice.field = Please select an option
+
+please.select.an.option = Please select an option
