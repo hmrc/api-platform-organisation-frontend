@@ -36,7 +36,7 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -332,7 +332,10 @@
     </div>
   }
 
-  <h1 class="govuk-heading-l">@pageHeading</h1>
+  <h1 class="govuk-heading-l">
+    <span class='govuk-caption-l'>@{questionnaire.label.value}</span>
+    @pageHeading
+  </h1>
 
   @renderMaybeStatement(question.statement)
 

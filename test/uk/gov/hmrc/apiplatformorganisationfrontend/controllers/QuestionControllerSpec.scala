@@ -117,6 +117,7 @@ class QuestionControllerSpec
         result
       ) contains (s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
       contentAsString(result) contains ("<title>") shouldBe true
+      contentAsString(result) contains ("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
     }
 
     "succeed and check for label, hintText, date question" in new Setup {
