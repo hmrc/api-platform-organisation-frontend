@@ -26,34 +26,39 @@
 
 @layout(
     crumbs = Seq(Crumb.home),
-    pageTitle = "Get verified on the Developer Hub",
+    pageTitle = "Set up the Developer Hub dashboard",
     loggedInSession = loggedInSession
 ) {
 
-    <h1 class="govuk-heading-l">Get verified on the Developer Hub </h1>
+    <h1 class="govuk-heading-l">Set up the Developer Hub dashboard for your business</h1>
 
-    <p class="govuk-body-l">
+    <p class="govuk-body">We're making improvements to the Developer Hub.</p>
 
-        To use our APIs in production, you need to verify the individual or organisation responsible for the software you are building.
-    </p>
-
-    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-
-    <h2 class="govuk-heading-m" id="who-should-register">Before you start</h2>
-
-
-    <p class="govuk-body">You’ll need:</p>
+    <p class="govuk-body">You'll soon be able to:</p>
     <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
-        <li>Your business type</li>
-        <li>company registration number (you can <a href="https://www.gov.uk/get-information-about-a-company" target="_blank">look up the company number (opens in new tab)</a>), or your National Insurance number if you are a sole trader</li>
-        <li>Unique Taxpayer Reference</li>
-        <li>Contact details of a responsible individual that will ensure your software complies with our terms of use</li>
+        <li>view data about your applications and APIs</li>
+        <li>view and manage access to all of your applications in a single place</li>
+        <li>submit and track support queries using your Developer Hub account</li>
     </ul>
 
-
     <p class="govuk-body">
-        Our team will check the information you provide and may contact you with more questions. We aim to complete the checking process in 10 days.
+        To deliver these changes, we need some information about the businesses and individuals that own the software 
+        applications in our production environment.
     </p>
+
+    <p class="govuk-body">We need to know your:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>Unique Taxpayer Reference, HMRC reference, or a tax registration document for a non-UK business</li>
+        <li>contact information for the person responsible for making sure that all software applications comply with our <a href="/api-documentation/docs/terms-of-use" class="govuk-link govuk-link--no-visited-state" target="_blank">terms of use (opens in new tab)</a></li>
+   </ul>
+
+    <p class="govuk-body">For businesses we also need to know the:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>business name</li>
+        <li>registered business address</li>
+        <li>type of business</li>
+        <li>company registration number</li>
+   </ul>
 
     @helper.form(action = routes.OrganisationController.beforeYouStartAction) {
         @helper.CSRF.formField
