@@ -72,15 +72,17 @@ class QuestionsController @Inject() (
     val persistedAnswer = request.submission.latestInstance.answersToQuestions.get(questionId)
     val submission      = request.submission
     val oQuestion       = submission.findQuestion(questionId)
+    val oQuestionnaire  = submission.findQuestionnaireContaining(questionId)
 
     (
       for {
-        flowItem <- fromOption(oQuestion, "Question not found in questionnaire")
-        question  = oQuestion.get
+        flowItem      <- fromOption(oQuestion, "Question not found in questionnaire")
+        question       = oQuestion.get
+        questionnaire <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
       } yield {
         errorInfo.fold[Result](
-          Ok(questionView(question, submitAction, persistedAnswer, None))
-        )(ei => BadRequest(questionView(question, submitAction, onFormAnswer, Some(ei))))
+          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, None))
+        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, Some(ei))))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
