@@ -42,9 +42,13 @@
 @questionId = @{s"question-${question.id.value}-id"}
 @choiceAsId(choice: PossibleAnswer) = {question-@{choice.htmlValue}-id}
 
-@renderStatementText(st: StatementText) = @{Html(st.text)}
+@renderStatementText(st: StatementText) = @{Html(renderText(st.text))}
 
 @renderStatementLink(sl: StatementLink) = {<a class="govuk-link" href="@{sl.url}" target="_blank">@{sl.text}</a>}
+
+@renderText(text: String): String = @{
+  text.replace("{userName}", loggedIn.developer.displayedName)
+}
 
 @renderCompoundFragment(cs: CompoundFragment) = @{
  HtmlFormat.fill(cs.fragments.map( fragment =>
