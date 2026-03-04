@@ -15,16 +15,21 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 @this(layout: Layout,
 govukPanel: GovukPanel)
 
-@()(implicit request: RequestHeader, messages: Messages)
+@()(implicit request: RequestHeader, loggedInSession: UserSession, messages: Messages)
 
 @layout(pageTitle = "We have received your request") {
-  @govukPanel(Panel(title=Text("Your verification request is being processed")))
+  @govukPanel(Panel(title=Text("We’re checking the information you provided")))
 
   <h2 class="govuk-heading-m">What happens next</h2>
 
-  <p class="govuk-body">We will email you within 10 days to let you know the outcome of your verification.</p>
+  <p class="govuk-body">Our checks take up to 10 UK working days.</p>
+
+ <p class="govuk-body">Your software applications and API subscriptions will remain active while we check your information.</p>
+
+ <p class="govuk-body">We’ll email @{loggedInSession.developer.email.toString} when our checks are complete.</p>
 }
