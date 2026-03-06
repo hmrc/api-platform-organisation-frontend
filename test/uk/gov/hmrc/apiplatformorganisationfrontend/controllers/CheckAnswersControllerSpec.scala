@@ -176,7 +176,7 @@ class CheckAnswersControllerSpec
 
       val result = controller.submitSuccessPage(submissionId)(loggedInRequest.withCSRFToken)
       status(result) shouldBe OK
-      contentAsString(result) should include("Your verification request is being processed")
+      contentAsString(result) should include("We’re checking the information you provided")
     }
   }
 }
