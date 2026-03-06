@@ -47,7 +47,7 @@
     
     <h2 class="govuk-heading-m">Organisation member</h2>
 
-    @helper.form(action = routes.ManageMembersController.addMemberAction(viewModel.organisationId)) {
+    @helper.form(action = routes.ManageMembersController.addCollaboratorAction(viewModel.organisationId)) {
       @helper.CSRF.formField
 
         <div class="govuk-form-group">
@@ -65,6 +65,6 @@
             isStartButton = false,
             content = Text("Add member")))
 
-        <a href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
+        <a href="@routes.ManageMembersController.manageCollaborators(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
     }
 }

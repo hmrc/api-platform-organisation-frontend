@@ -31,7 +31,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithAllMembersDetails
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails, OrganisationWithAllMembersDetails}
 
 class OrganisationActionServiceSpec extends AsyncHmrcSpec {
 
@@ -45,7 +45,7 @@ class OrganisationActionServiceSpec extends AsyncHmrcSpec {
     val email             = LaxEmailAddress("bob@example.com")
     val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(userDetails))
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails)))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 

@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
@@ -43,7 +44,7 @@ class OrganisationService @Inject() (
       for {
         org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(org.collaborators.map(m => m.userId).toList))
-      } yield OrganisationWithAllMembersDetails(org, members.users)
+      } yield OrganisationWithAllMembersDetails.apply(org, members.users)
     ).value
   }
 
@@ -51,19 +52,20 @@ class OrganisationService @Inject() (
     (
       for {
         org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
+        coll    <- fromOption(org.collaborators.find(c => c.userId == userId), "Collaborator not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(List(userId)))
         member  <- fromOption(members.users.find(m => m.userId == userId), "User not found")
-      } yield OrganisationWithMemberDetails(org, member)
+      } yield OrganisationWithMemberDetails.apply(org, coll, member)
     ).value
   }
 
-  def addMemberToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def addCollaboratorToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     for {
-      org <- organisationConnector.addMemberToOrganisation(id, emailAddress)
+      org <- organisationConnector.addCollaboratorToOrganisation(id, emailAddress, role)
     } yield org
   }
 
-  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
-    organisationConnector.removeMemberFromOrganisation(id, userId, emailAddress)
+  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+    organisationConnector.removeCollaboratorFromOrganisation(id, userId, emailAddress)
   }
 }
