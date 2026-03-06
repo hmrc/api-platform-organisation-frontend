@@ -21,8 +21,11 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.{AddMemberViewModel, AddMemberForm}
 @import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include._
 
-@this(layout: Layout,
-        govukButton: GovukButton)
+@this(
+    layout: Layout,
+    govukButton: GovukButton,
+    govukRadios: GovukRadios
+)
 
 @(loggedInSession: Option[UserSession], form: Form[AddMemberForm], viewModel: AddMemberViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
@@ -58,7 +61,39 @@
             <span class="govuk-visually-hidden">Error:</span> @fieldError(form.errors, "email")
           </span>
           <input type="text" class="govuk-input @if(form.errors("email").nonEmpty) {govuk-input--error}" id="email" name="email" value="@form.data.getOrElse("email", "")" aria-labelledby="email-label" aria-describedby="add-email-error">
+
         </div>
+
+        @govukRadios(Radios(
+            name = "role",
+            fieldset = Some(
+                Fieldset(
+                    legend = Some(
+                        Legend(
+                            content = HtmlContent("<h2 class='govuk-fieldset__heading'>What permissions do you want to give them?</h2>"),
+                            classes = "govuk-fieldset__legend govuk-fieldset__legend--m"
+                       )
+                    )
+                )
+            ),            
+            errorMessage = form.error("role").map(e => ErrorMessage(content = Text(messages(e.message)))),
+            value = None,
+            items = List(
+                RadioItem(
+                    id = Some("member"), 
+                    content = Text("Member"), 
+                    hint = Some(Hint(content = HtmlContent("<ul class='govuk-list govuk-hint'><li>Manage specific applications</li><li>View organisation members</li></ul>"))),
+                    value = Some("member")
+                ),
+                RadioItem(
+                    id = Some("admin"), 
+                    content = Text("Admin"), 
+                    hint = Some(Hint(content = HtmlContent("<ul class='govuk-list govuk-hint'><li>Manage all applications</li><li>Add organisation members</li><li>Manage organisation members</li></ul>"))),
+                    value = Some("administrator")
+                )
+            )
+        ))  
+
 
         @govukButton(Button(
             id = Some("addMember"), 

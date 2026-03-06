@@ -165,7 +165,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("email" -> "john@example.com"))
+        .withFormUrlEncodedBody("email" -> "john@example.com", "role" -> "member"))
       OrganisationServiceMock.AddMemberToOrganisation.thenReturns(organisation)
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
@@ -178,7 +178,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("email" -> ""))
+        .withFormUrlEncodedBody("email" -> "", "role" -> "member"))
       OrganisationServiceMock.Fetch.thenReturns(organisation)
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
@@ -188,12 +188,27 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("Enter an email address")
     }
 
+    "return bad request if no role selected" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+        .withUser(underTest)(sessionId)
+        .withFormUrlEncodedBody("email" -> "john@example.com", "role" -> ""))
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+
+      val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) should include("Add an organisation member")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("Please select an option")
+    }
+
     "return bad request if invalid email address entered" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("email" -> "fshdgfskjf"))
+        .withFormUrlEncodedBody("email" -> "fshdgfskjf", "role" -> "member"))
       OrganisationServiceMock.Fetch.thenReturns(organisation)
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
@@ -208,7 +223,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("email" -> "john@example.com"))
+        .withFormUrlEncodedBody("email" -> "john@example.com", "role" -> "member"))
       OrganisationServiceMock.AddMemberToOrganisation.thenReturnsNone()
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)

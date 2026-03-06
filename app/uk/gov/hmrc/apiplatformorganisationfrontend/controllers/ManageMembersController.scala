@@ -26,8 +26,8 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Roles
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
@@ -40,13 +40,15 @@ object ManageMembersController {
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
   case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
 
-  case class AddMemberForm(email: String)
+  case class AddMemberForm(email: String, role: Option[String])
 
   object AddMemberForm {
 
     def form: Form[AddMemberForm] = Form(
       mapping(
-        "email" -> emailValidator()
+        "email" -> emailValidator(),
+        "role"  -> optional(text)
+          .verifying("member.error.confirmation.no.choice.field", _.isDefined)
       )(AddMemberForm.apply)(AddMemberForm.unapply)
     )
   }
@@ -112,7 +114,8 @@ class ManageMembersController @Inject() (
         }
       },
       memberAddData => {
-        organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), Roles.Member)
+        val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
+        organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
             case Right(org) => Redirect(routes.ManageMembersController.manageCollaborators(organisationId))
             case Left(msg)  => BadRequest(msg)
