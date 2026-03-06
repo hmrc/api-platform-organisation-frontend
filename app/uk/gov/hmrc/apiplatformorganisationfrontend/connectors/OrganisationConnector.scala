@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.{Role, Roles}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
@@ -125,7 +126,7 @@ class OrganisationConnector @Inject() (
 
     metrics.record(api) {
       http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
-        .withBody(Json.toJson(AddMemberRequest(email)))
+        .withBody(Json.toJson(AddMemberRequest(email, Roles.Member)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
@@ -156,7 +157,7 @@ object OrganisationConnector {
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
   implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 
-  case class AddMemberRequest(email: LaxEmailAddress)
+  case class AddMemberRequest(email: LaxEmailAddress, role: Role)
   implicit val writesAddMembersRequest: Writes[AddMemberRequest] = Json.writes[AddMemberRequest]
 
   case class RemoveMemberRequest(userId: UserId, email: LaxEmailAddress)

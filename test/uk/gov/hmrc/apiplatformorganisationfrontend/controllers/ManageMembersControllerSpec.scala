@@ -30,7 +30,7 @@ import play.api.test.{CSRFTokenHelper, FakeRequest}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -82,7 +82,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val orgId             = OrganisationId.random
     val userId            = userSession.developer.userId
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(RegisteredOrUnregisteredUser(userId, email, true, true)))
     val orgWithMember     = OrganisationWithMemberDetails(organisation, RegisteredOrUnregisteredUser(userId, email, true, true))
 
@@ -116,7 +116,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     }
 
     "return not authorised if not a member of the organisation" in new Setup {
-      val orgNotMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(UserId.random)))
+      val orgNotMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(UserId.random)))
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(orgNotMember, userSession)
       val fakeRequest  = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-members").withUser(underTest)(sessionId))
