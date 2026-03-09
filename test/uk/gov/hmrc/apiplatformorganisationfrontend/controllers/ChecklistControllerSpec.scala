@@ -99,7 +99,7 @@ class ChecklistControllerSpec
       val result = controller.checklistPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) should include("Get verified on the Developer Hub")
+      contentAsString(result) should include("Set up your business in the Developer Hub")
     }
 
     "succeed with completed submission" in new Setup {
@@ -108,7 +108,7 @@ class ChecklistControllerSpec
       val result = controller.checklistPage(submissionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) should include("Get verified on the Developer Hub")
+      contentAsString(result) should include("Set up your business in the Developer Hub")
     }
 
     "fail with NOT FOUND if logged in user doesn't match submission user" in new Setup {

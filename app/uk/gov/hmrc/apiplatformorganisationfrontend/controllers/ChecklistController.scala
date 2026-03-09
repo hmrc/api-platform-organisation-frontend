@@ -54,7 +54,25 @@ object ChecklistController {
     lazy val fieldName = label.toLowerCase
   }
   case class ViewGrouping(label: String, questionnaireSummaries: NonEmptyList[ViewQuestionnaireSummary])
-  case class ViewModel(submissionId: SubmissionId, groupings: NonEmptyList[ViewGrouping])
+
+  case class ViewModel(submissionId: SubmissionId, groupings: NonEmptyList[ViewGrouping]) {
+
+    def isComplete: Boolean = {
+      groupings.find(g => g.questionnaireSummaries.find(q => !q.isComplete).isDefined).isEmpty
+    }
+
+    def numberOfQuestionnaires: Int = {
+      var count: Int = 0
+      groupings.map(g => count += g.questionnaireSummaries.size)
+      count
+    }
+
+    def numberOfCompletedQuestionnaires: Int = {
+      var count: Int = 0
+      groupings.map(g => count += g.questionnaireSummaries.filter(q => q.isComplete).size)
+      count
+    }
+  }
 
   def convertToSummary(extSubmission: ExtendedSubmission)(questionnaire: Questionnaire): ViewQuestionnaireSummary = {
     val progress   = extSubmission.questionnaireProgress.get(questionnaire.id).get
