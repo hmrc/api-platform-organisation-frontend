@@ -67,22 +67,22 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
     object AddMemberToOrganisation {
 
       def thenReturns(out: Organisation) = {
-        when(aMock.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
+        when(aMock.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(Right(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
 
     object RemoveMemberFromOrganisation {
 
       def thenReturns(out: Organisation) = {
-        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
+        when(aMock.removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
       }
 
       def thenReturnsNone() = {
-        when(aMock.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Organisation not found")))
       }
     }
   }

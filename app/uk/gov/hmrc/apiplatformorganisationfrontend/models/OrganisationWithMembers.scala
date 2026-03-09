@@ -16,9 +16,36 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models
 
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator, Organisation}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 
-case class OrganisationWithAllMembersDetails(organisation: Organisation, members: List[RegisteredOrUnregisteredUser])
+case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser)
 
-case class OrganisationWithMemberDetails(organisation: Organisation, member: RegisteredOrUnregisteredUser)
+object CollaboratorWithUserDetails {
+
+  def apply(collaborator: Collaborator, user: Option[RegisteredOrUnregisteredUser]): Option[CollaboratorWithUserDetails] = {
+    user match {
+      case Some(u) => Some(CollaboratorWithUserDetails(collaborator, u))
+      case _       => None
+    }
+  }
+}
+
+case class OrganisationWithAllMembersDetails(organisation: Organisation, collaborators: Set[CollaboratorWithUserDetails])
+
+object OrganisationWithAllMembersDetails {
+
+  def apply(organisation: Organisation, members: List[RegisteredOrUnregisteredUser]): OrganisationWithAllMembersDetails = {
+    val collaborators = organisation.collaborators.map(c => CollaboratorWithUserDetails.apply(c, members.find(u => u.userId == c.userId))).flatten
+    OrganisationWithAllMembersDetails(organisation, collaborators)
+  }
+}
+
+case class OrganisationWithMemberDetails(organisation: Organisation, collaborator: CollaboratorWithUserDetails)
+
+object OrganisationWithMemberDetails {
+
+  def apply(organisation: Organisation, collaborator: Collaborator, member: RegisteredOrUnregisteredUser): OrganisationWithMemberDetails = {
+    OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(collaborator, member))
+  }
+}

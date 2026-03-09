@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
@@ -119,19 +120,19 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def addMemberToOrganisation(id: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def addCollaboratorToOrganisation(id: OrganisationId, email: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to add user $email to organisation $id"
 
     metrics.record(api) {
       http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
-        .withBody(Json.toJson(AddMemberRequest(email)))
+        .withBody(Json.toJson(AddMemberRequest(email, role)))
         .execute[Either[UpstreamErrorResponse, Organisation]]
         .map(_.leftMap(failed))
     }
   }
 
-  def removeMemberFromOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
     import cats.implicits._
     val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
 
@@ -156,7 +157,7 @@ object OrganisationConnector {
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
   implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 
-  case class AddMemberRequest(email: LaxEmailAddress)
+  case class AddMemberRequest(email: LaxEmailAddress, role: Role)
   implicit val writesAddMembersRequest: Writes[AddMemberRequest] = Json.writes[AddMemberRequest]
 
   case class RemoveMemberRequest(userId: UserId, email: LaxEmailAddress)

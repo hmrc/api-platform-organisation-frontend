@@ -47,16 +47,16 @@
     
     <h2 class="govuk-heading-m">Organisation member</h2>
 
-    @helper.form(action = routes.ManageMembersController.removeMemberAction(viewModel.organisationId, viewModel.member.userId)) {
+    @helper.form(action = routes.ManageMembersController.removeCollaboratorAction(viewModel.organisationId, viewModel.collaborator.user.userId)) {
       @helper.CSRF.formField
 
-        <p class="govuk-body">@viewModel.member.email.text</p>
+        <p class="govuk-body">@viewModel.collaborator.user.email.text</p>
         <div class="govuk-form-group @if(form.errors("confirm").nonEmpty) {govuk-form-group--error}">
           <fieldset id="confirm" class="govuk-fieldset" aria-describedby="remove-team-member-error">
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
               <h3 class="govuk-fieldset__heading">Are you sure you want to remove this member from this organisation?</h3>
             </legend>
-            <input id="email" name="email" type="hidden" value="@viewModel.member.email.text"/>
+            <input id="email" name="email" type="hidden" value="@viewModel.collaborator.user.email.text"/>
             <span id="remove-team-member-error" class="govuk-error-message">
               <span class="govuk-visually-hidden">Error:</span> @fieldError(form.errors, "confirm")
             </span>
@@ -79,6 +79,6 @@
             isStartButton = false,
             content = Text("Remove member")))
 
-        <a href="@routes.ManageMembersController.manageMembers(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
+        <a href="@routes.ManageMembersController.manageCollaborators(viewModel.organisationId)" class="govuk-button govuk-button--secondary">Cancel</a>
     }
 }

@@ -45,12 +45,12 @@ trait OrganisationActionServiceMockModule extends MockitoSugar with ArgumentMatc
       ): Unit = {
 
       def createReturn(req: UserRequest[A]): Future[Option[OrganisationRequest[A]]] = {
-        org.members.find(_.userId == userSession.developer.userId) match {
+        org.collaborators.find(_.userId == userSession.developer.userId) match {
           case None         => successful(None)
           case Some(member) => successful(Some(
               new OrganisationRequest(
                 organisation = org,
-                member = member,
+                collaborator = member,
                 userRequest = req
               )
             ))
