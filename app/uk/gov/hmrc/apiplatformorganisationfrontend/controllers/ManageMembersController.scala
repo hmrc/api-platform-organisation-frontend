@@ -26,26 +26,29 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
-import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.CollaboratorWithUserDetails
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ManageMembersController {
-  case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, members: List[RegisteredOrUnregisteredUser])
+  case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborators: Set[CollaboratorWithUserDetails])
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
-  case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, member: RegisteredOrUnregisteredUser)
+  case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
 
-  case class AddMemberForm(email: String)
+  case class AddMemberForm(email: String, role: Option[String])
 
   object AddMemberForm {
 
     def form: Form[AddMemberForm] = Form(
       mapping(
-        "email" -> emailValidator()
+        "email" -> emailValidator(),
+        "role"  -> optional(text)
+          .verifying("member.error.confirmation.no.choice.field", _.isDefined)
       )(AddMemberForm.apply)(AddMemberForm.unapply)
     )
   }
@@ -84,25 +87,25 @@ class ManageMembersController @Inject() (
   val addMemberForm: Form[AddMemberForm]       = AddMemberForm.form
   val removeMemberForm: Form[RemoveMemberForm] = RemoveMemberForm.form
 
-  def manageMembers(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def manageCollaborators(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetchWithAllMembersDetails(organisationId)
       .map(_ match {
         case Right(org) => {
-          val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.members)
+          val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.collaborators)
           Ok(manageMembersPage(Some(request.userSession), viewModel))
         }
         case Left(msg)  => BadRequest(msg)
       })
   }
 
-  def addMember(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def addCollaborator(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetch(organisationId) map {
       case Some(org) => Ok(addMemberPage(Some(request.userSession), addMemberForm, AddMemberViewModel(org.id, org.organisationName)))
       case _         => BadRequest("Organisation not found")
     }
   }
 
-  def addMemberAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def addCollaboratorAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     addMemberForm.bindFromRequest().fold(
       formWithErrors => {
         organisationService.fetch(organisationId) map {
@@ -111,33 +114,34 @@ class ManageMembersController @Inject() (
         }
       },
       memberAddData => {
-        organisationService.addMemberToOrganisation(organisationId, LaxEmailAddress(memberAddData.email))
+        val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
+        organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
-            case Right(org) => Redirect(routes.ManageMembersController.manageMembers(organisationId))
+            case Right(org) => Redirect(routes.ManageMembersController.manageCollaborators(organisationId))
             case Left(msg)  => BadRequest(msg)
           })
       }
     )
   }
 
-  def removeMember(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def removeCollaborator(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     organisationService.fetchWithMemberDetails(organisationId, userId)
       .map(_ match {
         case Right(org) => {
-          val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.member)
+          val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
           Ok(removeMemberPage(Some(request.userSession), removeMemberForm, viewModel))
         }
         case Left(msg)  => BadRequest(msg)
       })
   }
 
-  def removeMemberAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def removeCollaboratorAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     removeMemberForm.bindFromRequest().fold(
       formWithErrors => {
         organisationService.fetchWithMemberDetails(organisationId, userId)
           .map(_ match {
             case Right(org) => {
-              val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.member)
+              val viewModel = RemoveMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
               BadRequest(removeMemberPage(Some(request.userSession), formWithErrors, viewModel))
             }
             case Left(msg)  => BadRequest(msg)
@@ -146,13 +150,13 @@ class ManageMembersController @Inject() (
       confirmData => {
         confirmData.confirm match {
           case Some("Yes") => {
-            organisationService.removeMemberFromOrganisation(organisationId, userId, LaxEmailAddress(confirmData.email))
+            organisationService.removeCollaboratorFromOrganisation(organisationId, userId, LaxEmailAddress(confirmData.email))
               .map(_ match {
-                case Right(org) => Redirect(routes.ManageMembersController.manageMembers(organisationId))
+                case Right(org) => Redirect(routes.ManageMembersController.manageCollaborators(organisationId))
                 case Left(msg)  => BadRequest(msg)
               })
           }
-          case _           => successful(Redirect(routes.ManageMembersController.manageMembers(organisationId)))
+          case _           => successful(Redirect(routes.ManageMembersController.manageCollaborators(organisationId)))
         }
       }
     )

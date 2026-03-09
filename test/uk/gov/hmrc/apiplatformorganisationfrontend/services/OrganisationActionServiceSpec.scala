@@ -24,14 +24,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithAllMembersDetails
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails, OrganisationWithAllMembersDetails}
 
 class OrganisationActionServiceSpec extends AsyncHmrcSpec {
 
@@ -43,9 +43,9 @@ class OrganisationActionServiceSpec extends AsyncHmrcSpec {
     val orgId             = OrganisationId.random
     val userId            = userSession.developer.userId
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(userDetails))
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails)))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
@@ -68,7 +68,7 @@ class OrganisationActionServiceSpec extends AsyncHmrcSpec {
     }
 
     "return None if not a member of organisation" in new Setup {
-      val org = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(UserId.random)))
+      val org = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(UserId.random)))
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(org)))
 
       val result = await(underTest.process(orgId, userRequest))

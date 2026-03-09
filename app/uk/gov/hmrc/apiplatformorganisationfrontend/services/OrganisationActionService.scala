@@ -40,8 +40,8 @@ class OrganisationActionService @Inject() (
     (
       for {
         organisation <- OptionT(organisationConnector.fetchOrganisation(organisationId))
-        member       <- OptionT.fromOption[Future](organisation.members.find(_.userId == userRequest.developer.userId))
-      } yield new OrganisationRequest(organisation, member, userRequest)
+        collaborator <- OptionT.fromOption[Future](organisation.collaborators.find(_.userId == userRequest.developer.userId))
+      } yield new OrganisationRequest(organisation, collaborator, userRequest)
     )
       .value
   }

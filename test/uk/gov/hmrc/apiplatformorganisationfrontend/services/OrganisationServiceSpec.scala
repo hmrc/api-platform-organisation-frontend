@@ -23,13 +23,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Member, Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Roles
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, RegisteredOrUnregisteredUser}
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.OrganisationWithAllMembersDetails
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails => CollaboratorWithUserDetailsuserDetails, OrganisationWithAllMembersDetails}
 
 class OrganisationServiceSpec extends AsyncHmrcSpec {
 
@@ -41,9 +42,9 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     val orgId             = OrganisationId.random
     val userId            = UserId.random
     val email             = LaxEmailAddress("bob@example.com")
-    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Member(userId)))
+    val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, List(userDetails))
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetailsuserDetails(Collaborators.Member(userId), userDetails)))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
@@ -73,7 +74,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
       result.isRight shouldBe true
       result.value.organisation.id shouldBe orgId
-      result.value.members.head.email shouldBe email
+      result.value.collaborators.head.user.email shouldBe email
     }
 
     "return left if organisation not found" in new Setup {
@@ -95,7 +96,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
       result.isRight shouldBe true
       result.value.organisation.id shouldBe orgId
-      result.value.member.email shouldBe email
+      result.value.collaborator.user.email shouldBe email
     }
 
     "return left if organisation not found" in new Setup {
@@ -118,44 +119,44 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     }
   }
 
-  "addMemberToOrganisation" should {
+  "addCollaboratorToOrganisation" should {
     "get or create user in TPD, then call back end connector to add user id to org" in new Setup {
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
+      when(mockOrganisationConnector.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(Right(organisation)))
 
-      val result = await(underTest.addMemberToOrganisation(orgId, email))
+      val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
 
       result.isRight shouldBe true
       result.value.id shouldBe orgId
     }
 
     "return left if fails to add new member" in new Setup {
-      when(mockOrganisationConnector.addMemberToOrganisation(*[OrganisationId], *[LaxEmailAddress])(*)).thenReturn(successful(
+      when(mockOrganisationConnector.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(
         Left(s"Failed to add user $userId to organisation $orgId")
       ))
 
-      val result = await(underTest.addMemberToOrganisation(orgId, email))
+      val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
 
       result.isLeft shouldBe true
       result.left.value shouldBe s"Failed to add user $userId to organisation $orgId"
     }
   }
 
-  "removeMemberFromOrganisation" should {
+  "removeCollaboratorFromOrganisation" should {
     "call back end connector to remove user id from org" in new Setup {
-      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
+      when(mockOrganisationConnector.removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(organisation)))
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
+      val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
       result.isRight shouldBe true
       result.value.id shouldBe orgId
     }
 
     "return left if fails to remove member" in new Setup {
-      when(mockOrganisationConnector.removeMemberFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
+      when(mockOrganisationConnector.removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
         Left(s"Failed to remove user $userId from organisation $orgId")
       ))
 
-      val result = await(underTest.removeMemberFromOrganisation(orgId, userId, email))
+      val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
       result.isLeft shouldBe true
       result.left.value shouldBe s"Failed to remove user $userId from organisation $orgId"
