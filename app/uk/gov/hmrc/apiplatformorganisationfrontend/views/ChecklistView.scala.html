@@ -32,6 +32,14 @@
     label.toLowerCase.replaceAll(" ", "-")
 }
 
+@statusAsTaskListItem(questionnaire: ViewQuestionnaireSummary) = @{
+  if(questionnaire.isComplete) {
+    TaskListItemStatus(tag = None, content = Text(questionnaire.state))
+  } else {
+    TaskListItemStatus(tag = Some(Tag(content = Text(questionnaire.state))))
+  }  
+}
+
 @layout(
     crumbs = Seq(Crumb.home),
     pageTitle = pageTitle,
@@ -48,11 +56,11 @@
     <ol class="app-task-list">
     @for(group <- model.groupings.toList) {
         <li>
-            @govukTaskList(TaskList(items = group.questionnaireSummaries.map(questionaire =>
+            @govukTaskList(TaskList(items = group.questionnaireSummaries.map(questionnaire =>
                 TaskListItem(
-                    title = TaskListItemTitle(content = Text(questionaire.label)),
-                    status = TaskListItemStatus(tag = Some(Tag(content = Text(questionaire.state), classes = if(!questionaire.isComplete) "govuk-tag--grey" else ""))),
-                    href = questionaire.nextQuestionUrl
+                    title = TaskListItemTitle(content = Text(questionnaire.label)),
+                    status = statusAsTaskListItem(questionnaire),
+                    href = questionnaire.nextQuestionUrl
                 )
             ).toList,
                 idPrefix = labelAsId(group.label)
