@@ -91,7 +91,8 @@ class ManageMembersController @Inject() (
     organisationService.fetchWithAllMembersDetails(organisationId)
       .map(_ match {
         case Right(org) => {
-          val viewModel = ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.collaborators)
+          val viewModel =
+            ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.collaborators.filter(c => c.collaborator.isResponsibleIndividual == false))
           Ok(manageMembersPage(Some(request.userSession), viewModel))
         }
         case Left(msg)  => BadRequest(msg)

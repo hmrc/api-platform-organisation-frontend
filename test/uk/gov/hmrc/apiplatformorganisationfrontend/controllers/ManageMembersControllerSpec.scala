@@ -106,6 +106,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Manage organisation members")
       contentAsString(result) should include("My org")
+      contentAsString(result) should include("Add an organisation member")
       contentAsString(result) should include("bob@example.com")
     }
 
