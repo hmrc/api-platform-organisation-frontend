@@ -25,11 +25,19 @@
 @(model: ViewModel, form: Form[DummyForm])(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
 
 @pageTitle = @{
-    "Get verified on the Developer Hub"
+    "Set up your business in the Developer Hub"
 }
 
 @labelAsId(label: String) = @{
     label.toLowerCase.replaceAll(" ", "-")
+}
+
+@statusAsTaskListItem(questionnaire: ViewQuestionnaireSummary) = @{
+  if(questionnaire.isComplete) {
+    TaskListItemStatus(tag = None, content = Text(questionnaire.state))
+  } else {
+    TaskListItemStatus(tag = Some(Tag(content = Text(questionnaire.state))))
+  }  
 }
 
 @layout(
@@ -42,17 +50,17 @@
     <h1 class="govuk-heading-l">
     @pageTitle
     </h1>
+    <p class="govuk-body">
+        You have completed @model.numberOfCompletedQuestionnaires of @model.numberOfQuestionnaires sections.
+    </p>
     <ol class="app-task-list">
     @for(group <- model.groupings.toList) {
         <li>
-            <h2 class="app-task-list__section">
-            @group.label
-            </h2>
-            @govukTaskList(TaskList(items = group.questionnaireSummaries.map(questionaire =>
+            @govukTaskList(TaskList(items = group.questionnaireSummaries.map(questionnaire =>
                 TaskListItem(
-                    title = TaskListItemTitle(content = Text(questionaire.label)),
-                    status = TaskListItemStatus(tag = Some(Tag(content = Text(questionaire.state.toLowerCase.capitalize), classes = if(!questionaire.isComplete) "govuk-tag--grey" else ""))),
-                    href = questionaire.nextQuestionUrl
+                    title = TaskListItemTitle(content = Text(questionnaire.label)),
+                    status = statusAsTaskListItem(questionnaire),
+                    href = questionnaire.nextQuestionUrl
                 )
             ).toList,
                 idPrefix = labelAsId(group.label)
@@ -64,9 +72,11 @@
     @helper.form(action = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistAction(model.submissionId), Symbol("class") -> "form") {
         @helper.CSRF.formField
 
-        <div class="govuk-button-group">
-            <button id="submit-ok" class="govuk-button" type="submit" name="submit-action">Save and continue</button>
-        </div>
+        @if(model.isComplete) {
+            <div class="govuk-button-group">
+                <button id="submit-ok" class="govuk-button" type="submit" name="submit-action">Review and send</button>
+            </div>
+        }
     }
 
 }
