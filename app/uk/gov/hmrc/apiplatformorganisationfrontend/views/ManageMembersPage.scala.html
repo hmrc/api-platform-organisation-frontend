@@ -26,7 +26,7 @@
 @(loggedInSession: Option[UserSession], viewModel: ManageMembersViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    crumbs = Seq(Crumb.home),
+    crumbs = Seq(Crumb.organisation(viewModel.organisationId, viewModel.organisationName), Crumb.home),
     pageTitle = "Organisation members",
     loggedInSession = loggedInSession
 ) {
@@ -34,8 +34,10 @@
     <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
     <h1 class="govuk-heading-l">Organisation members</h1>
 
-    <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add an organisation member</a>
-    
+    <div class="govuk-button-group">
+      <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add an organisation member</a>
+    </div>
+
     <h2 class="govuk-heading-m">Manage organisation members</h2>
 
     <table class="govuk-table">
