@@ -33,22 +33,21 @@
     Crumb.organisation(viewModel.organisationId, viewModel.organisationName), 
     Crumb.home
   ),
-  pageTitle = "Organisation member added",
+  pageTitle = "Organisation member removed",
   loggedInSession = loggedInSession
 ) {
 
   @govukPanel(
     Panel(
-      title=Text("Organisation member added"),
-      content=Text(s"to ${viewModel.organisationName.value}")
+      title=Text("Organisation member removed"),
+      content=Text(s"from ${viewModel.organisationName.value}")
     ))
 
   <p class="govuk-body">
-    We've sent an email to tell them that they have been added as @(if(viewModel.role == "Admin") { "an" } else { "a" }) @{viewModel.role.toLowerCase()} to your organisation.
+    We've sent an email to tell them that they have been removed as @(if(viewModel.role == "Admin") { "an" } else { "a" }) @{viewModel.role.toLowerCase()} from your organisation.
   </p>
 
   <div class="govuk-button-group">
-    <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add another organisation member</a>
     <a href="@routes.ManageMembersController.manageCollaborators(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Back to organisation members</a>
   </div>
 }

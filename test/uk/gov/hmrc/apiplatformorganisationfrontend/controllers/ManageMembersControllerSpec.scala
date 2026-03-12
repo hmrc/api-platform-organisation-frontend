@@ -64,6 +64,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val addMemberPage                 = app.injector.instanceOf[AddMemberPage]
     val removeMemberPage              = app.injector.instanceOf[RemoveMemberPage]
     val addMemberSuccessPage          = app.injector.instanceOf[AddMemberSuccessPage]
+    val removeMemberSuccessPage       = app.injector.instanceOf[RemoveMemberSuccessPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -76,6 +77,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         addMemberPage,
         removeMemberPage,
         addMemberSuccessPage,
+        removeMemberSuccessPage,
         OrganisationServiceMock.aMock,
         OrganisationActionServiceMock.aMock,
         cookieSigner,
@@ -308,7 +310,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Organisation member added")
       contentAsString(result) should include("My org")
-      contentAsString(result) should include("We've sent an email to to tell them that they have been added as a member to your organisation.")
+      contentAsString(result) should include("We've sent an email to tell them that they have been added as a member to your organisation.")
     }
 
     "return bad request if no organisation found" in new Setup {
@@ -333,7 +335,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Remove an organisation member")
+      contentAsString(result) should include("Are you sure that you want to remove this user from your organisation?")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("bob@example.com")
     }
@@ -353,22 +355,22 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     "remove existing member and redirect to manage members page" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/remove-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("confirm" -> "Yes", "email" -> "bob@example.com"))
+        .withFormUrlEncodedBody("confirm" -> "Yes", "role" -> "Member", "email" -> "bob@example.com"))
       OrganisationServiceMock.RemoveMemberFromOrganisation.thenReturns(organisation)
 
       val result = underTest.removeCollaboratorAction(orgId, userId)(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId/manage-collaborators")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId/remove-collaborator-success?role=Member")
     }
 
     "do not remove existing member if user selects No" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/remove-collaborator")
         .withUser(underTest)(sessionId)
-        .withFormUrlEncodedBody("confirm" -> "No", "email" -> "bob@example.com"))
+        .withFormUrlEncodedBody("confirm" -> "No", "role" -> "Member", "email" -> "bob@example.com"))
 
       val result = underTest.removeCollaboratorAction(orgId, userId)(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
@@ -378,17 +380,44 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     "return bad request if user doesn't select Yes or No" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/remove-collaborator")
         .withUser(underTest)(sessionId)
         .withFormUrlEncodedBody("confirm" -> ""))
       OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithMember)
 
       val result = underTest.removeCollaboratorAction(orgId, userId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) should include("Remove an organisation member")
+      contentAsString(result) should include("Are you sure that you want to remove this user from your organisation?")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("bob@example.com")
       contentAsString(result) should include("Please select an option")
+    }
+  }
+
+  "GET /remove-collaborator-success" should {
+    "return page to confirm member removed" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/remove-collaborator-success").withUser(underTest)(sessionId))
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+
+      val result = underTest.removeCollaboratorSuccess(orgId, "Member")(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Organisation member removed")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("We've sent an email to tell them that they have been removed as a member from your organisation.")
+    }
+
+    "return bad request if no organisation found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/remove-collaborator-success").withUser(underTest)(sessionId))
+      OrganisationServiceMock.Fetch.thenReturnsNone()
+
+      val result = underTest.removeCollaboratorSuccess(orgId, "Member")(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
     }
   }
 }
