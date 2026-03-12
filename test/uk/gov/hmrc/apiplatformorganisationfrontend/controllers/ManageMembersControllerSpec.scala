@@ -60,6 +60,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val manageMembersPage             = app.injector.instanceOf[ManageMembersPage]
+    val manageMemberPage              = app.injector.instanceOf[ManageMemberPage]
     val addMemberPage                 = app.injector.instanceOf[AddMemberPage]
     val removeMemberPage              = app.injector.instanceOf[RemoveMemberPage]
     val addMemberSuccessPage          = app.injector.instanceOf[AddMemberSuccessPage]
@@ -71,6 +72,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       new ManageMembersController(
         mcc,
         manageMembersPage,
+        manageMemberPage,
         addMemberPage,
         removeMemberPage,
         addMemberSuccessPage,
@@ -87,10 +89,13 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
 
     val orgWithAllMembers =
-      OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true))))
+      OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), None)))
 
     val orgWithMember =
-      OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true)))
+      OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), Some(user)))
+
+    val orgWithUnregisteredMember =
+      OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), None))
 
     implicit val loggedInUser: User = user
   }
@@ -130,6 +135,62 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       OrganisationServiceMock.FetchWithAllMembersDetails.thenReturns(orgWithAllMembers)
 
       val result = underTest.manageCollaborators(orgId)(fakeRequest)
+      status(result) shouldBe Status.SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId")
+    }
+  }
+
+  "GET /manage-collaborator" should {
+    "return page with details of member" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborator").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithMember)
+
+      val result = underTest.manageCollaborator(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("John Doe")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("Remove this user from the organisation")
+      contentAsString(result) should include("bob@example.com")
+    }
+
+    "return page with details of unregistered member" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborator").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithUnregisteredMember)
+
+      val result = underTest.manageCollaborator(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Unregistered user")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("Remove this user from the organisation")
+      contentAsString(result) should include("bob@example.com")
+    }
+
+    "return bad request if no organisation found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborator").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithMemberDetails.thenReturnsNone()
+
+      val result = underTest.manageCollaborator(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return not authorised if not a member of the organisation" in new Setup {
+      val orgNotMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(UserId.random)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotMember, userSession)
+      val fakeRequest  = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborator").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithMember)
+
+      val result = underTest.manageCollaborator(orgId, userId)(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId")
     }

@@ -40,6 +40,7 @@ object ManageMembersController {
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
   case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
   case class AddMemberSuccessViewModel(organisationId: OrganisationId, organisationName: OrganisationName, role: String)
+  case class ManageMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
 
   case class AddMemberForm(email: String, role: Option[String])
 
@@ -72,6 +73,7 @@ object ManageMembersController {
 class ManageMembersController @Inject() (
     mcc: MessagesControllerComponents,
     manageMembersPage: ManageMembersPage,
+    manageMemberPage: ManageMemberPage,
     addMemberPage: AddMemberPage,
     removeMemberPage: RemoveMemberPage,
     addMemberSuccessPage: AddMemberSuccessPage,
@@ -96,6 +98,18 @@ class ManageMembersController @Inject() (
           val viewModel =
             ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.collaborators.filter(c => c.collaborator.isResponsibleIndividual == false))
           Ok(manageMembersPage(Some(request.userSession), viewModel))
+        }
+        case Left(msg)  => BadRequest(msg)
+      })
+  }
+
+  def manageCollaborator(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+    organisationService.fetchWithMemberDetails(organisationId, userId)
+      .map(_ match {
+        case Right(org) => {
+          val viewModel =
+            ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
+          Ok(manageMemberPage(Some(request.userSession), viewModel))
         }
         case Left(msg)  => BadRequest(msg)
       })

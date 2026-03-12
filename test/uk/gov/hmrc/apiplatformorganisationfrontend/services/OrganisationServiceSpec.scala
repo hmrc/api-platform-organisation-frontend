@@ -30,7 +30,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails => CollaboratorWithUserDetailsuserDetails, OrganisationWithAllMembersDetails}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails, OrganisationWithAllMembersDetails}
 
 class OrganisationServiceSpec extends AsyncHmrcSpec {
 
@@ -44,7 +44,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     val email             = LaxEmailAddress("bob@example.com")
     val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetailsuserDetails(Collaborators.Member(userId), userDetails)))
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails, None)))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
@@ -91,12 +91,28 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     "return organisation with members details for given org id" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
       ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+      ThirdPartyDeveloperConnectorMock.FetchDeveloper.succeeds(user)
 
       val result = await(underTest.fetchWithMemberDetails(orgId, userId))
 
       result.isRight shouldBe true
       result.value.organisation.id shouldBe orgId
       result.value.collaborator.user.email shouldBe email
+      result.value.collaborator.maybeUserDetails.isDefined shouldBe true
+      result.value.collaborator.maybeUserDetails.get.firstName shouldBe "John"
+    }
+
+    "return organisation with members details but no user details for unregistered user" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+      ThirdPartyDeveloperConnectorMock.FetchDeveloper.returnsNone()
+
+      val result = await(underTest.fetchWithMemberDetails(orgId, userId))
+
+      result.isRight shouldBe true
+      result.value.organisation.id shouldBe orgId
+      result.value.collaborator.user.email shouldBe email
+      result.value.collaborator.maybeUserDetails.isDefined shouldBe false
     }
 
     "return left if organisation not found" in new Setup {

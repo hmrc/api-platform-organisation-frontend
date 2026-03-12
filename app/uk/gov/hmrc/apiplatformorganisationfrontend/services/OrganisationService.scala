@@ -55,7 +55,8 @@ class OrganisationService @Inject() (
         coll    <- fromOption(org.collaborators.find(c => c.userId == userId), "Collaborator not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(List(userId)))
         member  <- fromOption(members.users.find(m => m.userId == userId), "User not found")
-      } yield OrganisationWithMemberDetails.apply(org, coll, member)
+        user    <- liftF(thirdPartyDeveloperConnector.fetchDeveloper(userId))
+      } yield OrganisationWithMemberDetails.apply(org, coll, member, user)
     ).value
   }
 
