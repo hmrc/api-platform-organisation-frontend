@@ -62,6 +62,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val manageMembersPage             = app.injector.instanceOf[ManageMembersPage]
     val addMemberPage                 = app.injector.instanceOf[AddMemberPage]
     val removeMemberPage              = app.injector.instanceOf[RemoveMemberPage]
+    val addMemberSuccessPage          = app.injector.instanceOf[AddMemberSuccessPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -72,6 +73,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         manageMembersPage,
         addMemberPage,
         removeMemberPage,
+        addMemberSuccessPage,
         OrganisationServiceMock.aMock,
         OrganisationActionServiceMock.aMock,
         cookieSigner,
@@ -171,7 +173,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId/manage-collaborators")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/organisation/$orgId/add-collaborator-success?role=Member")
     }
 
     "return bad request if no email address entered" in new Setup {
@@ -228,6 +230,33 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       OrganisationServiceMock.AddMemberToOrganisation.thenReturnsNone()
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+  }
+
+  "GET /add-collaborator-success" should {
+    "return page to confirm new member added" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-collaborator-success").withUser(underTest)(sessionId))
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+
+      val result = underTest.addCollaboratorSuccess(orgId, "Member")(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Organisation member added")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("We've sent an email to to tell them that they have been added as a member to your organisation.")
+    }
+
+    "return bad request if no organisation found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-collaborator-success").withUser(underTest)(sessionId))
+      OrganisationServiceMock.Fetch.thenReturnsNone()
+
+      val result = underTest.addCollaboratorSuccess(orgId, "Member")(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }

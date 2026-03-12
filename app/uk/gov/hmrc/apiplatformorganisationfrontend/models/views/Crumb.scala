@@ -30,4 +30,8 @@ object Crumb {
 
   def organisation(organisationId: OrganisationId, organisationName: OrganisationName) =
     Crumb(organisationName.value, routes.OrganisationController.organisationHomePage(organisationId).url, Some("data-breadcrumb-organisation-home"))
+
+  def organisationMembers(organisationId: OrganisationId) =
+    Crumb("Organisation members", routes.ManageMembersController.manageCollaborators(organisationId).url, Some("data-breadcrumb-organisation-members"))
+
 }

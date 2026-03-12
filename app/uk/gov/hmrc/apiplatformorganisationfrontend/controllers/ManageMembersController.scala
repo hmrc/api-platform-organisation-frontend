@@ -39,6 +39,7 @@ object ManageMembersController {
   case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborators: Set[CollaboratorWithUserDetails])
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
   case class RemoveMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
+  case class AddMemberSuccessViewModel(organisationId: OrganisationId, organisationName: OrganisationName, role: String)
 
   case class AddMemberForm(email: String, role: Option[String])
 
@@ -73,6 +74,7 @@ class ManageMembersController @Inject() (
     manageMembersPage: ManageMembersPage,
     addMemberPage: AddMemberPage,
     removeMemberPage: RemoveMemberPage,
+    addMemberSuccessPage: AddMemberSuccessPage,
     organisationService: OrganisationService,
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
@@ -118,11 +120,18 @@ class ManageMembersController @Inject() (
         val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
         organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
-            case Right(org) => Redirect(routes.ManageMembersController.manageCollaborators(organisationId))
+            case Right(org) => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
             case Left(msg)  => BadRequest(msg)
           })
       }
     )
+  }
+
+  def addCollaboratorSuccess(organisationId: OrganisationId, role: String): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+    organisationService.fetch(organisationId) map {
+      case Some(org) => Ok(addMemberSuccessPage(Some(request.userSession), AddMemberSuccessViewModel(org.id, org.organisationName, role)))
+      case _         => BadRequest("Organisation not found")
+    }
   }
 
   def removeCollaborator(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>

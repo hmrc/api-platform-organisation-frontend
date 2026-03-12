@@ -28,6 +28,7 @@ GET         /organisation/:oid/remove-collaborator/:uid uk.gov.hmrc.apiplatformo
 POST        /organisation/:oid/remove-collaborator/:uid uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorAction(oid: OrganisationId, uid: UserId)
 GET         /organisation/:oid/add-collaborator         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaborator(oid: OrganisationId)
 POST        /organisation/:oid/add-collaborator         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: OrganisationId)
+GET         /organisation/:oid/add-collaborator-success uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: OrganisationId, role: String)
 
 GET        /organisation/:oid/add-applications          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
 POST       /organisation/:oid/add-applications          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
