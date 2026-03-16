@@ -16,13 +16,19 @@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 
 @this(layout: Layout,
 govukPanel: GovukPanel)
 
-@()(implicit request: RequestHeader, loggedInSession: UserSession, messages: Messages)
+@()(implicit request: RequestHeader, loggedInSession: UserSession, messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = "We have received your request") {
+@layout(
+  crumbs = Seq(Crumb.home),
+  pageTitle = "We have received your request",
+  loggedInSession = Some(loggedInSession)
+) {
+
   @govukPanel(Panel(title=Text("We’re checking the information you provided")))
 
   <h2 class="govuk-heading-m">What happens next</h2>
