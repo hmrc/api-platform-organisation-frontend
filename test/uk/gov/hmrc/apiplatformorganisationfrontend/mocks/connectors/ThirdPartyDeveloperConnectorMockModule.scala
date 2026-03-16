@@ -20,6 +20,8 @@ import scala.concurrent.Future.successful
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.GetRegisteredOrUnregisteredUsersResponse
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.data.SampleUserSession
@@ -52,6 +54,15 @@ trait ThirdPartyDeveloperConnectorMockModule
 
       def succeeds(response: GetRegisteredOrUnregisteredUsersResponse) =
         when(aMock.getRegisteredOrUnregisteredUsers(*)(*)).thenReturn(successful(response))
+    }
+
+    object FetchDeveloper {
+
+      def succeeds(user: User) =
+        when(aMock.fetchDeveloper(*[UserId])(*)).thenReturn(successful(Some(user)))
+
+      def returnsNone() =
+        when(aMock.fetchDeveloper(*[UserId])(*)).thenReturn(successful(None))
     }
   }
 

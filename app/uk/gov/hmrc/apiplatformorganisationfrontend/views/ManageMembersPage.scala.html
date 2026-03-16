@@ -20,67 +20,38 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.ManageMembersViewModel
 
-@this(layout: Layout,
-        govukButton: GovukButton)
+@this(
+  layout: Layout,
+  govukTable: GovukTable
+)
 
 @(loggedInSession: Option[UserSession], viewModel: ManageMembersViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    crumbs = Seq(Crumb.home),
-    pageTitle = "Manage organisation members",
-    loggedInSession = loggedInSession
+  crumbs = Seq(Crumb.organisation(viewModel.organisationId, viewModel.organisationName), Crumb.home),
+  pageTitle = "Organisation members",
+  loggedInSession = loggedInSession
 ) {
 
-    <h1 class="govuk-heading-l">Manage organisation members</h1>
+  <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
+  <h1 class="govuk-heading-l">Organisation members</h1>
 
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-one-quarter">
-            <span class="govuk-body govuk-!-font-weight-bold govuk-!-margin-0">Organisation:</span>
-        </div>
-        <div class="govuk-grid-column-three-quarters">
-            <p class="govuk-body govuk-!-margin-0" id="organisation-name">@viewModel.organisationName.toString</p>
-        </div>
-    </div>
-    
-    <br>
-    
-    <h2 class="govuk-heading-m">Organisation members</h2>
+  <div class="govuk-button-group">
+    <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add an organisation member</a>
+  </div>
 
-    <table class="govuk-table">
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">
-            Email address
-          </th>
-          <th scope="col" class="govuk-table__header">
-            Role
-          </th>
-          <th scope="col" class="govuk-table__header">
-            <span class="govuk-visually-hidden">
-               Delete button column
-            </span>
-          </th>
-        </tr>
-      </thead>    
-      <tbody class="govuk-table__body">
-        @for(member <- viewModel.collaborators) {
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell center-table-text">@member.user.email.text</td>
-            <td class="govuk-table__cell center-table-text">@member.collaborator.role.displayText</td>
-            <td class="govuk-table__cell center-table-text">
-              <a class="govuk-button govuk-button--secondary govuk-!-margin-0" href="@routes.ManageMembersController.removeCollaborator(viewModel.organisationId, member.user.userId).url">
-                Remove <span class="govuk-visually-hidden">@member.user.email.text</span>
-              </a>
-            </td>
-          </tr>  
-        }
-      </tbody>
-    </table>
-    @helper.form(action = routes.ManageMembersController.addCollaborator(viewModel.organisationId)) {
-        @helper.CSRF.formField
-        @govukButton(Button(
-            id = Some("addMember"), 
-            isStartButton = false,
-            content = Text("Add member")))
-    }
+  <h2 class="govuk-heading-m">Manage organisation members</h2>
+
+  @govukTable(Table(
+    head = Some(Seq(
+      HeadCell(content = Text("Email address")),
+      HeadCell(content = Text("Role")),
+      HeadCell(content = Text("Action"))
+    )),
+    rows = viewModel.collaborators.toList.map(member => Seq(
+      TableRow(content = Text(member.user.email.text)),
+      TableRow(content = Text(member.collaborator.role.displayText)),
+      TableRow(content = HtmlContent(s"<a class='govuk-link govuk-link--no-visited-state' href='${routes.ManageMembersController.manageCollaborator(viewModel.organisationId, member.user.userId)}'>Manage</a>")),
+    ))
+  ))
 }

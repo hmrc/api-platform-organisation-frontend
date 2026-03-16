@@ -1,35 +1,38 @@
 # microservice specific routes
 
-->          /hmrc-frontend                              hmrcfrontend.Routes
+->          /hmrc-frontend                                  hmrcfrontend.Routes
 
-GET         /landing                                    uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.landingView
+GET         /landing                                        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.landingView
 
-GET         /before-you-start                           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartView
-POST        /before-you-start                           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartAction
-GET         /check-responsible-individual               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualView
-POST        /check-responsible-individual               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualAction
-GET         /not-responsible-individual                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.notResponsibleIndividualView
+GET         /before-you-start                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartView
+POST        /before-you-start                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartAction
+GET         /check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualView
+POST        /check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualAction
+GET         /not-responsible-individual                     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.notResponsibleIndividualView
 
-GET         /submission/:sid/checklist                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
-POST        /submission/:sid/checklist                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
+GET         /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
+POST        /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
 
-GET         /submission/:sid/question/:qid              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.showQuestion(sid: SubmissionId, qid: Question.Id)
-POST        /submission/:sid/question/:qid              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.recordAnswer(sid: SubmissionId, qid: Question.Id)
-GET         /submission/:sid/question/:qid/update       uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
-POST        /submission/:sid/question/:qid/update       uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
+GET         /submission/:sid/question/:qid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.showQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.recordAnswer(sid: SubmissionId, qid: Question.Id)
+GET         /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
 
-GET         /submission/:sid/check-answers              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
-POST        /submission/:sid/submit-request             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
-GET         /submission/:sid/submit-success             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
+GET         /submission/:sid/check-answers                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
+POST        /submission/:sid/submit-request                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
+GET         /submission/:sid/submit-success                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
 
-GET         /organisation/:oid                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationHomePage(oid: OrganisationId)
-GET         /organisation/:oid/manage-collaborators     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborators(oid: OrganisationId)
-GET         /organisation/:oid/remove-collaborator/:uid uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaborator(oid: OrganisationId, uid: UserId)
-POST        /organisation/:oid/remove-collaborator/:uid uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorAction(oid: OrganisationId, uid: UserId)
-GET         /organisation/:oid/add-collaborator         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaborator(oid: OrganisationId)
-POST        /organisation/:oid/add-collaborator         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: OrganisationId)
+GET         /organisation/:oid                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationHomePage(oid: OrganisationId)
+GET         /organisation/:oid/manage-collaborators         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborators(oid: OrganisationId)
+GET         /organisation/:oid/manage-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborator(oid: OrganisationId, uid: UserId)
+GET         /organisation/:oid/remove-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaborator(oid: OrganisationId, uid: UserId)
+POST        /organisation/:oid/remove-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorAction(oid: OrganisationId, uid: UserId)
+GET         /organisation/:oid/remove-collaborator-success  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorSuccess(oid: OrganisationId, role: String)
+GET         /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaborator(oid: OrganisationId)
+POST        /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: OrganisationId)
+GET         /organisation/:oid/add-collaborator-success     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: OrganisationId, role: String)
 
-GET        /organisation/:oid/add-applications          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
-POST       /organisation/:oid/add-applications          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
+GET        /organisation/:oid/add-applications              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
+POST       /organisation/:oid/add-applications              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
 
-GET         /assets/*file                               controllers.Assets.versioned(path = "/public", file: Asset)
+GET         /assets/*file                                   controllers.Assets.versioned(path = "/public", file: Asset)

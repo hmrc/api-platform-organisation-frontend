@@ -45,7 +45,7 @@ class OrganisationActionServiceSpec extends AsyncHmrcSpec {
     val email             = LaxEmailAddress("bob@example.com")
     val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails)))
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails, None)))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 

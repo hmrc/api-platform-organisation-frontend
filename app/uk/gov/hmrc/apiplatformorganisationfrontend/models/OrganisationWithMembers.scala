@@ -17,15 +17,16 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.models
 
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator, Organisation}
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 
-case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser)
+case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser, maybeUserDetails: Option[User])
 
 object CollaboratorWithUserDetails {
 
-  def apply(collaborator: Collaborator, user: Option[RegisteredOrUnregisteredUser]): Option[CollaboratorWithUserDetails] = {
+  def apply(collaborator: Collaborator, user: Option[RegisteredOrUnregisteredUser], maybeUserDetails: Option[User]): Option[CollaboratorWithUserDetails] = {
     user match {
-      case Some(u) => Some(CollaboratorWithUserDetails(collaborator, u))
+      case Some(u) => Some(CollaboratorWithUserDetails(collaborator, u, maybeUserDetails))
       case _       => None
     }
   }
@@ -36,7 +37,7 @@ case class OrganisationWithAllMembersDetails(organisation: Organisation, collabo
 object OrganisationWithAllMembersDetails {
 
   def apply(organisation: Organisation, members: List[RegisteredOrUnregisteredUser]): OrganisationWithAllMembersDetails = {
-    val collaborators = organisation.collaborators.map(c => CollaboratorWithUserDetails.apply(c, members.find(u => u.userId == c.userId))).flatten
+    val collaborators = organisation.collaborators.map(c => CollaboratorWithUserDetails.apply(c, members.find(u => u.userId == c.userId), None)).flatten
     OrganisationWithAllMembersDetails(organisation, collaborators)
   }
 }
@@ -45,7 +46,7 @@ case class OrganisationWithMemberDetails(organisation: Organisation, collaborato
 
 object OrganisationWithMemberDetails {
 
-  def apply(organisation: Organisation, collaborator: Collaborator, member: RegisteredOrUnregisteredUser): OrganisationWithMemberDetails = {
-    OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(collaborator, member))
+  def apply(organisation: Organisation, collaborator: Collaborator, member: RegisteredOrUnregisteredUser, maybeUser: Option[User]): OrganisationWithMemberDetails = {
+    OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(collaborator, member, maybeUser))
   }
 }

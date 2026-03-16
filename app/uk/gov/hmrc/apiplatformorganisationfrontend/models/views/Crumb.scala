@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
 
 case class Crumb(name: String, url: String = "", dataAttribute: Option[String] = None)
 
@@ -24,5 +27,11 @@ object Crumb {
 
   def home(implicit appConfig: AppConfig) =
     Crumb("Home", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/dashboard", Some("data-breadcrumb-home"))
+
+  def organisation(organisationId: OrganisationId, organisationName: OrganisationName) =
+    Crumb(organisationName.value, routes.OrganisationController.organisationHomePage(organisationId).url, Some("data-breadcrumb-organisation-home"))
+
+  def organisationMembers(organisationId: OrganisationId) =
+    Crumb("Organisation members", routes.ManageMembersController.manageCollaborators(organisationId).url, Some("data-breadcrumb-organisation-members"))
 
 }
