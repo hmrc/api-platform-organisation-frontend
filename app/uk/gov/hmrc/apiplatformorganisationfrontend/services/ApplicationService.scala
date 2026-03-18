@@ -45,7 +45,7 @@ class ApplicationService @Inject() (thirdPartyOrchestratorConnector: ThirdPartyO
         applicationId =>
           thirdPartyOrchestratorConnector.applicationCommandDispatch(
             applicationId,
-            DispatchRequest(LinkToOrganisation(actor, organisationId, instant()), Set.empty)
+            DispatchRequest(LinkToOrganisation(actor, organisationId, instant), Set.empty)
           )
       }
     ).map(_ => ())
