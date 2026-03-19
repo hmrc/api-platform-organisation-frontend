@@ -146,7 +146,7 @@ class QuestionControllerSpec
       contentAsString(result) contains ("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
       contentAsString(result) contains ("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
       contentAsString(result) contains ("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
-      contentAsString(result) contains ("Region") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result) contains ("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
       contentAsString(result) contains ("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
       contentAsString(result) contains ("<title>") shouldBe true
     }
