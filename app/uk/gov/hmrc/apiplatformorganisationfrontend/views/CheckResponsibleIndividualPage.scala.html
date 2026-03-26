@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
-@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.CheckResponsibleIndividualForm
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.CheckResponsibleIndividualForm
 
 @this(
     layout: Layout,
@@ -33,7 +33,7 @@
     pageTitle = "Are you the responsible individual?",
     loggedInSession = loggedInSession
 ) {
-    @helper.form(action = routes.OrganisationController.checkResponsibleIndividualAction) {
+    @helper.form(action = routes.OrganisationRegistrationController.checkResponsibleIndividualAction) {
         @helper.CSRF.formField
 
         @govukRadios(Radios(

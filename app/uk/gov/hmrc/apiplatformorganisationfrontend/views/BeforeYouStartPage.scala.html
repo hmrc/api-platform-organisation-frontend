@@ -60,7 +60,7 @@
         <li>company registration number</li>
    </ul>
 
-    @helper.form(action = routes.OrganisationController.beforeYouStartAction) {
+    @helper.form(action = routes.OrganisationRegistrationController.beforeYouStartAction) {
         @helper.CSRF.formField
         @govukButton(Button(
             id = Some("createSubmission"), 

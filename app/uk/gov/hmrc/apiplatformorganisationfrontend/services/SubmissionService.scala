@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -27,7 +27,10 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 
 @Singleton
-class SubmissionService @Inject() (organisationConnector: OrganisationConnector) {
+class SubmissionService @Inject() (
+    organisationConnector: OrganisationConnector
+  )(implicit val ec: ExecutionContext
+  ) {
 
   def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] =
     organisationConnector.createSubmission(userId, requestedBy)
@@ -45,4 +48,8 @@ class SubmissionService @Inject() (organisationConnector: OrganisationConnector)
   def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier)
       : Future[Either[ValidationErrors, ExtendedSubmission]] =
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
+
+  def checkIsInAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Boolean] = {
+    organisationConnector.fetchOrganisationAllowList(userId).map(allow => allow.isDefined)
+  }
 }

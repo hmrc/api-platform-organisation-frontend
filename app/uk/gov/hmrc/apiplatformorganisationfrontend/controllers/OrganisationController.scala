@@ -17,10 +17,8 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-import play.api.data.Form
-import play.api.data.Forms.mapping
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
@@ -28,32 +26,16 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object OrganisationController {
   case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
-
-  case class CheckResponsibleIndividualForm(confirmResponsibleIndividual: String)
-
-  object CheckResponsibleIndividualForm {
-
-    def form: Form[CheckResponsibleIndividualForm] = Form(
-      mapping(
-        "confirmResponsibleIndividual" -> oneOf("yes", "no")
-      )(CheckResponsibleIndividualForm.apply)(CheckResponsibleIndividualForm.unapply)
-    )
-  }
 }
 
 @Singleton
 class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
-    beforeYouStartPage: BeforeYouStartPage,
-    checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
-    notResponsibleIndividualPage: NotResponsibleIndividualPage,
-    landingPage: LandingPage,
     organisationHomePage: OrganisationHomePage,
     submissionService: SubmissionService,
     organisationService: OrganisationService,
@@ -67,49 +49,6 @@ class OrganisationController @Inject() (
   ) extends BaseController(mcc) {
 
   import OrganisationController._
-
-  val checkResponsibleIndividualForm: Form[CheckResponsibleIndividualForm] = CheckResponsibleIndividualForm.form
-
-  val landingView: Action[AnyContent] = loggedInAction { implicit request =>
-    submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
-      case Some(submission) => Future.successful(Ok(landingPage(Some(request.userSession), Some(submission.id), submission.status.isOpenToAnswers)))
-      case _                => Future.successful(Ok(landingPage(Some(request.userSession), None)))
-    }
-  }
-
-  val beforeYouStartView: Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Ok(beforeYouStartPage(Some(request.userSession))))
-  }
-
-  val beforeYouStartAction: Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationController.checkResponsibleIndividualView))
-  }
-
-  val checkResponsibleIndividualView: Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Ok(checkResponsibleIndividualPage(Some(request.userSession), checkResponsibleIndividualForm)))
-  }
-
-  val checkResponsibleIndividualAction: Action[AnyContent] = loggedInAction { implicit request =>
-    checkResponsibleIndividualForm.bindFromRequest().fold(
-      formWithErrors => {
-        Future.successful(BadRequest(checkResponsibleIndividualPage(Some(request.userSession), formWithErrors)))
-      },
-      formData => {
-        if (formData.confirmResponsibleIndividual == "yes") {
-          submissionService.createSubmission(request.userId, request.email).map {
-            case Some(submission) => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
-            case _                => BadRequest("No submission created")
-          }
-        } else {
-          Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationController.notResponsibleIndividualView))
-        }
-      }
-    )
-  }
-
-  val notResponsibleIndividualView: Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Ok(notResponsibleIndividualPage(Some(request.userSession))))
-  }
 
   def organisationHomePage(organisationId: OrganisationId): Action[AnyContent] = loggedInAction { implicit request =>
     organisationService.fetch(organisationId).map {

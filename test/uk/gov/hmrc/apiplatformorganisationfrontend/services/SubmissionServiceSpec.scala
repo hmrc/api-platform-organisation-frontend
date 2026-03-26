@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
 
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,6 +29,8 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 
 class SubmissionServiceSpec extends AsyncHmrcSpec {
+
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   trait Setup extends FixedClock with SubmissionsTestData {
     implicit val hc: HeaderCarrier = HeaderCarrier()
