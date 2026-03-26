@@ -61,7 +61,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       with LocalUserIdTracker {
 
     val mcc                            = app.injector.instanceOf[MessagesControllerComponents]
-    val beforeYouStartPage             = app.injector.instanceOf[BeforeYouStartPage]
+    val registrationStartPage          = app.injector.instanceOf[RegistrationStartPage]
     val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
     val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
     val notAllowListedPage             = app.injector.instanceOf[NotAllowListedPage]
@@ -74,7 +74,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val underTest =
       new OrganisationRegistrationController(
         mcc,
-        beforeYouStartPage,
+        registrationStartPage,
         checkResponsibleIndividualPage,
         notResponsibleIndividualPage,
         notAllowListedPage,
@@ -93,13 +93,13 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
   }
 
-  "GET /before-you-start" should {
-    "show before you start page" in new Setup {
+  "GET /registration" should {
+    "show registration start page" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturnsNone()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
-      val result = underTest.beforeYouStartView()(fakeRequest)
+      val result = underTest.registrationStartView()(fakeRequest)
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Set up the Developer Hub dashboard for your business")
@@ -108,18 +108,18 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     "redirect to check list page if you already have a submission" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(aSubmission)
-      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
+      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
-      val result = underTest.beforeYouStartView()(loggedOutRequest)
+      val result = underTest.registrationStartView()(loggedOutRequest)
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id}/checklist")
     }
 
     "redirect to login when logged out" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.fails()
-      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
+      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
-      val result = underTest.beforeYouStartView()(loggedOutRequest)
+      val result = underTest.registrationStartView()(loggedOutRequest)
       status(result) shouldBe Status.SEE_OTHER
       redirectLocation(result) shouldBe Some("http://localhost:9685/developer/login")
     }
@@ -128,7 +128,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
   "GET /not-allow-listed" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/not-allow-listed").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration/not-allow-listed").withUser(underTest)(sessionId))
 
       val result = underTest.notAllowListedView(fakeRequest)
       status(result) shouldBe Status.OK
@@ -136,21 +136,21 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     }
   }
 
-  "POST /before-you-start" should {
+  "POST /registration" should {
     "return 303" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/registration").withUser(underTest)(sessionId))
 
-      val result = underTest.beforeYouStartAction()(fakeRequest)
+      val result = underTest.registrationStartAction()(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/check-responsible-individual")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/registration/check-responsible-individual")
     }
   }
 
   "GET /check-responsible-individual" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/check-responsible-individual").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration/check-responsible-individual").withUser(underTest)(sessionId))
 
       val result = underTest.checkResponsibleIndividualView(fakeRequest)
       status(result) shouldBe Status.OK
@@ -164,7 +164,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     "create new submission and redirect to it if user selected Yes" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "yes")
+        FakeRequest("POST", "/registration/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "yes")
       )
       SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
 
@@ -177,19 +177,19 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     "redirect to 'no' page if user selected No" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "no")
+        FakeRequest("POST", "/registration/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "no")
       )
 
       val result = underTest.checkResponsibleIndividualAction()(fakeRequest)
       status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/not-responsible-individual")
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/registration/not-responsible-individual")
       SubmissionServiceMock.CreateSubmission.verifyNotCalled()
     }
 
     "return bad request if no option selected" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId)
+        FakeRequest("POST", "/registration/check-responsible-individual").withUser(underTest)(sessionId)
       )
       SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
 
@@ -202,7 +202,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
   "GET /not-responsible-individual" should {
     "return 200" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/not-responsible-individual").withUser(underTest)(sessionId))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration/not-responsible-individual").withUser(underTest)(sessionId))
 
       val result = underTest.notResponsibleIndividualView(fakeRequest)
       status(result) shouldBe Status.OK

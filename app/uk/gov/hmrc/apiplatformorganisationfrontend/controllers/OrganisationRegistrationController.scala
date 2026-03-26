@@ -46,7 +46,7 @@ object OrganisationRegistrationController {
 @Singleton
 class OrganisationRegistrationController @Inject() (
     mcc: MessagesControllerComponents,
-    beforeYouStartPage: BeforeYouStartPage,
+    registrationStartPage: RegistrationStartPage,
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
@@ -65,14 +65,14 @@ class OrganisationRegistrationController @Inject() (
 
   val checkResponsibleIndividualForm: Form[CheckResponsibleIndividualForm] = CheckResponsibleIndividualForm.form
 
-  def beforeYouStartView(): Action[AnyContent] = loggedInAction { implicit request =>
+  def registrationStartView(): Action[AnyContent] = loggedInAction { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
       case Some(submission) => Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id)))
-      case _                => Future.successful(Ok(beforeYouStartPage(Some(request.userSession))))
+      case _                => Future.successful(Ok(registrationStartPage(Some(request.userSession))))
     }
   }
 
-  def beforeYouStartAction(): Action[AnyContent] = loggedInAction { implicit request =>
+  def registrationStartAction(): Action[AnyContent] = loggedInAction { implicit request =>
     Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.checkResponsibleIndividualView))
   }
 
