@@ -25,7 +25,7 @@
 @(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @layout(
-    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
+    crumbs = Seq(Crumb.home),
     pageTitle = "You are not authorised to complete these checks yet",
     loggedInSession = loggedInSession
 ) {

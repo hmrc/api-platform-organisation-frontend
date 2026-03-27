@@ -24,7 +24,7 @@ import play.api.libs.json.{JsValue, Json}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{OrganisationId, UserId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Question, Submission, SubmissionId}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, OrganisationAllowList, Question, Submission, SubmissionId}
 
 object ApiPlatformOrganisationStub {
 
@@ -273,6 +273,31 @@ object ApiPlatformOrganisationStub {
     def fails(orgId: OrganisationId, userId: UserId, status: Int): StubMapping = {
       stubFor(
         delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
+  object FetchOrganisationAllowList {
+
+    def succeeds(userId: UserId, allowList: OrganisationAllowList): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/allow-list/${userId}"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(allowList).toString())
+          )
+      )
+    }
+
+    def fails(userId: UserId, status: Int): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/allow-list/${userId}"))
           .willReturn(
             aResponse()
               .withStatus(status)

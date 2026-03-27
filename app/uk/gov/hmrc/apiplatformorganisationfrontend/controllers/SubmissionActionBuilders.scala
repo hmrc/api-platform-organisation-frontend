@@ -33,6 +33,8 @@ class SubmissionRequest[A](val extSubmission: ExtendedSubmission, val userReques
   lazy val answersToQuestions = submission.latestInstance.answersToQuestions
 }
 
+class AllowListRequest[A](val allowList: OrganisationAllowList, val userRequest: UserRequest[A]) extends UserRequest[A](userRequest.userSession, userRequest.msgRequest)
+
 trait SubmissionActionBuilders {
   self: BaseController =>
 
@@ -48,6 +50,22 @@ trait SubmissionActionBuilders {
           for {
             submission <- ETR.fromOptionM(submissionService.fetch(submissionId), errorHandler.notFoundTemplate(input).map(NotFound(_)))
           } yield new SubmissionRequest(submission, input)
+        )
+          .value
+      }
+    }
+
+  private def allowListRefiner()(implicit ec: ExecutionContext): ActionRefiner[UserRequest, AllowListRequest] =
+    new ActionRefiner[UserRequest, AllowListRequest] {
+      def executionContext = ec
+
+      def refine[A](input: UserRequest[A]): Future[Either[Result, AllowListRequest[A]]] = {
+        implicit val implicitRequest: MessagesRequest[A] = input
+        lazy val notAllowListedRedirect                  = Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.notAllowListedView)
+        (
+          for {
+            allowList <- ETR.fromOptionM(submissionService.fetchAllowList(input.userSession.developer.userId), Future.successful(notAllowListedRedirect))
+          } yield new AllowListRequest(allowList, input)
         )
           .value
       }
@@ -71,6 +89,15 @@ trait SubmissionActionBuilders {
       (
         loggedInActionRefiner() andThen
           submissionRefiner(submissionId) andThen submissionFilter
+      ).invokeBlock(request, block)
+    }
+  }
+
+  def withAllowList(block: AllowListRequest[AnyContent] => Future[Result])(implicit ec: ExecutionContext): Action[AnyContent] = {
+    Action.async { implicit request =>
+      (
+        loggedInActionRefiner() andThen
+          allowListRefiner()
       ).invokeBlock(request, block)
     }
   }

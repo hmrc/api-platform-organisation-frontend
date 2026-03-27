@@ -49,7 +49,7 @@ class SubmissionService @Inject() (
       : Future[Either[ValidationErrors, ExtendedSubmission]] =
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
 
-  def checkIsInAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    organisationConnector.fetchOrganisationAllowList(userId).map(allow => allow.isDefined)
+  def fetchAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[OrganisationAllowList]] = {
+    organisationConnector.fetchOrganisationAllowList(userId)
   }
 }

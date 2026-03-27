@@ -50,7 +50,7 @@ class OrganisationRegistrationController @Inject() (
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
-    submissionService: SubmissionService,
+    val submissionService: SubmissionService,
     organisationService: OrganisationService,
     organisationConnector: OrganisationConnector,
     val organisationActionService: OrganisationActionService,
@@ -59,20 +59,21 @@ class OrganisationRegistrationController @Inject() (
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
-  ) extends BaseController(mcc) {
+  ) extends BaseController(mcc)
+    with SubmissionActionBuilders {
 
   import OrganisationRegistrationController._
 
   val checkResponsibleIndividualForm: Form[CheckResponsibleIndividualForm] = CheckResponsibleIndividualForm.form
 
-  def registrationStartView(): Action[AnyContent] = loggedInAction { implicit request =>
+  def registrationStartView(): Action[AnyContent] = withAllowList { implicit request =>
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
       case Some(submission) => Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id)))
       case _                => Future.successful(Ok(registrationStartPage(Some(request.userSession))))
     }
   }
 
-  def registrationStartAction(): Action[AnyContent] = loggedInAction { implicit request =>
+  def registrationStartAction(): Action[AnyContent] = withAllowList { implicit request =>
     Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.checkResponsibleIndividualView))
   }
 
@@ -80,11 +81,11 @@ class OrganisationRegistrationController @Inject() (
     Future.successful(Ok(notAllowListedPage(Some(request.userSession))))
   }
 
-  val checkResponsibleIndividualView: Action[AnyContent] = loggedInAction { implicit request =>
+  val checkResponsibleIndividualView: Action[AnyContent] = withAllowList { implicit request =>
     Future.successful(Ok(checkResponsibleIndividualPage(Some(request.userSession), checkResponsibleIndividualForm)))
   }
 
-  def checkResponsibleIndividualAction(): Action[AnyContent] = loggedInAction { implicit request =>
+  def checkResponsibleIndividualAction(): Action[AnyContent] = withAllowList { implicit request =>
     checkResponsibleIndividualForm.bindFromRequest().fold(
       formWithErrors => {
         Future.successful(BadRequest(checkResponsibleIndividualPage(Some(request.userSession), formWithErrors)))
