@@ -23,7 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, SubmissionId}
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
@@ -40,6 +41,8 @@ class SubmissionServiceSpec extends AsyncHmrcSpec {
     val underTest = new SubmissionService(
       mockOrganisationConnector
     )
+
+    val allowList = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
   }
 
   "fetch" should {
@@ -98,6 +101,17 @@ class SubmissionServiceSpec extends AsyncHmrcSpec {
       val result = await(underTest.submitSubmission(submittedSubmission.id, LaxEmailAddress("bob@example.com")))
 
       result.isRight shouldBe true
+    }
+  }
+
+  "fetchAllowList" should {
+    "fetch allow list" in new Setup {
+      when(mockOrganisationConnector.fetchOrganisationAllowList(*[UserId])(*)).thenReturn(successful(Some(allowList)))
+
+      val result = await(underTest.fetchAllowList(userId))
+
+      result.isDefined shouldBe true
+      result shouldBe Some(allowList)
     }
   }
 }

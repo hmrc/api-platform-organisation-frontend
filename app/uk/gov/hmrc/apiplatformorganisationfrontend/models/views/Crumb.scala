@@ -26,7 +26,7 @@ case class Crumb(name: String, url: String = "", dataAttribute: Option[String] =
 object Crumb {
 
   def home(implicit appConfig: AppConfig) =
-    Crumb("Home", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/dashboard", Some("data-breadcrumb-home"))
+    Crumb("Home", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/applications", Some("data-breadcrumb-home"))
 
   def organisation(organisationId: OrganisationId, organisationName: OrganisationName) =
     Crumb(organisationName.value, routes.OrganisationController.organisationHomePage(organisationId).url, Some("data-breadcrumb-organisation-home"))
