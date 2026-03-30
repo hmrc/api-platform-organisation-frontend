@@ -119,6 +119,17 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id}/checklist")
     }
 
+    "redirect to view answers page if you already have a submitted submission" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      SubmissionServiceMock.FetchAllowList.thenReturns(allowList)
+      SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(submittedSubmission)
+      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
+
+      val result = underTest.registrationStartView()(loggedOutRequest)
+      status(result) shouldBe Status.SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id}/check-answers")
+    }
+
     "redirect to not allow listed page if you are not in the allow list" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchAllowList.thenReturnsNone()

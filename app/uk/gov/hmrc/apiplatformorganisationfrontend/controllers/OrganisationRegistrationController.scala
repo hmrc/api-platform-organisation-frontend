@@ -24,6 +24,7 @@ import play.api.data.Forms.mapping
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
@@ -67,8 +68,16 @@ class OrganisationRegistrationController @Inject() (
   val checkResponsibleIndividualForm: Form[CheckResponsibleIndividualForm] = CheckResponsibleIndividualForm.form
 
   def registrationStartView(): Action[AnyContent] = withAllowList { implicit request =>
+    def pageToShow(submission: Submission) = {
+      if (submission.status.isOpenToAnswers) {
+        Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
+      } else {
+        Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(submission.id))
+      }
+    }
+
     submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
-      case Some(submission) => Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id)))
+      case Some(submission) => Future.successful(pageToShow(submission))
       case _                => Future.successful(Ok(registrationStartPage(Some(request.userSession))))
     }
   }
