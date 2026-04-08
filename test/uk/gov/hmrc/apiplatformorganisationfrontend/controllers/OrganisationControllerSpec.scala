@@ -60,25 +60,17 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       with OrganisationActionServiceMockModule
       with LocalUserIdTracker {
 
-    val mcc                            = app.injector.instanceOf[MessagesControllerComponents]
-    val beforeYouStartPage             = app.injector.instanceOf[BeforeYouStartPage]
-    val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
-    val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
-    val mainLandingPage                = app.injector.instanceOf[LandingPage]
-    val organisationHomePage           = app.injector.instanceOf[OrganisationHomePage]
-    val cookieSigner                   = app.injector.instanceOf[CookieSigner]
-    val errorHandler                   = app.injector.instanceOf[ErrorHandler]
-    implicit val appConfig: AppConfig  = app.injector.instanceOf[AppConfig]
+    val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
+    val organisationHomePage          = app.injector.instanceOf[OrganisationHomePage]
+    val cookieSigner                  = app.injector.instanceOf[CookieSigner]
+    val errorHandler                  = app.injector.instanceOf[ErrorHandler]
+    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
     val underTest =
       new OrganisationController(
         mcc,
-        beforeYouStartPage,
-        checkResponsibleIndividualPage,
-        notResponsibleIndividualPage,
-        mainLandingPage,
         organisationHomePage,
         SubmissionServiceMock.aMock,
         OrganisationServiceMock.aMock,
@@ -93,134 +85,6 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     val orgId        = OrganisationId.random
     val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
-  }
-
-  "GET /before-you-start" should {
-    "return 200" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
-
-      val result = underTest.beforeYouStartView(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-
-    "return HTML" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/before-you-start").withUser(underTest)(sessionId))
-
-      val result = underTest.beforeYouStartView(fakeRequest)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Set up the Developer Hub dashboard for your business")
-    }
-
-    "returns 303 on logged out" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.fails()
-      val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/landing").withUser(underTest)(sessionId))
-
-      val result = underTest.beforeYouStartView(loggedOutRequest)
-      status(result) shouldBe Status.SEE_OTHER
-    }
-  }
-
-  "POST /before-you-start" should {
-    "return 303" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/before-you-start").withUser(underTest)(sessionId))
-
-      val result = underTest.beforeYouStartAction(fakeRequest)
-      status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/check-responsible-individual")
-    }
-  }
-
-  "GET /check-responsible-individual" should {
-    "return 200" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/check-responsible-individual").withUser(underTest)(sessionId))
-
-      val result = underTest.checkResponsibleIndividualView(fakeRequest)
-      status(result) shouldBe Status.OK
-      contentAsString(result) should include(
-        "Are you the person responsible for making sure that software products owned by the business you work for comply with our API terms of use?"
-      )
-    }
-  }
-
-  "POST /check-responsible-individual" should {
-    "create new submission and redirect to it if user selected Yes" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "yes")
-      )
-      SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
-
-      val result = underTest.checkResponsibleIndividualAction(fakeRequest)
-      status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/checklist")
-      SubmissionServiceMock.CreateSubmission.verifyCalledWith(loggedInUser.userId, loggedInUser.email)
-    }
-
-    "redirect to 'no' page if user selected No" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId).withFormUrlEncodedBody("confirmResponsibleIndividual" -> "no")
-      )
-
-      val result = underTest.checkResponsibleIndividualAction(fakeRequest)
-      status(result) shouldBe Status.SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/not-responsible-individual")
-      SubmissionServiceMock.CreateSubmission.verifyNotCalled()
-    }
-
-    "return bad request if no option selected" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(
-        FakeRequest("POST", "/check-responsible-individual").withUser(underTest)(sessionId)
-      )
-      SubmissionServiceMock.CreateSubmission.thenReturns(aSubmission)
-
-      val result = underTest.checkResponsibleIndividualAction(fakeRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) should include("Please select an option")
-    }
-  }
-
-  "GET /not-responsible-individual" should {
-    "return 200" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/not-responsible-individual").withUser(underTest)(sessionId))
-
-      val result = underTest.notResponsibleIndividualView(fakeRequest)
-      status(result) shouldBe Status.OK
-      contentAsString(result) should include("Ask someone else to complete these checks instead")
-    }
-  }
-
-  "GET /landing" should {
-    "return landing page with button to continue submission if submission for user found" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
-      SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(aSubmission)
-
-      val result = underTest.landingView(fakeRequest)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Main organisations landing page")
-      contentAsString(result) should include("Continue Organisation entry")
-    }
-
-    "return landing page with button to create new submission if submission for user not found" in new Setup {
-      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
-      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/landing").withUser(underTest)(sessionId))
-      SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturnsNone()
-
-      val result = underTest.landingView(fakeRequest)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Main organisations landing page")
-      contentAsString(result) should include("Create New Organisation")
-    }
   }
 
   "GET /organisation/oid" should {

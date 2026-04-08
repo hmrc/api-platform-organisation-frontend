@@ -143,6 +143,13 @@ class OrganisationConnector @Inject() (
         .map(_.leftMap(failed))
     }
   }
+
+  def fetchOrganisationAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[OrganisationAllowList]] = {
+    metrics.record(api) {
+      http.get(url"${config.serviceBaseUrl}/allow-list/$userId")
+        .execute[Option[OrganisationAllowList]]
+    }
+  }
 }
 
 object OrganisationConnector {

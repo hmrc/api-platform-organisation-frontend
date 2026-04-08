@@ -2,13 +2,12 @@
 
 ->          /hmrc-frontend                                  hmrcfrontend.Routes
 
-GET         /landing                                        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.landingView
-
-GET         /before-you-start                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartView
-POST        /before-you-start                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.beforeYouStartAction
-GET         /check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualView
-POST        /check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.checkResponsibleIndividualAction
-GET         /not-responsible-individual                     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.notResponsibleIndividualView
+GET         /registration                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartView()
+POST        /registration                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartAction()
+GET         /registration/not-allow-listed                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notAllowListedView
+GET         /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualView
+POST        /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualAction()
+GET         /registration/not-responsible-individual        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notResponsibleIndividualView
 
 GET         /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
 POST        /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
@@ -32,7 +31,7 @@ GET         /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatf
 POST        /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: OrganisationId)
 GET         /organisation/:oid/add-collaborator-success     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: OrganisationId, role: String)
 
-GET        /organisation/:oid/add-applications              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
-POST       /organisation/:oid/add-applications              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
+GET         /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
+POST        /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
 
 GET         /assets/*file                                   controllers.Assets.versioned(path = "/public", file: Asset)

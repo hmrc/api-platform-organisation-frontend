@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Roles
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.OrganisationAllowList
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
@@ -44,6 +45,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     val orgId        = OrganisationId.random
     val organisation = Organisation(orgId, OrganisationName("Org name"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
     val email        = LaxEmailAddress("bill@example.com")
+    val allowList    = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
   }
 
   override def fakeApplication(): PlayApplication =
@@ -256,6 +258,24 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
       result shouldBe Left(s"Failed to remove user $userId from organisation $orgId")
+    }
+  }
+
+  "fetchOrganisationAllowList" should {
+    "successfully fetch" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisationAllowList.succeeds(userId, allowList)
+
+      val result = await(underTest.fetchOrganisationAllowList(userId))
+
+      result shouldBe Some(allowList)
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.FetchOrganisationAllowList.fails(userId, INTERNAL_SERVER_ERROR)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.fetchOrganisationAllowList(userId))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }

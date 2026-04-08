@@ -109,6 +109,15 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
         when(aMock.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Failed to submit submission")))
       }
     }
+
+    object FetchAllowList {
+
+      def thenReturns(out: OrganisationAllowList) =
+        when(aMock.fetchAllowList(*[UserId])(*)).thenReturn(successful(Some(out)))
+
+      def thenReturnsNone() =
+        when(aMock.fetchAllowList(*[UserId])(*)).thenReturn(successful(None))
+    }
   }
 
   object SubmissionServiceMock extends BaseSubmissionServiceMock {
