@@ -107,14 +107,21 @@ class QuestionsController @Inject() (
       success: (ExtendedSubmission) => Future[Result]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    def failed(answers: List[String]) = (errors: ValidationErrors) => {
+    def failed(answers: List[String], trimmedAnswers: Map[String, Seq[String]]) = (errors: ValidationErrors) => {
       import cats.implicits._
 
       val question = request.submission.findQuestion(questionId).get
 
       val onFormAnswer = question match {
-        case q: Question.TextQuestion => answers.headOption.map(ActualAnswer.TextAnswer)
-        case _                        => None
+        case q: Question.TextQuestion    => answers.headOption.map(ActualAnswer.TextAnswer)
+        case a: Question.AddressQuestion => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
+            trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
+            trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
+            trimmedAnswers.get("locality").flatMap(_.headOption),
+            trimmedAnswers.get("region").flatMap(_.headOption),
+            trimmedAnswers.get("postcode").flatMap(_.headOption)
+          )))
+        case _                           => None
       }
 
       showQuestion(submissionId, questionId, onFormAnswer, errors.some)(request)
@@ -126,7 +133,7 @@ class QuestionsController @Inject() (
     val answers        = rawAnswers.map(a => a.trim())
 
     submissionService.recordAnswer(submissionId, questionId, trimmedAnswers)
-      .map(_.fold(failed(answers), success))
+      .map(_.fold(failed(answers, trimmedAnswers), success))
       .flatten
   }
 

@@ -278,7 +278,7 @@ class QuestionControllerSpec
 
     "fail if invalid answer provided and returns downstream error" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      SubmissionServiceMock.RecordAnswer.thenReturnsError()
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("Failed to record answer for submission")
       private val invalidEmailAnswer = "bob"
       private val request            = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidEmailAnswer, "submit-action" -> "save")
 
@@ -291,6 +291,19 @@ class QuestionControllerSpec
       body should include("Failed to record answer for submission")
     }
 
+    "fail if invalid address answer provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("Town or City required")
+      private val request = loggedInRequest.withFormUrlEncodedBody("addressLineOne" -> "123 High Street", "postcode" -> "NW1 3PQ", "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionAddress.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("Town or City required")
+    }
   }
 
   "updateAnswer" should {
