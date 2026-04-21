@@ -230,6 +230,7 @@
                 label = Label(
                     content = Text("Town or city")
                 ),
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "locality")).map(err => ErrorMessage(content = Text(err.message))),
                 value = currentAnswers match {
                     case Some(ActualAnswer.AddressAnswer(add)) => add.locality
                     case _ => None
