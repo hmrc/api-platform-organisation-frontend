@@ -77,7 +77,6 @@ class CheckAnswersController @Inject() (
     withSubmission(submissionId) { implicit request =>
       submissionService.fetch(submissionId).map {
         case Some(extSubmission) =>
-          // Use existing conversion, then filter to one questionnaire
           val fullViewModel     = convertSubmissionToViewModel(extSubmission)
           val filteredViewModel = fullViewModel.copy(
             questionnaires = fullViewModel.questionnaires.filter(_.id == questionnaireId)
