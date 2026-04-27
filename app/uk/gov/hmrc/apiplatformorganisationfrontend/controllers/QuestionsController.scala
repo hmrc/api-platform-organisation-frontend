@@ -100,8 +100,8 @@ class QuestionsController @Inject() (
 
   def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
-      val returnTo = request.getQueryString("returnTo")
-      val returnQnid = request.getQueryString("qnid")
+      val returnTo     = request.getQueryString("returnTo")
+      val returnQnid   = request.getQueryString("qnid")
       val submitAction = routes.QuestionsController.updateAnswer(submissionId, questionId)
       processQuestion(questionId, onFormAnswer, errorInfo, returnTo, returnQnid)(submitAction)
     }
@@ -169,8 +169,8 @@ class QuestionsController @Inject() (
       val nextQuestion  = extSubmission.questionnaireProgress.get(questionnaire.id)
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
 
-      val returnTo = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption))
-      val returnQnid = request.body.asFormUrlEncoded.flatMap(_.get("returnQnid").flatMap(_.headOption))
+      val returnTo             = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption))
+      val returnQnid           = request.body.asFormUrlEncoded.flatMap(_.get("returnQnid").flatMap(_.headOption))
       val isFromSectionSummary = returnTo.contains("section-summary")
 
       lazy val toCheckAnswers   = routes.CheckAnswersController.checkAnswersPage(request.submission.id)
@@ -214,7 +214,7 @@ class QuestionsController @Inject() (
       }
     }
 
-  def sectionSummaryAction(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
+  def sectionSummaryAction(submissionId: SubmissionId) =
     withSubmission(submissionId) { _ =>
       Future.successful(
         Redirect(routes.ChecklistController.checklistPage(submissionId))

@@ -502,7 +502,7 @@ class QuestionControllerSpec
       SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
 
       val request = loggedInRequest.withCSRFToken
-      val result  = controller.sectionSummaryAction(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionnaire.id)(request)
+      val result  = controller.sectionSummaryAction(fullyAnsweredSubmission.submission.id)(request)
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/checklist")
