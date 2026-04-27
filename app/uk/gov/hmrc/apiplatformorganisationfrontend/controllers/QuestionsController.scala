@@ -215,7 +215,7 @@ class QuestionsController @Inject() (
     }
 
   def sectionSummaryAction(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
-    withSubmission(submissionId) { implicit _ =>
+    withSubmission(submissionId) { _ =>
       Future.successful(
         Redirect(routes.ChecklistController.checklistPage(submissionId))
       )

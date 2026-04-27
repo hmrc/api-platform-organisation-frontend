@@ -532,9 +532,9 @@ class QuestionControllerSpec
         private val request = loggedInRequest
           .withFormUrlEncodedBody(
             Question.answerKey -> answer1,
-            "submit-action" -> "save",
-            "returnTo" -> "section-summary",
-            "returnQnid" -> OrganisationDetails.questionnaire.id.value
+            "submit-action"    -> "save",
+            "returnTo"         -> "section-summary",
+            "returnQnid"       -> OrganisationDetails.questionnaire.id.value
           )
 
         val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
