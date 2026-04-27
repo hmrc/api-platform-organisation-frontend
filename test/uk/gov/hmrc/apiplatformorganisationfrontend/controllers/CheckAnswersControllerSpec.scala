@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.{Completed, InProgress}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, QuestionnaireProgress}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Questionnaire, QuestionnaireProgress, Submission, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -41,7 +41,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SubmitSubmissionSuccessPage, SubmittedAnswersView}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SectionSummaryView, SubmitSubmissionSuccessPage, SubmittedAnswersView}
 import uk.gov.hmrc.apiplatformorganisationfrontend.{AsIdsHelpers, WithCSRFAddToken}
 
 class CheckAnswersControllerSpec
@@ -81,6 +81,7 @@ class CheckAnswersControllerSpec
     val checkAnswersView              = app.injector.instanceOf[CheckAnswersView]
     val submittedAnswersView          = app.injector.instanceOf[SubmittedAnswersView]
     val submitSubmissionSuccessPage   = app.injector.instanceOf[SubmitSubmissionSuccessPage]
+    val sectionSummaryView            = app.injector.instanceOf[SectionSummaryView]
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
@@ -95,6 +96,7 @@ class CheckAnswersControllerSpec
       checkAnswersView,
       submittedAnswersView,
       submitSubmissionSuccessPage,
+      sectionSummaryView,
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
@@ -177,6 +179,77 @@ class CheckAnswersControllerSpec
       val result = controller.submitSuccessPage(submissionId)(loggedInRequest.withCSRFToken)
       status(result) shouldBe OK
       contentAsString(result) should include("We’re checking the information you provided")
+    }
+  }
+
+  "showSectionSummary" should {
+    "display section summary with only one questionnaire" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+
+      val result = controller.showSectionSummary(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionnaire.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val content = contentAsString(result)
+      content should include("Check your")
+    }
+
+    "fail with BAD_REQUEST when questionnaire not found" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+
+      val result = controller.showSectionSummary(fullyAnsweredSubmission.submission.id, Questionnaire.Id("invalid-id"))(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "sectionSummaryAction" should {
+    "redirect to checklist" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+
+      val request = loggedInRequest.withCSRFToken
+      val result  = controller.sectionSummaryAction(fullyAnsweredSubmission.submission.id)(request)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/checklist")
     }
   }
 }

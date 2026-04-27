@@ -42,7 +42,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, QuestionView, SectionSummaryView}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, QuestionView}
 
 class QuestionControllerSpec
     extends HmrcSpec
@@ -73,7 +73,6 @@ class QuestionControllerSpec
     val errorHandler               = app.injector.instanceOf[ErrorHandler]
 
     val questionView                  = app.injector.instanceOf[QuestionView]
-    val sectionSummaryView            = app.injector.instanceOf[SectionSummaryView]
     val checkAnswersView              = app.injector.instanceOf[CheckAnswersView]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
@@ -83,7 +82,6 @@ class QuestionControllerSpec
       OrganisationActionServiceMock.aMock,
       cookieSigner,
       questionView,
-      sectionSummaryView,
       mcc,
       ThirdPartyDeveloperConnectorMock.aMock
     )(global, appConfig)
@@ -237,6 +235,41 @@ class QuestionControllerSpec
 
       status(result) shouldBe NOT_FOUND
     }
+
+    "updating from section summary" should {
+      "return to section summary when no more questions to answer" in new Setup {
+        val fullyAnsweredSubmission = Submission.create(
+          "bob@example.com",
+          SubmissionId.random,
+          Some(organisationId),
+          instant,
+          userId,
+          testGroups,
+          testQuestionIdsOfInterest,
+          standardContext
+        )
+          .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+          .withCompletedProgress()
+
+        SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+        SubmissionServiceMock.RecordAnswer.thenReturns(fullyAnsweredSubmission)
+
+        private val answer1 = "Updated answer"
+        private val request = loggedInRequest
+          .withFormUrlEncodedBody(
+            Question.answerKey -> answer1,
+            "submit-action"    -> "save",
+            "returnTo"         -> "section-summary"
+          )
+
+        val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/questionnaire/${OrganisationDetails.questionnaire.id.value}/summary"
+        )
+      }
+    }
   }
 
   "recordAnswer" should {
@@ -306,6 +339,27 @@ class QuestionControllerSpec
 
       body should include("Town or City required")
     }
+
+    "completing last question in section" should {
+      "redirect to section summary instead of checklist" in new Setup {
+        val submissionWithOneQuestionLeft = aSubmission.withIncompleteProgress()
+
+        SubmissionServiceMock.Fetch.thenReturns(submissionWithOneQuestionLeft)
+        SubmissionServiceMock.RecordAnswer.thenReturns(submissionWithOneQuestionLeft.copy(
+          questionnaireProgress = Map(OrganisationDetails.questionnaire.id ->
+            QuestionnaireProgress(QuestionnaireState.Completed, List.empty))
+        ))
+
+        private val answer  = "Bob's Burgers"
+        private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save")
+
+        val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgAddress.id)(request.withCSRFToken)
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/questionnaire/${OrganisationDetails.questionnaire.id.value}/summary")
+      }
+    }
+
   }
 
   "updateAnswer" should {
@@ -413,136 +467,6 @@ class QuestionControllerSpec
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${followUpQuestionId.value}/update")
-    }
-  }
-
-  "recordAnswer" when {
-    "completing last question in section" should {
-      "redirect to section summary instead of checklist" in new Setup {
-        val submissionWithOneQuestionLeft = aSubmission.withIncompleteProgress()
-
-        SubmissionServiceMock.Fetch.thenReturns(submissionWithOneQuestionLeft)
-        SubmissionServiceMock.RecordAnswer.thenReturns(submissionWithOneQuestionLeft.copy(
-          questionnaireProgress = Map(OrganisationDetails.questionnaire.id ->
-            QuestionnaireProgress(QuestionnaireState.Completed, List.empty))
-        ))
-
-        private val answer  = "Bob's Burgers"
-        private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save")
-
-        val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionLtdOrgAddress.id)(request.withCSRFToken)
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${aSubmission.id.value}/questionnaire/${OrganisationDetails.questionnaire.id.value}/summary")
-      }
-    }
-  }
-
-  "showSectionSummary" should {
-    "display section summary with only one questionnaire" in new Setup {
-      val fullyAnsweredSubmission = Submission.create(
-        "bob@example.com",
-        SubmissionId.random,
-        Some(organisationId),
-        instant,
-        userId,
-        testGroups,
-        testQuestionIdsOfInterest,
-        standardContext
-      )
-        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
-        .withCompletedProgress()
-
-      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
-
-      val result = controller.showSectionSummary(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionnaire.id)(loggedInRequest.withCSRFToken)
-
-      status(result) shouldBe OK
-      val content = contentAsString(result)
-      content should include("Check your")
-    }
-
-    "fail with BAD_REQUEST when questionnaire not found" in new Setup {
-      val fullyAnsweredSubmission = Submission.create(
-        "bob@example.com",
-        SubmissionId.random,
-        Some(organisationId),
-        instant,
-        userId,
-        testGroups,
-        testQuestionIdsOfInterest,
-        standardContext
-      )
-        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
-        .withCompletedProgress()
-
-      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
-
-      val result = controller.showSectionSummary(fullyAnsweredSubmission.submission.id, Questionnaire.Id("invalid-id"))(loggedInRequest.withCSRFToken)
-
-      status(result) shouldBe BAD_REQUEST
-    }
-  }
-
-  "sectionSummaryAction" should {
-    "redirect to checklist" in new Setup {
-      val fullyAnsweredSubmission = Submission.create(
-        "bob@example.com",
-        SubmissionId.random,
-        Some(organisationId),
-        instant,
-        userId,
-        testGroups,
-        testQuestionIdsOfInterest,
-        standardContext
-      )
-        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
-        .withCompletedProgress()
-
-      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
-
-      val request = loggedInRequest.withCSRFToken
-      val result  = controller.sectionSummaryAction(fullyAnsweredSubmission.submission.id)(request)
-
-      status(result) shouldBe SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/checklist")
-    }
-  }
-
-  "updateAnswer" when {
-    "updating from section summary" should {
-      "return to section summary when no more questions to answer" in new Setup {
-        val fullyAnsweredSubmission = Submission.create(
-          "bob@example.com",
-          SubmissionId.random,
-          Some(organisationId),
-          instant,
-          userId,
-          testGroups,
-          testQuestionIdsOfInterest,
-          standardContext
-        )
-          .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
-          .withCompletedProgress()
-
-        SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
-        SubmissionServiceMock.RecordAnswer.thenReturns(fullyAnsweredSubmission)
-
-        private val answer1 = "Updated answer"
-        private val request = loggedInRequest
-          .withFormUrlEncodedBody(
-            Question.answerKey -> answer1,
-            "submit-action"    -> "save",
-            "returnTo"         -> "section-summary"
-          )
-
-        val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/questionnaire/${OrganisationDetails.questionnaire.id.value}/summary"
-        )
-      }
     }
   }
 

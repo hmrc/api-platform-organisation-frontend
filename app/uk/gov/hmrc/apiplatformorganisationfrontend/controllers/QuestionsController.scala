@@ -32,7 +32,6 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
@@ -52,7 +51,6 @@ class QuestionsController @Inject() (
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     questionView: QuestionView,
-    sectionSummaryView: SectionSummaryView,
     mcc: MessagesControllerComponents,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
@@ -148,7 +146,7 @@ class QuestionsController @Inject() (
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).drop(1).headOption)
 
       lazy val toSectionSummary =
-        routes.QuestionsController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
+        routes.CheckAnswersController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
       lazy val toNextQuestion   = (nextQuestionId) => routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
 
       successful(Redirect(nextQuestion.fold(toSectionSummary)(toNextQuestion)))
@@ -171,7 +169,7 @@ class QuestionsController @Inject() (
       val isFromSectionSummary = returnTo.contains("section-summary")
 
       lazy val toCheckAnswers   = routes.CheckAnswersController.checkAnswersPage(request.submission.id)
-      lazy val toSectionSummary = routes.QuestionsController.showSectionSummary(request.submission.id, questionnaire.id)
+      lazy val toSectionSummary = routes.CheckAnswersController.showSectionSummary(request.submission.id, questionnaire.id)
       lazy val toNextQuestion   = (nextQuestionId: Question.Id) =>
         if (hasQuestionBeenAnswered(nextQuestionId)) {
           if (isFromSectionSummary) toSectionSummary else toCheckAnswers
@@ -186,32 +184,4 @@ class QuestionsController @Inject() (
 
     processAnswer(submissionId, questionId)(success)
   }
-
-  def showSectionSummary(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
-    withSubmission(submissionId) { implicit request =>
-      submissionService.fetch(submissionId).map {
-        case Some(extSubmission) =>
-          // Use existing conversion, then filter to one questionnaire
-          val fullViewModel     = convertSubmissionToViewModel(extSubmission)
-          val filteredViewModel = fullViewModel.copy(
-            questionnaires = fullViewModel.questionnaires.filter(_.id == questionnaireId)
-          )
-
-          filteredViewModel.questionnaires.headOption match {
-            case Some(questionnaire) =>
-              Ok(sectionSummaryView(filteredViewModel, questionnaire.label))
-            case None                =>
-              BadRequest("Questionnaire not found")
-          }
-        case None                =>
-          BadRequest("No submission found")
-      }
-    }
-
-  def sectionSummaryAction(submissionId: SubmissionId) =
-    withSubmission(submissionId) { _ =>
-      Future.successful(
-        Redirect(routes.ChecklistController.checklistPage(submissionId))
-      )
-    }
 }

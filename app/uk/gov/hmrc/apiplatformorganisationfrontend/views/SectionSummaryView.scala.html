@@ -35,7 +35,7 @@
 
     @answersFragment(model, canChange = true, returnContext = Some("section-summary"))
 
-    @helper.form(action = routes.QuestionsController.sectionSummaryAction(model.submissionId)) {
+    @helper.form(action = routes.CheckAnswersController.sectionSummaryAction(model.submissionId)) {
       @helper.CSRF.formField
       @govukButton(Button(
           id = Some("continue"),
