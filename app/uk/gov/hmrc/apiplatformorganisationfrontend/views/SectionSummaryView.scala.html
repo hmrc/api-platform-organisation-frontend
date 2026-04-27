@@ -33,12 +33,12 @@
 ) {
     <h1 class="govuk-heading-xl">@title</h1>
 
-    @answersFragment(model, canChange = true)
+    @answersFragment(model, canChange = true, returnContext = Some("section-summary"))
 
     @helper.form(action = routes.QuestionsController.sectionSummaryAction(model.submissionId, model.questionnaires.head.id)) {
       @helper.CSRF.formField
       @govukButton(Button(
-          id = Some("continue"), 
+          id = Some("continue"),
           content = Text("Continue")))
     }
 }
