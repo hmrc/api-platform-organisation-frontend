@@ -67,8 +67,7 @@ class QuestionsController @Inject() (
       questionId: Question.Id,
       onFormAnswer: Option[ActualAnswer],
       errorInfo: Option[ValidationErrors],
-      returnTo: Option[String] = None,
-      returnQnid: Option[String] = None
+      returnTo: Option[String] = None
     )(
       submitAction: Call
     )(implicit request: SubmissionRequest[AnyContent]
@@ -85,8 +84,8 @@ class QuestionsController @Inject() (
         questionnaire <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
       } yield {
         errorInfo.fold[Result](
-          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, None, returnTo, returnQnid))
-        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, Some(ei), returnTo, returnQnid)))
+          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, None, returnTo))
+        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, Some(ei), returnTo)))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
@@ -101,9 +100,8 @@ class QuestionsController @Inject() (
   def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
       val returnTo     = request.getQueryString("returnTo")
-      val returnQnid   = request.getQueryString("qnid")
       val submitAction = routes.QuestionsController.updateAnswer(submissionId, questionId)
-      processQuestion(questionId, onFormAnswer, errorInfo, returnTo, returnQnid)(submitAction)
+      processQuestion(questionId, onFormAnswer, errorInfo, returnTo)(submitAction)
     }
 
   private def processAnswer(
@@ -170,14 +168,10 @@ class QuestionsController @Inject() (
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
 
       val returnTo             = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption))
-      val returnQnid           = request.body.asFormUrlEncoded.flatMap(_.get("returnQnid").flatMap(_.headOption))
       val isFromSectionSummary = returnTo.contains("section-summary")
 
       lazy val toCheckAnswers   = routes.CheckAnswersController.checkAnswersPage(request.submission.id)
-      lazy val toSectionSummary = returnQnid
-        .map(qnidStr => Questionnaire.Id(qnidStr))
-        .map(qnid => routes.QuestionsController.showSectionSummary(request.submission.id, qnid))
-        .getOrElse(routes.QuestionsController.showSectionSummary(request.submission.id, questionnaire.id))
+      lazy val toSectionSummary = routes.QuestionsController.showSectionSummary(request.submission.id, questionnaire.id)
       lazy val toNextQuestion   = (nextQuestionId: Question.Id) =>
         if (hasQuestionBeenAnswered(nextQuestionId)) {
           if (isFromSectionSummary) toSectionSummary else toCheckAnswers

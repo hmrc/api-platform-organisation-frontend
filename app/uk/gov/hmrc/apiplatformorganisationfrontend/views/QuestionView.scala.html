@@ -36,7 +36,7 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None, returnQnid: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -349,9 +349,6 @@
     
     @returnTo.map { rt =>
       <input type="hidden" name="returnTo" value="@rt" />
-    }
-    @returnQnid.map { qnid =>
-      <input type="hidden" name="returnQnid" value="@qnid" />
     }
 
     @renderQuestionType(question)

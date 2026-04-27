@@ -32,7 +32,7 @@
           <dd class="govuk-summary-list__actions width-10">
             @if(canChange) {
               @defining(returnContext match {
-                case Some(context) => s"${routes.QuestionsController.updateQuestion(model.submissionId, question.id)}?returnTo=$context&qnid=${questionnaire.id.value}"
+                case Some(context) => s"${routes.QuestionsController.updateQuestion(model.submissionId, question.id)}?returnTo=$context"
                 case None => routes.QuestionsController.updateQuestion(model.submissionId, question.id).url
               }) { changeUrl =>
                 <a class="govuk-link" href="@changeUrl">Change <span class="govuk-visually-hidden">@question.text</span></a>
