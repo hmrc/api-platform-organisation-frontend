@@ -32,6 +32,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
@@ -51,6 +52,7 @@ class QuestionsController @Inject() (
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     questionView: QuestionView,
+    sectionSummaryView: SectionSummaryView,
     mcc: MessagesControllerComponents,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
@@ -141,13 +143,13 @@ class QuestionsController @Inject() (
     val success = (extSubmission: ExtendedSubmission) => {
       val questionnaire = extSubmission.submission.findQuestionnaireContaining(questionId).get
       val nextQuestion  = extSubmission.questionnaireProgress.get(questionnaire.id)
-        .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
+        .flatMap(_.questionsToAsk.dropWhile(_ != questionId).drop(1).headOption)
 
-      lazy val toProdChecklist =
-        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(extSubmission.submission.id)
-      lazy val toNextQuestion  = (nextQuestionId) => uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
+      lazy val toSectionSummary =
+        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
+      lazy val toNextQuestion   = (nextQuestionId) => uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
 
-      successful(Redirect(nextQuestion.fold(toProdChecklist)(toNextQuestion)))
+      successful(Redirect(nextQuestion.fold(toSectionSummary)(toNextQuestion)))
     }
 
     processAnswer(submissionId, questionId)(success)
@@ -163,17 +165,55 @@ class QuestionsController @Inject() (
       val nextQuestion  = extSubmission.questionnaireProgress.get(questionnaire.id)
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
 
-      lazy val toCheckAnswers = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(request.submission.id)
-      lazy val toNextQuestion = (nextQuestionId: Question.Id) =>
+      // Determine context: are we updating from check answers or section summary?
+      val referrer             = request.headers.get("Referer")
+      val isFromSectionSummary = referrer match {
+        case Some(ref) => ref.contains("/questionnaire/") && ref.contains("/summary")
+        case None      => false
+      }
+
+      lazy val toCheckAnswers   = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(request.submission.id)
+      lazy val toSectionSummary = uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.showSectionSummary(request.submission.id, questionnaire.id)
+      lazy val toNextQuestion   = (nextQuestionId: Question.Id) =>
         if (hasQuestionBeenAnswered(nextQuestionId)) {
-          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(request.submission.id)
+          if (isFromSectionSummary) toSectionSummary else toCheckAnswers
         } else {
           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.updateQuestion(submissionId, nextQuestionId)
         }
 
-      successful(Redirect(nextQuestion.fold(toCheckAnswers)(toNextQuestion)))
+      successful(Redirect(nextQuestion.fold(
+        if (isFromSectionSummary) toSectionSummary else toCheckAnswers
+      )(toNextQuestion)))
     }
 
     processAnswer(submissionId, questionId)(success)
   }
+
+  def showSectionSummary(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
+    withSubmission(submissionId) { implicit request =>
+      submissionService.fetch(submissionId).map {
+        case Some(extSubmission) =>
+          // Use existing conversion, then filter to one questionnaire
+          val fullViewModel     = convertSubmissionToViewModel(extSubmission)
+          val filteredViewModel = fullViewModel.copy(
+            questionnaires = fullViewModel.questionnaires.filter(_.id == questionnaireId)
+          )
+
+          filteredViewModel.questionnaires.headOption match {
+            case Some(questionnaire) =>
+              Ok(sectionSummaryView(filteredViewModel, questionnaire.label))
+            case None                =>
+              BadRequest("Questionnaire not found")
+          }
+        case None                =>
+          BadRequest("No submission found")
+      }
+    }
+
+  def sectionSummaryAction(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
+    withSubmission(submissionId) { implicit _ =>
+      Future.successful(
+        Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submissionId))
+      )
+    }
 }

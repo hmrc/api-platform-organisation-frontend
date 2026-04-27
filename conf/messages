@@ -8,3 +8,6 @@ emailAddress.error.maxLength.field = Provide an email address with fewer than 32
 member.error.confirmation.no.choice.field = Please select an option
 
 please.select.an.option = Please select an option
+
+section.summary.title = Check your {0}
+section.summary.continue = Continue
