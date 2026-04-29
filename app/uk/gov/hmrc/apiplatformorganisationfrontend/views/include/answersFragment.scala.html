@@ -15,8 +15,9 @@
  *@
 
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
 
-@(model: ViewModel, canChange: Boolean)
+@(model: ViewModel, canChange: Boolean, returnContext: Option[String] = None)
 
   @for(questionnaire <- model.questionnaires.toList) {
     <h2 class="app-task-list__section">
@@ -30,7 +31,12 @@
           <dd class="govuk-summary-list__value width-20">@question.answer</dd>
           <dd class="govuk-summary-list__actions width-10">
             @if(canChange) {
-              <a class="govuk-link" href="@uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.QuestionsController.updateQuestion(model.submissionId, question.id)">Change <span class="govuk-visually-hidden">@question.text</span></a>
+              @defining(returnContext match {
+                case Some(context) => s"${routes.QuestionsController.updateQuestion(model.submissionId, question.id)}?returnTo=$context"
+                case None => routes.QuestionsController.updateQuestion(model.submissionId, question.id).url
+              }) { changeUrl =>
+                <a class="govuk-link" href="@changeUrl">Change <span class="govuk-visually-hidden">@question.text</span></a>
+              }
             }
           </dd>
         </div>

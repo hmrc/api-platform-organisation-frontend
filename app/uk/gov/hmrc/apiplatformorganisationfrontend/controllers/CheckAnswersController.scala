@@ -40,6 +40,7 @@ class CheckAnswersController @Inject() (
     checkAnswersView: CheckAnswersView,
     submittedAnswersView: SubmittedAnswersView,
     submitSubmissionSuccessPage: SubmitSubmissionSuccessPage,
+    sectionSummaryView: SectionSummaryView,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
@@ -71,4 +72,31 @@ class CheckAnswersController @Inject() (
   def submitSuccessPage(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     Future.successful(Ok(submitSubmissionSuccessPage()))
   }
+
+  def showSectionSummary(submissionId: SubmissionId, questionnaireId: Questionnaire.Id) =
+    withSubmission(submissionId) { implicit request =>
+      submissionService.fetch(submissionId).map {
+        case Some(extSubmission) =>
+          val fullViewModel     = convertSubmissionToViewModel(extSubmission)
+          val filteredViewModel = fullViewModel.copy(
+            questionnaires = fullViewModel.questionnaires.filter(_.id == questionnaireId)
+          )
+
+          filteredViewModel.questionnaires.headOption match {
+            case Some(questionnaire) =>
+              Ok(sectionSummaryView(filteredViewModel, questionnaire.label))
+            case None                =>
+              BadRequest("Questionnaire not found")
+          }
+        case None                =>
+          BadRequest("No submission found")
+      }
+    }
+
+  def sectionSummaryAction(submissionId: SubmissionId) =
+    withSubmission(submissionId) { _ =>
+      Future.successful(
+        Redirect(routes.ChecklistController.checklistPage(submissionId))
+      )
+    }
 }

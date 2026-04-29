@@ -36,7 +36,7 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors])(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -346,6 +346,10 @@
 
   @helper.form(action = submitAction, Symbol("class") -> "form") {
     @helper.CSRF.formField
+    
+    @returnTo.map { rt =>
+      <input type="hidden" name="returnTo" value="@rt" />
+    }
 
     @renderQuestionType(question)
   }

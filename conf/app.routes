@@ -17,6 +17,8 @@ POST        /submission/:sid/question/:qid                  uk.gov.hmrc.apiplatf
 GET         /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
 POST        /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
 
+GET         /submission/:sid/questionnaire/:qnid/summary    uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.showSectionSummary(sid: SubmissionId, qnid: Questionnaire.Id)
+POST        /submission/:sid/questionnaire/summary          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.sectionSummaryAction(sid: SubmissionId)
 GET         /submission/:sid/check-answers                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
 POST        /submission/:sid/submit-request                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
 GET         /submission/:sid/submit-success                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
