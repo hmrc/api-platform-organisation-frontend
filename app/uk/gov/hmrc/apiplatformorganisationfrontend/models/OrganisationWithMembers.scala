@@ -20,7 +20,15 @@ import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 
-case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser, maybeUserDetails: Option[User])
+case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser, maybeUserDetails: Option[User]) {
+
+  def name(): String = {
+    maybeUserDetails match {
+      case Some(userDetails) => s"${userDetails.firstName} ${userDetails.lastName}"
+      case _                 => "(Unverified)"
+    }
+  }
+}
 
 object CollaboratorWithUserDetails {
 

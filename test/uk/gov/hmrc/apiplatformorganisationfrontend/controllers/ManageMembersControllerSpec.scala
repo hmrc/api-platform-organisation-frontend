@@ -116,6 +116,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("Manage organisation members")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("Add an organisation member")
+      contentAsString(result) should include("(Unverified)")
       contentAsString(result) should include("bob@example.com")
     }
 
@@ -169,7 +170,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Unregistered user")
+      contentAsString(result) should include("(Unverified)")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("Remove this user from the organisation")
       contentAsString(result) should include("bob@example.com")

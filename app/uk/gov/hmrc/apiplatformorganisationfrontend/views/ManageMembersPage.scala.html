@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.CollaboratorWithUserDetails
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.ManageMembersViewModel
 
 @this(
@@ -44,13 +45,15 @@
 
   @govukTable(Table(
     head = Some(Seq(
-      HeadCell(content = Text("Email address")),
+      HeadCell(content = Text("Name")),
       HeadCell(content = Text("Role")),
+      HeadCell(content = Text("Email address")),
       HeadCell(content = Text("Action"))
     )),
     rows = viewModel.collaborators.toList.map(member => Seq(
-      TableRow(content = Text(member.user.email.text)),
+      TableRow(content = HtmlContent(s"<strong>${member.name()}</strong>")),
       TableRow(content = Text(member.collaborator.role.displayText)),
+      TableRow(content = Text(member.user.email.text)),
       TableRow(content = HtmlContent(s"<a class='govuk-link govuk-link--no-visited-state' href='${routes.ManageMembersController.manageCollaborator(viewModel.organisationId, member.user.userId)}'>Manage</a>")),
     ))
   ))
