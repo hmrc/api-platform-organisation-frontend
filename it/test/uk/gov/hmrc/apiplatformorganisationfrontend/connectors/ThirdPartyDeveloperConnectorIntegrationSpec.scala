@@ -122,4 +122,22 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
       }.statusCode shouldBe INTERNAL_SERVER_ERROR
     }
   }
+
+  "fetchDevelopers" should {
+    "return a list of user's details" in new Setup {
+      ThirdPartyDeveloperStub.FetchDevelopers.succeeds(userId, nowAsText)
+
+      private val result = await(underTest.fetchDevelopers(List(userId)))
+
+      result shouldBe List(user)
+    }
+
+    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
+      ThirdPartyDeveloperStub.FetchDevelopers.throwsAnException()
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.fetchDevelopers(List(userId)))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
 }

@@ -53,4 +53,10 @@ class ThirdPartyDeveloperConnector @Inject() (
     http.get(url"$serviceBaseUrl/developer?${Seq("developerId" -> id.toString())}")
       .execute[Option[User]]
   }
+
+  def fetchDevelopers(users: List[UserId])(implicit hc: HeaderCarrier): Future[List[User]] = {
+    http.post(url"$serviceBaseUrl/developers/get-users")
+      .withBody(Json.toJson(GetUsersRequest(users)))
+      .execute[List[User]]
+  }
 }

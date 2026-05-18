@@ -44,7 +44,8 @@ class OrganisationService @Inject() (
       for {
         org     <- fromOptionF(organisationConnector.fetchOrganisation(id), "Organisation not found")
         members <- liftF(thirdPartyDeveloperConnector.getRegisteredOrUnregisteredUsers(org.collaborators.map(m => m.userId).toList))
-      } yield OrganisationWithAllMembersDetails.apply(org, members.users)
+        users   <- liftF(thirdPartyDeveloperConnector.fetchDevelopers(members.users.filter(u => u.isRegistered).map(u => u.userId).toList))
+      } yield OrganisationWithAllMembersDetails.apply(org, members.users, users)
     ).value
   }
 

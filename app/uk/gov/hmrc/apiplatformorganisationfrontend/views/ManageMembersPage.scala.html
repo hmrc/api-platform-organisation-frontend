@@ -31,7 +31,8 @@
 @layout(
   crumbs = Seq(Crumb.organisation(viewModel.organisationId, viewModel.organisationName), Crumb.home),
   pageTitle = "Organisation members",
-  loggedInSession = loggedInSession
+  loggedInSession = loggedInSession,
+  twoThirds = false
 ) {
 
   <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>

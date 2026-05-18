@@ -23,10 +23,10 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.RegisteredOrUnregisteredUser
 case class CollaboratorWithUserDetails(collaborator: Collaborator, user: RegisteredOrUnregisteredUser, maybeUserDetails: Option[User]) {
 
   def name(): String = {
-    maybeUserDetails match {
-      case Some(userDetails) if user.isVerified == true  => s"${userDetails.firstName} ${userDetails.lastName}"
-      case Some(userDetails) if user.isVerified == false => s"${userDetails.firstName} ${userDetails.lastName} (Unverified)"
-      case _                                             => "(Unverified)"
+    (maybeUserDetails, user.isVerified) match {
+      case (Some(userDetails), true)  => s"${userDetails.firstName} ${userDetails.lastName}"
+      case (Some(userDetails), false) => s"${userDetails.firstName} ${userDetails.lastName} (Unverified)"
+      case (_, _)                     => "(Unverified)"
     }
   }
 }
@@ -45,8 +45,9 @@ case class OrganisationWithAllMembersDetails(organisation: Organisation, collabo
 
 object OrganisationWithAllMembersDetails {
 
-  def apply(organisation: Organisation, members: List[RegisteredOrUnregisteredUser]): OrganisationWithAllMembersDetails = {
-    val collaborators = organisation.collaborators.map(c => CollaboratorWithUserDetails.apply(c, members.find(u => u.userId == c.userId), None)).flatten
+  def apply(organisation: Organisation, members: List[RegisteredOrUnregisteredUser], users: List[User]): OrganisationWithAllMembersDetails = {
+    val collaborators =
+      organisation.collaborators.map(c => CollaboratorWithUserDetails.apply(c, members.find(u => u.userId == c.userId), users.find(u => u.userId == c.userId))).flatten
     OrganisationWithAllMembersDetails(organisation, collaborators)
   }
 }
