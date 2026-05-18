@@ -36,7 +36,13 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionS
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object ManageMembersController {
-  case class ManageMembersViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborators: Set[CollaboratorWithUserDetails])
+
+  case class ManageMembersViewModel(
+      organisationId: OrganisationId,
+      organisationName: OrganisationName,
+      verifiedCollaborators: Set[CollaboratorWithUserDetails],
+      unverifiedCollaborators: Set[CollaboratorWithUserDetails]
+    )
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
   case class MemberSuccessViewModel(organisationId: OrganisationId, organisationName: OrganisationName, role: String)
   case class ManageMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
@@ -96,8 +102,14 @@ class ManageMembersController @Inject() (
     organisationService.fetchWithAllMembersDetails(organisationId)
       .map(_ match {
         case Right(org) => {
-          val viewModel =
-            ManageMembersViewModel(org.organisation.id, org.organisation.organisationName, org.collaborators.filter(c => c.collaborator.isResponsibleIndividual == false))
+          val organisationMembers = org.collaborators.filter(c => c.collaborator.isResponsibleIndividual == false)
+          val viewModel           =
+            ManageMembersViewModel(
+              org.organisation.id,
+              org.organisation.organisationName,
+              organisationMembers.filter(c => c.user.isVerified == true),
+              organisationMembers.filter(c => c.user.isVerified == false)
+            )
           Ok(manageMembersPage(Some(request.userSession), viewModel))
         }
         case Left(msg)  => BadRequest(msg)

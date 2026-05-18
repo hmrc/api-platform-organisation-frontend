@@ -50,11 +50,34 @@
       HeadCell(content = Text("Email address")),
       HeadCell(content = Text("Action"))
     )),
-    rows = viewModel.collaborators.toList.map(member => Seq(
+    rows = viewModel.verifiedCollaborators.toList.map(member => Seq(
       TableRow(content = HtmlContent(s"<strong>${member.name()}</strong>")),
       TableRow(content = Text(member.collaborator.role.displayText)),
       TableRow(content = Text(member.user.email.text)),
       TableRow(content = HtmlContent(s"<a class='govuk-link govuk-link--no-visited-state' href='${routes.ManageMembersController.manageCollaborator(viewModel.organisationId, member.user.userId)}'>Manage</a>")),
     ))
   ))
+
+  <h2 class="govuk-heading-m">Invites awaiting a response</h2>
+
+  @if(viewModel.unverifiedCollaborators.isEmpty) {
+    <p class="govuk-body">
+      Your organisation does not have any invites awaiting a response.
+    </p>
+  } else {
+    @govukTable(Table(
+      head = Some(Seq(
+        HeadCell(content = Text("Name")),
+        HeadCell(content = Text("Role")),
+        HeadCell(content = Text("Email address")),
+        HeadCell(content = Text("Action"))
+      )),
+      rows = viewModel.unverifiedCollaborators.toList.map(member => Seq(
+        TableRow(content = HtmlContent(s"<strong>${member.name()}</strong>")),
+        TableRow(content = Text(member.collaborator.role.displayText)),
+        TableRow(content = Text(member.user.email.text)),
+        TableRow(content = HtmlContent(s"<a class='govuk-link govuk-link--no-visited-state' href='${routes.ManageMembersController.manageCollaborator(viewModel.organisationId, member.user.userId)}'>Manage</a>")),
+      ))
+    ))
+  }
 }

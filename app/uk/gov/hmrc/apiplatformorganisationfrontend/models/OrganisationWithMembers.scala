@@ -24,8 +24,9 @@ case class CollaboratorWithUserDetails(collaborator: Collaborator, user: Registe
 
   def name(): String = {
     maybeUserDetails match {
-      case Some(userDetails) => s"${userDetails.firstName} ${userDetails.lastName}"
-      case _                 => "(Unverified)"
+      case Some(userDetails) if user.isVerified == true  => s"${userDetails.firstName} ${userDetails.lastName}"
+      case Some(userDetails) if user.isVerified == false => s"${userDetails.firstName} ${userDetails.lastName} (Unverified)"
+      case _                                             => "(Unverified)"
     }
   }
 }
