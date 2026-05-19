@@ -90,7 +90,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val userId2      = UserId.random
     val email        = LaxEmailAddress("bob@example.com")
     val email2       = LaxEmailAddress("bill@example.com")
-    val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+    val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Administrator(userId)))
 
     val orgWithAllMembers =
       OrganisationWithAllMembersDetails(
@@ -266,6 +266,16 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       val result = underTest.addCollaborator(orgId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-collaborator").withUser(underTest)(sessionId))
+
+      val result = underTest.addCollaborator(orgId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
+    }
   }
 
   "POST /add-collaborator" should {
@@ -337,6 +347,18 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+        .withUser(underTest)(sessionId)
+        .withFormUrlEncodedBody("email" -> "john@example.com", "role" -> "member"))
+
+      val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
     }
   }
 
@@ -434,6 +456,18 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("My org")
       contentAsString(result) should include("bob@example.com")
       contentAsString(result) should include("Please select an option")
+    }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/remove-collaborator")
+        .withUser(underTest)(sessionId)
+        .withFormUrlEncodedBody("confirm" -> ""))
+
+      val result = underTest.removeCollaboratorAction(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
     }
   }
 
