@@ -32,13 +32,6 @@
 
 @(loggedInSession: Option[UserSession], viewModel: ManageMemberViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
-@memberName(collaborator: CollaboratorWithUserDetails) = @{
-  collaborator.maybeUserDetails match {
-    case Some(user) => s"${user.firstName} ${user.lastName}"
-    case _          => "Unregistered user" 
-  }
-}
-
 @lastLoggedIn(collaborator: CollaboratorWithUserDetails, formatter: DateTimeFormatter) = @{
   collaborator.maybeUserDetails match {
     case Some(user) => formatMaybeDate(user.lastLogin, formatter)
@@ -64,13 +57,13 @@
 ) {
 
   <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
-  <h1 class="govuk-heading-l">@memberName(viewModel.collaborator)</h1>
+  <h1 class="govuk-heading-l">@viewModel.collaborator.name()</h1>
 
   @defining(DateTimeFormatter.ofPattern("d MMMM yyyy").withZone(ZoneId.of("Europe/London")).withLocale(Locale.UK)) { dateFormatter =>
     @govukTable(Table(
       firstCellIsHeader = true,
       rows = Seq(
-        Seq(TableRow(content = Text("Name")), TableRow(content = Text(memberName(viewModel.collaborator)))),
+        Seq(TableRow(content = Text("Name")), TableRow(content = Text(viewModel.collaborator.name()))),
         Seq(TableRow(content = Text("Email")), TableRow(content = Text(viewModel.collaborator.user.email.toString))),
         Seq(TableRow(content = Text("Organisation role")), TableRow(content = Text(viewModel.collaborator.collaborator.role.displayText))),
         Seq(TableRow(content = Text("Last signed in")), TableRow(content = Text(lastLoggedIn(viewModel.collaborator, dateFormatter))))

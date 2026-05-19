@@ -64,6 +64,15 @@ trait ThirdPartyDeveloperConnectorMockModule
       def returnsNone() =
         when(aMock.fetchDeveloper(*[UserId])(*)).thenReturn(successful(None))
     }
+
+    object FetchDevelopers {
+
+      def succeeds(users: List[User]) =
+        when(aMock.fetchDevelopers(*)(*)).thenReturn(successful(users))
+
+      def returnsNone() =
+        when(aMock.fetchDevelopers(*)(*)).thenReturn(successful(List.empty))
+    }
   }
 
   object ThirdPartyDeveloperConnectorMock extends AbstractThirdPartyDeveloperConnectorMock {

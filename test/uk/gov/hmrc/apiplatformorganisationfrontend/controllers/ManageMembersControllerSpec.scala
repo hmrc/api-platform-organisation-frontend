@@ -87,23 +87,45 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
     val orgId        = OrganisationId.random
     val userId       = userSession.developer.userId
+    val userId2      = UserId.random
     val email        = LaxEmailAddress("bob@example.com")
+    val email2       = LaxEmailAddress("bill@example.com")
     val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
 
     val orgWithAllMembers =
-      OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), None)))
+      OrganisationWithAllMembersDetails(
+        organisation,
+        Set(
+          CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), Some(user)),
+          CollaboratorWithUserDetails(Collaborators.Member(userId2), RegisteredOrUnregisteredUser(userId2, email2, false, false), None)
+        )
+      )
+
+    val orgWithNoUnverifiedMembers =
+      OrganisationWithAllMembersDetails(
+        organisation,
+        Set(
+          CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), Some(user))
+        )
+      )
 
     val orgWithMember =
-      OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), Some(user)))
+      OrganisationWithMemberDetails(
+        organisation,
+        CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), Some(user))
+      )
 
     val orgWithUnregisteredMember =
-      OrganisationWithMemberDetails(organisation, CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, true, true), None))
+      OrganisationWithMemberDetails(
+        organisation,
+        CollaboratorWithUserDetails(Collaborators.Member(userId), RegisteredOrUnregisteredUser(userId, email, false, false), None)
+      )
 
     implicit val loggedInUser: User = user
   }
 
   "GET /manage-collaborators" should {
-    "return page with list of members" in new Setup {
+    "return page with list of verified and unverified members" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborators").withUser(underTest)(sessionId))
@@ -114,9 +136,30 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Manage organisation members")
+      contentAsString(result) should include("Invites awaiting a response")
+      contentAsString(result) should include("My org")
+      contentAsString(result) should include("Add an organisation member")
+      contentAsString(result) should include("(Unverified)")
+      contentAsString(result) should include("bob@example.com")
+      contentAsString(result) should include("bill@example.com")
+    }
+
+    "return page with list of verified members only" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborators").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithAllMembersDetails.thenReturns(orgWithNoUnverifiedMembers)
+
+      val result = underTest.manageCollaborators(orgId)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Manage organisation members")
+      contentAsString(result) should include("Invites awaiting a response")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("Add an organisation member")
       contentAsString(result) should include("bob@example.com")
+      contentAsString(result) should include("Your organisation does not have any invites awaiting a response.")
     }
 
     "return bad request if no organisation found" in new Setup {
@@ -169,7 +212,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include("Unregistered user")
+      contentAsString(result) should include("(Unverified)")
       contentAsString(result) should include("My org")
       contentAsString(result) should include("Remove this user from the organisation")
       contentAsString(result) should include("bob@example.com")

@@ -25,7 +25,9 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Roles
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, RegisteredOrUnregisteredUser}
+import uk.gov.hmrc.apiplatform.modules.tpd.emailpreferences.domain.models.EmailPreferences
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
@@ -43,8 +45,9 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
     val userId            = UserId.random
     val email             = LaxEmailAddress("bob@example.com")
     val organisation      = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
-    val userDetails       = RegisteredOrUnregisteredUser(userId, email, true, true)
-    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userDetails, None)))
+    val userRegDetails    = RegisteredOrUnregisteredUser(userId, email, true, true)
+    val userDetails       = User(email, "Bob", "Fleming", instant, instant, true, None, List.empty, None, EmailPreferences.noPreferences, userId)
+    val orgWithAllMembers = OrganisationWithAllMembersDetails(organisation, Set(CollaboratorWithUserDetails(Collaborators.Member(userId), userRegDetails, Some(userDetails))))
 
     val mockOrganisationConnector = mock[OrganisationConnector]
 
@@ -68,7 +71,8 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
   "fetchWithAllMembersDetails" should {
     "return organisation with members details for given org id" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
-      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userRegDetails)))
+      ThirdPartyDeveloperConnectorMock.FetchDevelopers.succeeds(List(userDetails))
 
       val result = await(underTest.fetchWithAllMembersDetails(orgId))
 
@@ -90,7 +94,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
   "fetchWithMemberDetails" should {
     "return organisation with members details for given org id" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
-      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userRegDetails)))
       ThirdPartyDeveloperConnectorMock.FetchDeveloper.succeeds(user)
 
       val result = await(underTest.fetchWithMemberDetails(orgId, userId))
@@ -104,7 +108,7 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
     "return organisation with members details but no user details for unregistered user" in new Setup {
       when(mockOrganisationConnector.fetchOrganisation(*[OrganisationId])(*)).thenReturn(successful(Some(organisation)))
-      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userDetails)))
+      ThirdPartyDeveloperConnectorMock.GetRegisteredOrUnregisteredUsers.succeeds(GetRegisteredOrUnregisteredUsersResponse(List(userRegDetails)))
       ThirdPartyDeveloperConnectorMock.FetchDeveloper.returnsNone()
 
       val result = await(underTest.fetchWithMemberDetails(orgId, userId))
