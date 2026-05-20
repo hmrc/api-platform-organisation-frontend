@@ -38,9 +38,11 @@
   <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
   <h1 class="govuk-heading-l">Organisation members</h1>
 
-  <div class="govuk-button-group">
-    <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add an organisation member</a>
-  </div>
+  @if(viewModel.isAdministrator) {
+    <div class="govuk-button-group">
+      <a href="@routes.ManageMembersController.addCollaborator(viewModel.organisationId)" class="govuk-link govuk-link--no-visited-state">Add an organisation member</a>
+    </div>
+  }
 
   <h2 class="govuk-heading-m">Manage organisation members</h2>
 
