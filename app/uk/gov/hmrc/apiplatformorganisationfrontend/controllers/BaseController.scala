@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.OrganisationRequest
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.{DevHubAuthorization, OrganisationActionBuilders}
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security.{DevHubAuthorization, OrganisationActionBuilders, Permissions}
 
 abstract class BaseController(mcc: MessagesControllerComponents)
     extends FrontendController(mcc)
@@ -50,4 +50,12 @@ abstract class BaseController(mcc: MessagesControllerComponents)
       ).invokeBlock(request, block)
     }
 
+  def whenAdminOnOrg(organisationId: OrganisationId)(block: OrganisationRequest[AnyContent] => Future[Result]): Action[AnyContent] =
+    Action.async { implicit request =>
+      (
+        loggedInActionRefiner() andThen
+          organisationRequestRefiner(organisationId) andThen
+          permissionFilter(Permissions.AdministratorOnly)
+      ).invokeBlock(request, block)
+    }
 }

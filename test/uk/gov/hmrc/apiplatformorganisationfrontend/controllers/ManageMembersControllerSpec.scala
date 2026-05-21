@@ -90,7 +90,7 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val userId2      = UserId.random
     val email        = LaxEmailAddress("bob@example.com")
     val email2       = LaxEmailAddress("bill@example.com")
-    val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+    val organisation = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Administrator(userId)))
 
     val orgWithAllMembers =
       OrganisationWithAllMembersDetails(
@@ -162,6 +162,26 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("Your organisation does not have any invites awaiting a response.")
     }
 
+    "return page for team member" in new Setup {
+      val orgTeamMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgTeamMember, userSession)
+      val fakeRequest   = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborators").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithAllMembersDetails.thenReturns(orgWithAllMembers)
+
+      val result = underTest.manageCollaborators(orgId)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Manage organisation members")
+      contentAsString(result) should include("Invites awaiting a response")
+      contentAsString(result) should include("My org")
+      contentAsString(result) shouldNot include("Add an organisation member")
+      contentAsString(result) should include("(Unverified)")
+      contentAsString(result) should include("bob@example.com")
+      contentAsString(result) should include("bill@example.com")
+    }
+
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
@@ -218,6 +238,23 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("bob@example.com")
     }
 
+    "return page as a team member" in new Setup {
+      val orgTeamMember = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgTeamMember, userSession)
+      val fakeRequest   = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/manage-collaborator").withUser(underTest)(sessionId))
+      OrganisationServiceMock.FetchWithMemberDetails.thenReturns(orgWithMember)
+
+      val result = underTest.manageCollaborator(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("John Doe")
+      contentAsString(result) should include("My org")
+      contentAsString(result) shouldNot include("Remove this user from the organisation")
+      contentAsString(result) should include("bob@example.com")
+    }
+
     "return bad request if no organisation found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
@@ -265,6 +302,16 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addCollaborator(orgId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/add-collaborator").withUser(underTest)(sessionId))
+
+      val result = underTest.addCollaborator(orgId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
     }
   }
 
@@ -337,6 +384,18 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
       status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/add-collaborator")
+        .withUser(underTest)(sessionId)
+        .withFormUrlEncodedBody("email" -> "john@example.com", "role" -> "member"))
+
+      val result = underTest.addCollaboratorAction(orgId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
     }
   }
 
@@ -434,6 +493,18 @@ class ManageMembersControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       contentAsString(result) should include("My org")
       contentAsString(result) should include("bob@example.com")
       contentAsString(result) should include("Please select an option")
+    }
+
+    "return forbidden if not an admin of the organisation" in new Setup {
+      val orgNotAdmin = Organisation(orgId, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(orgNotAdmin, userSession)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("POST", "/remove-collaborator")
+        .withUser(underTest)(sessionId)
+        .withFormUrlEncodedBody("confirm" -> ""))
+
+      val result = underTest.removeCollaboratorAction(orgId, userId)(fakeRequest)
+      status(result) shouldBe Status.FORBIDDEN
     }
   }
 

@@ -45,4 +45,27 @@ trait OrganisationActionBuilders {
       }
     }
   }
+
+  private def forbiddenWhenNot[A](cond: Boolean)(implicit ec: ExecutionContext, applicationRequest: OrganisationRequest[A]): Future[Option[Result]] = {
+    if (cond) {
+      Future.successful(None)
+    } else {
+      errorHandler.forbiddenTemplate.map(x => Some(Forbidden(x)))
+    }
+  }
+
+  def forbiddenWhenNotFilter(cond: OrganisationRequest[_] => Boolean)(implicit ec: ExecutionContext): ActionFilter[OrganisationRequest] = new ActionFilter[OrganisationRequest] {
+    override protected def executionContext: ExecutionContext = ec
+
+    override protected def filter[A](request: OrganisationRequest[A]): Future[Option[Result]] = {
+      implicit val implicitRequest: OrganisationRequest[A] = request
+
+      forbiddenWhenNot(cond(request))
+    }
+  }
+
+  def permissionFilter(permission: Permission)(implicit ec: ExecutionContext) = {
+    val test: OrganisationRequest[_] => Boolean = (req) => permission.hasPermissions(req.collaborator)
+    forbiddenWhenNotFilter(req => test(req))
+  }
 }

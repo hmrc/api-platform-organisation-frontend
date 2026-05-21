@@ -71,9 +71,11 @@
     ))
   }
 
-  <div class="govuk-button-group">
-    <a class="govuk-link govuk-link--no-visited-state" href="@routes.ManageMembersController.removeCollaborator(viewModel.organisationId, viewModel.collaborator.user.userId).url">
-      Remove this user from the organisation
-    </a>
-  </div>
+  @if(viewModel.isAdministrator) {
+    <div class="govuk-button-group">
+      <a class="govuk-link govuk-link--no-visited-state" href="@routes.ManageMembersController.removeCollaborator(viewModel.organisationId, viewModel.collaborator.user.userId).url">
+        Remove this user from the organisation
+      </a>
+    </div>
+  }
 }
