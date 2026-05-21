@@ -23,7 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import cats.data.NonEmptyList
 
 import play.api.libs.crypto.CookieSigner
-import play.api.libs.json.{Json, OWrites, Reads}
+import play.api.libs.json.{Json, Reads}
 import play.api.mvc.{MessagesControllerComponents, _}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
@@ -36,9 +36,6 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionS
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
 object QuestionsController extends NonEmptyListFormatters {
-  case class ErrorMessage(message: String)
-  implicit val writesErrorMessage: OWrites[ErrorMessage] = Json.writes[ErrorMessage]
-
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
   implicit val readsInboundRecordAnswersRequest: Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
 

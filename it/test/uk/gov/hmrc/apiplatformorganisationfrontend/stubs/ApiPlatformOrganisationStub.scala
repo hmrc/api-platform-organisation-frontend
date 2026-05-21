@@ -245,12 +245,13 @@ object ApiPlatformOrganisationStub {
       )
     }
 
-    def fails(orgId: OrganisationId, status: Int): StubMapping = {
+    def fails(orgId: OrganisationId, status: Int, body: JsValue = Json.obj()): StubMapping = {
       stubFor(
         put(urlEqualTo(s"/organisation/$orgId/member"))
           .willReturn(
             aResponse()
               .withStatus(status)
+              .withBody(body.toString())
           )
       )
     }

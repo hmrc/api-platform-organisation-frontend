@@ -23,7 +23,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId, UserId}
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{ErrorMessage, OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationService
 
 trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
@@ -71,7 +71,7 @@ trait OrganisationServiceMockModule extends MockitoSugar with ArgumentMatchersSu
       }
 
       def thenReturnsNone() = {
-        when(aMock.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(Left("Organisation not found")))
+        when(aMock.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(Left(ErrorMessage("Organisation not found"))))
       }
     }
 

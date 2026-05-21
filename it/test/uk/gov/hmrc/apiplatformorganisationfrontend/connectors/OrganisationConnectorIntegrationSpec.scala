@@ -20,7 +20,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 import play.api.{Application => PlayApplication, Configuration, Mode}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
@@ -30,6 +30,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborator
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.OrganisationAllowList
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.ErrorMessage
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformOrganisationStub
 
 class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec with GuiceOneAppPerSuite {
@@ -39,8 +40,10 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
   )
 
   trait Setup extends SubmissionsTestData {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val underTest                  = app.injector.instanceOf[OrganisationConnector]
+    implicit val hc: HeaderCarrier                        = HeaderCarrier()
+    implicit val writesErrorMessage: Writes[ErrorMessage] = Json.writes[ErrorMessage]
+
+    val underTest = app.injector.instanceOf[OrganisationConnector]
 
     val orgId        = OrganisationId.random
     val organisation = Organisation(orgId, OrganisationName("Org name"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(userId)))
@@ -234,12 +237,20 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       result shouldBe Right(organisation)
     }
 
+    "fail when the call returns a validation error" in new Setup {
+      ApiPlatformOrganisationStub.AddMemberToOrganisation.fails(orgId, BAD_REQUEST, Json.toJson(ErrorMessage("Validation error message")))
+
+      val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
+
+      result shouldBe Left(ErrorMessage("Validation error message"))
+    }
+
     "fail when the call returns an error" in new Setup {
       ApiPlatformOrganisationStub.AddMemberToOrganisation.fails(orgId, INTERNAL_SERVER_ERROR)
 
       val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
 
-      result shouldBe Left(s"Failed to add user $email to organisation $orgId")
+      result shouldBe Left(ErrorMessage(s"Failed to add user $email to organisation $orgId"))
     }
   }
 

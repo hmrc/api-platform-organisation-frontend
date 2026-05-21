@@ -138,17 +138,18 @@ class ManageMembersController @Inject() (
   def addCollaboratorAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     addMemberForm.bindFromRequest().fold(
       formWithErrors => {
-        organisationService.fetch(organisationId) map {
-          case Some(org) => BadRequest(addMemberPage(Some(request.userSession), formWithErrors, AddMemberViewModel(organisationId, org.organisationName)))
-          case _         => BadRequest("Organisation not found")
-        }
+        successful(BadRequest(addMemberPage(Some(request.userSession), formWithErrors, AddMemberViewModel(organisationId, request.organisation.organisationName))))
       },
       memberAddData => {
         val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
         organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
             case Right(org) => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
-            case Left(msg)  => BadRequest(msg)
+            case Left(msg)  => BadRequest(addMemberPage(
+                Some(request.userSession),
+                addMemberForm.fill(memberAddData).withError("email", msg.message),
+                AddMemberViewModel(organisationId, request.organisation.organisationName)
+              ))
           })
       }
     )

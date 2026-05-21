@@ -32,7 +32,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails, OrganisationWithAllMembersDetails}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{CollaboratorWithUserDetails, ErrorMessage, OrganisationWithAllMembersDetails}
 
 class OrganisationServiceSpec extends AsyncHmrcSpec {
 
@@ -151,13 +151,13 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
     "return left if fails to add new member" in new Setup {
       when(mockOrganisationConnector.addCollaboratorToOrganisation(*[OrganisationId], *[LaxEmailAddress], *)(*)).thenReturn(successful(
-        Left(s"Failed to add user $userId to organisation $orgId")
+        Left(ErrorMessage(s"Failed to add user $userId to organisation $orgId"))
       ))
 
       val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
 
       result.isLeft shouldBe true
-      result.left.value shouldBe s"Failed to add user $userId to organisation $orgId"
+      result.left.value shouldBe ErrorMessage(s"Failed to add user $userId to organisation $orgId")
     }
   }
 

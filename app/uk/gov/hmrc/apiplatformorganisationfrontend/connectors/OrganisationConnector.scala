@@ -30,6 +30,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.ErrorMessage
 
 @Singleton
 class OrganisationConnector @Inject() (
@@ -120,15 +121,20 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def addCollaboratorToOrganisation(id: OrganisationId, email: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def addCollaboratorToOrganisation(id: OrganisationId, email: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[ErrorMessage, Organisation]] = {
     import cats.implicits._
-    val failed = (err: UpstreamErrorResponse) => s"Failed to add user $email to organisation $id"
 
     metrics.record(api) {
       http.put(url"${config.serviceBaseUrl}/organisation/${id.value}/member")
         .withBody(Json.toJson(AddMemberRequest(email, role)))
-        .execute[Either[UpstreamErrorResponse, Organisation]]
-        .map(_.leftMap(failed))
+        .execute[HttpResponse]
+        .map(resp =>
+          resp.status match {
+            case 200 => resp.json.as[Organisation].asRight
+            case 400 => resp.json.as[ErrorMessage].asLeft
+            case _   => ErrorMessage(message = s"Failed to add user $email to organisation $id").asLeft
+          }
+        )
     }
   }
 
