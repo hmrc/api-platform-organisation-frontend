@@ -41,11 +41,12 @@ object ManageMembersController {
       organisationId: OrganisationId,
       organisationName: OrganisationName,
       verifiedCollaborators: Set[CollaboratorWithUserDetails],
-      unverifiedCollaborators: Set[CollaboratorWithUserDetails]
+      unverifiedCollaborators: Set[CollaboratorWithUserDetails],
+      isAdministrator: Boolean
     )
   case class AddMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
   case class MemberSuccessViewModel(organisationId: OrganisationId, organisationName: OrganisationName, role: String)
-  case class ManageMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails)
+  case class ManageMemberViewModel(organisationId: OrganisationId, organisationName: OrganisationName, collaborator: CollaboratorWithUserDetails, isAdministrator: Boolean)
 
   case class AddMemberForm(email: String, role: Option[String])
 
@@ -108,7 +109,8 @@ class ManageMembersController @Inject() (
               org.organisation.id,
               org.organisation.organisationName,
               organisationMembers.filter(c => c.user.isVerified == true),
-              organisationMembers.filter(c => c.user.isVerified == false)
+              organisationMembers.filter(c => c.user.isVerified == false),
+              request.collaborator.isAdministrator
             )
           Ok(manageMembersPage(Some(request.userSession), viewModel))
         }
@@ -121,21 +123,21 @@ class ManageMembersController @Inject() (
       .map(_ match {
         case Right(org) => {
           val viewModel =
-            ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
+            ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator, request.collaborator.isAdministrator)
           Ok(manageMemberPage(Some(request.userSession), viewModel))
         }
         case Left(msg)  => BadRequest(msg)
       })
   }
 
-  def addCollaborator(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def addCollaborator(organisationId: OrganisationId): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     organisationService.fetch(organisationId) map {
       case Some(org) => Ok(addMemberPage(Some(request.userSession), addMemberForm, AddMemberViewModel(org.id, org.organisationName)))
       case _         => BadRequest("Organisation not found")
     }
   }
 
-  def addCollaboratorAction(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def addCollaboratorAction(organisationId: OrganisationId): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     addMemberForm.bindFromRequest().fold(
       formWithErrors => {
         successful(BadRequest(addMemberPage(Some(request.userSession), formWithErrors, AddMemberViewModel(organisationId, request.organisation.organisationName))))
@@ -155,31 +157,31 @@ class ManageMembersController @Inject() (
     )
   }
 
-  def addCollaboratorSuccess(organisationId: OrganisationId, role: String): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def addCollaboratorSuccess(organisationId: OrganisationId, role: String): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     organisationService.fetch(organisationId) map {
       case Some(org) => Ok(addMemberSuccessPage(Some(request.userSession), MemberSuccessViewModel(org.id, org.organisationName, role)))
       case _         => BadRequest("Organisation not found")
     }
   }
 
-  def removeCollaborator(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def removeCollaborator(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     organisationService.fetchWithMemberDetails(organisationId, userId)
       .map(_ match {
         case Right(org) => {
-          val viewModel = ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
+          val viewModel = ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator, request.collaborator.isAdministrator)
           Ok(removeMemberPage(Some(request.userSession), removeMemberForm, viewModel))
         }
         case Left(msg)  => BadRequest(msg)
       })
   }
 
-  def removeCollaboratorAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def removeCollaboratorAction(organisationId: OrganisationId, userId: UserId): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     removeMemberForm.bindFromRequest().fold(
       formWithErrors => {
         organisationService.fetchWithMemberDetails(organisationId, userId)
           .map(_ match {
             case Right(org) => {
-              val viewModel = ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator)
+              val viewModel = ManageMemberViewModel(org.organisation.id, org.organisation.organisationName, org.collaborator, request.collaborator.isAdministrator)
               BadRequest(removeMemberPage(Some(request.userSession), formWithErrors, viewModel))
             }
             case Left(msg)  => BadRequest(msg)
@@ -200,7 +202,7 @@ class ManageMembersController @Inject() (
     )
   }
 
-  def removeCollaboratorSuccess(organisationId: OrganisationId, role: String): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+  def removeCollaboratorSuccess(organisationId: OrganisationId, role: String): Action[AnyContent] = whenAdminOnOrg(organisationId) { implicit request =>
     organisationService.fetch(organisationId) map {
       case Some(org) => Ok(removeMemberSuccessPage(Some(request.userSession), MemberSuccessViewModel(org.id, org.organisationName, role)))
       case _         => BadRequest("Organisation not found")
