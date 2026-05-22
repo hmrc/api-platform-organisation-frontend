@@ -202,6 +202,24 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     }
   }
 
+  "createOrganisation" should {
+    "successfully create one" in new Setup {
+      ApiPlatformOrganisationStub.CreateOrganisation.succeeds(organisation)
+
+      val result = await(underTest.createOrganisation(organisation.organisationName, organisation.organisationType, userId))
+
+      result shouldBe organisation
+    }
+
+    "fail when the call returns an error" in new Setup {
+      ApiPlatformOrganisationStub.CreateOrganisation.fails(INTERNAL_SERVER_ERROR)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.createOrganisation(organisation.organisationName, organisation.organisationType, userId))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   "fetchOrganisation" should {
     "successfully get one" in new Setup {
       ApiPlatformOrganisationStub.FetchOrganisation.succeeds(orgId, organisation)
@@ -263,12 +281,20 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
       result shouldBe Right(organisation)
     }
 
+    "fail when the call returns a validation error" in new Setup {
+      ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, userId, BAD_REQUEST, Json.toJson(ErrorMessage("Validation error message")))
+
+      val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
+
+      result shouldBe Left(ErrorMessage("Validation error message"))
+    }
+
     "fail when the call returns an error" in new Setup {
       ApiPlatformOrganisationStub.RemoveMemberFromOrganisation.fails(orgId, userId, INTERNAL_SERVER_ERROR)
 
       val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
-      result shouldBe Left(s"Failed to remove user $userId from organisation $orgId")
+      result shouldBe Left(ErrorMessage(s"Failed to remove user $userId from organisation $orgId"))
     }
   }
 

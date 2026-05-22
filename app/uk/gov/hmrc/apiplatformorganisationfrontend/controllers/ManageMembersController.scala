@@ -187,7 +187,7 @@ class ManageMembersController @Inject() (
             organisationService.removeCollaboratorFromOrganisation(organisationId, userId, LaxEmailAddress(memberRemoveData.email))
               .map(_ match {
                 case Right(org) => Redirect(routes.ManageMembersController.removeCollaboratorSuccess(organisationId, memberRemoveData.role))
-                case Left(msg)  => BadRequest(msg)
+                case Left(msg)  => BadRequest(msg.message)
               })
           }
           case _           => successful(Redirect(routes.ManageMembersController.manageCollaborators(organisationId)))

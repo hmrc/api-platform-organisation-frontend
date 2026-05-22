@@ -173,13 +173,13 @@ class OrganisationServiceSpec extends AsyncHmrcSpec {
 
     "return left if fails to remove member" in new Setup {
       when(mockOrganisationConnector.removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(
-        Left(s"Failed to remove user $userId from organisation $orgId")
+        Left(ErrorMessage(s"Failed to remove user $userId from organisation $orgId"))
       ))
 
       val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
       result.isLeft shouldBe true
-      result.left.value shouldBe s"Failed to remove user $userId from organisation $orgId"
+      result.left.value shouldBe ErrorMessage(s"Failed to remove user $userId from organisation $orgId")
     }
   }
 }

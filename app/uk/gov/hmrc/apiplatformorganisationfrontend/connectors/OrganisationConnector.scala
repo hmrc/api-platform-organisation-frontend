@@ -138,15 +138,20 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, email: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[ErrorMessage, Organisation]] = {
     import cats.implicits._
-    val failed = (err: UpstreamErrorResponse) => s"Failed to remove user $userId from organisation $id"
 
     metrics.record(api) {
       http.delete(url"${config.serviceBaseUrl}/organisation/${id.value}/member/$userId")
         .withBody(Json.toJson(RemoveMemberRequest(userId, email)))
-        .execute[Either[UpstreamErrorResponse, Organisation]]
-        .map(_.leftMap(failed))
+        .execute[HttpResponse]
+        .map(resp =>
+          resp.status match {
+            case 200 => resp.json.as[Organisation].asRight
+            case 400 => resp.json.as[ErrorMessage].asLeft
+            case _   => ErrorMessage(message = s"Failed to remove user $userId from organisation $id").asLeft
+          }
+        )
     }
   }
 

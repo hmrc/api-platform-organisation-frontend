@@ -65,7 +65,8 @@ class OrganisationService @Inject() (
     organisationConnector.addCollaboratorToOrganisation(id, emailAddress, role)
   }
 
-  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier)
+      : Future[Either[ErrorMessage, Organisation]] = {
     organisationConnector.removeCollaboratorFromOrganisation(id, userId, emailAddress)
   }
 }
