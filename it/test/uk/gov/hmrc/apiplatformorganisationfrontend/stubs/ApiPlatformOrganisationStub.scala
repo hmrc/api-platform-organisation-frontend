@@ -181,6 +181,31 @@ object ApiPlatformOrganisationStub {
     }
   }
 
+  object CreateOrganisation {
+
+    def succeeds(organisation: Organisation): StubMapping = {
+      stubFor(
+        post(urlEqualTo("/organisation/create"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(organisation).toString())
+          )
+      )
+    }
+
+    def fails(status: Int): StubMapping = {
+      stubFor(
+        post(urlEqualTo("/organisation/create"))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+          )
+      )
+    }
+  }
+
   object FetchOrganisation {
 
     def succeeds(orgId: OrganisationId, organisation: Organisation): StubMapping = {
@@ -245,12 +270,13 @@ object ApiPlatformOrganisationStub {
       )
     }
 
-    def fails(orgId: OrganisationId, status: Int): StubMapping = {
+    def fails(orgId: OrganisationId, status: Int, body: JsValue = Json.obj()): StubMapping = {
       stubFor(
         put(urlEqualTo(s"/organisation/$orgId/member"))
           .willReturn(
             aResponse()
               .withStatus(status)
+              .withBody(body.toString())
           )
       )
     }
@@ -270,12 +296,13 @@ object ApiPlatformOrganisationStub {
       )
     }
 
-    def fails(orgId: OrganisationId, userId: UserId, status: Int): StubMapping = {
+    def fails(orgId: OrganisationId, userId: UserId, status: Int, body: JsValue = Json.obj()): StubMapping = {
       stubFor(
         delete(urlEqualTo(s"/organisation/$orgId/member/$userId"))
           .willReturn(
             aResponse()
               .withStatus(status)
+              .withBody(body.toString())
           )
       )
     }

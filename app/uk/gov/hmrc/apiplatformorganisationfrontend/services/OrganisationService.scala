@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.{OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.{ErrorMessage, OrganisationWithAllMembersDetails, OrganisationWithMemberDetails}
 
 @Singleton
 class OrganisationService @Inject() (
@@ -61,13 +61,12 @@ class OrganisationService @Inject() (
     ).value
   }
 
-  def addCollaboratorToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
-    for {
-      org <- organisationConnector.addCollaboratorToOrganisation(id, emailAddress, role)
-    } yield org
+  def addCollaboratorToOrganisation(id: OrganisationId, emailAddress: LaxEmailAddress, role: Role)(implicit hc: HeaderCarrier): Future[Either[ErrorMessage, Organisation]] = {
+    organisationConnector.addCollaboratorToOrganisation(id, emailAddress, role)
   }
 
-  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Organisation]] = {
+  def removeCollaboratorFromOrganisation(id: OrganisationId, userId: UserId, emailAddress: LaxEmailAddress)(implicit hc: HeaderCarrier)
+      : Future[Either[ErrorMessage, Organisation]] = {
     organisationConnector.removeCollaboratorFromOrganisation(id, userId, emailAddress)
   }
 }
