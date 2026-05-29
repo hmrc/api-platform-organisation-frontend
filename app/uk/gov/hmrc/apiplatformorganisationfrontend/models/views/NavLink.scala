@@ -53,7 +53,7 @@ case object UserNavLinks {
 
   private def loggedInNavLinks(appConfig: AppConfig, userFullName: String) = List(
     NavLink(userFullName, s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/profile", isSensitive = true),
-    NavLink("Sign out", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/logout/survey")
+    NavLink("Sign out", s"${appConfig.thirdPartyDeveloperFrontendUrl}/developer/logout")
   )
 
   private def loggedOutNavLinks(appConfig: AppConfig) = List(
