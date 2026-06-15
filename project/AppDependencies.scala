@@ -4,7 +4,7 @@ object AppDependencies {
 
   private val bootstrapVersion = "10.7.0"
   private val tpdDomainVersion = "0.15.0"
-  private val orgDomainVersion = "0.19.0"
+  private val orgDomainVersion = "0.20.0"
   private val appDomainVersion = "1.1.0"
 
   val compile = Seq(
@@ -13,7 +13,6 @@ object AppDependencies {
     "uk.gov.hmrc"      %% "api-platform-tpd-domain"          % tpdDomainVersion,
     "uk.gov.hmrc"      %% "http-metrics"                     % "2.9.0",
     "uk.gov.hmrc"      %% "api-platform-organisation-domain" % orgDomainVersion,
-    "commons-validator" % "commons-validator"                % "1.7",
     "uk.gov.hmrc"      %% "api-platform-application-domain"  % appDomainVersion
   )
 
