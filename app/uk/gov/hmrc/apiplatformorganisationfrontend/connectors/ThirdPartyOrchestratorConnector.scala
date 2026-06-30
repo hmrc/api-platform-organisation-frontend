@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 
 @Singleton
 class ThirdPartyOrchestratorConnector @Inject() (
@@ -41,6 +42,10 @@ class ThirdPartyOrchestratorConnector @Inject() (
   def getAppsForResponsibleIndividualOrAdmin(request: GetAppsForAdminOrRIRequest)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] =
     http.post(url"${config.serviceBaseUrl}/responsible-ind-or-admin/applications")
       .withBody(Json.toJson(request))
+      .execute[List[ApplicationWithCollaborators]]
+
+  def getAppsForOrganisation(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] =
+    http.get(url"${config.serviceBaseUrl}/query?organisationId=${organisationId}")
       .execute[List[ApplicationWithCollaborators]]
 
   def applicationCommandDispatch(applicationId: String, request: DispatchRequest)(implicit hc: HeaderCarrier): Future[Unit] =

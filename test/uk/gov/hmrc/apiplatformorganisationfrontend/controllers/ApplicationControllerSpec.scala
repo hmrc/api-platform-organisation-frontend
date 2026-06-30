@@ -40,6 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationActionServiceMockModule, OrganisationServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.OrganisationApplicationsPage
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -63,6 +64,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val addApplicationsView           = app.injector.instanceOf[AddApplicationsView]
     val addApplicationsSuccessView    = app.injector.instanceOf[AddApplicationsSuccessView]
+    val applicationsPage              = app.injector.instanceOf[OrganisationApplicationsPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -75,6 +77,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         OrganisationActionServiceMock.aMock,
         addApplicationsView,
         addApplicationsSuccessView,
+        applicationsPage,
         ThirdPartyDeveloperConnectorMock.aMock,
         errorHandler,
         cookieSigner

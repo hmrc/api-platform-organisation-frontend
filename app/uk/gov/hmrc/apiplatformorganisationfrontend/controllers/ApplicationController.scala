@@ -29,13 +29,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actors, ApplicationId, Environment, OrganisationId}
-import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Organisation
+import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.AppViewModel.fromApplicationWithCollaborators
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.{ManageApplicationsViewModel, SelectedAppsForm}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{ApplicationService, OrganisationActionService, OrganisationService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.OrganisationApplicationsPage
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 object ApplicationController {
@@ -65,6 +65,8 @@ object ApplicationController {
           if (data.selectedPrincipalApps.isEmpty && data.selectedSubordinateApps.isEmpty) false else true
       ))
   }
+
+  case class OrganisationApplicationsPageViewModel(organisationId: OrganisationId, organisationName: OrganisationName, applications: List[ApplicationWithCollaborators])
 }
 
 @Singleton
@@ -75,12 +77,15 @@ class ApplicationController @Inject() (
     val organisationActionService: OrganisationActionService,
     val addApplicationsView: AddApplicationsView,
     val addApplicationsSuccessView: AddApplicationsSuccessView,
+    val organisationApplicationsPage: OrganisationApplicationsPage,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     val errorHandler: ErrorHandler,
     val cookieSigner: CookieSigner
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
   ) extends BaseController(mcc) with Logging {
+
+  import ApplicationController._
 
   val selectedAppsForm: Form[SelectedAppsForm] = SelectedAppsForm.form
 
@@ -151,5 +156,13 @@ class ApplicationController @Inject() (
     val subordinateApps = partitioned._2.map(app => fromApplicationWithCollaborators(app))
 
     ManageApplicationsViewModel(organisationId, organisationName, principalApps = principalApps, subordinateApps = subordinateApps)
+  }
+
+  def organisationApplicationsPage(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
+    applicationService.fetchApplicationsForOrganisation(organisationId)
+      .map { list =>
+        val viewModel = OrganisationApplicationsPageViewModel(request.organisation.id, request.organisation.organisationName, list)
+        Ok(organisationApplicationsPage(Some(request.userSession), viewModel))
+      }
   }
 }

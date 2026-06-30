@@ -51,4 +51,7 @@ class ApplicationService @Inject() (thirdPartyOrchestratorConnector: ThirdPartyO
     ).map(_ => ())
   }
 
+  def fetchApplicationsForOrganisation(id: OrganisationId)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] = {
+    thirdPartyOrchestratorConnector.getAppsForOrganisation(id)
+  }
 }
