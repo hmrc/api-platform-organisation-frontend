@@ -40,6 +40,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{ApplicationServiceMockModule, OrganisationActionServiceMockModule, OrganisationServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.OrganisationApplicationsPage
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.application.{AddApplicationsSuccessView, AddApplicationsView}
 
 class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -63,6 +64,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val addApplicationsView           = app.injector.instanceOf[AddApplicationsView]
     val addApplicationsSuccessView    = app.injector.instanceOf[AddApplicationsSuccessView]
+    val applicationsPage              = app.injector.instanceOf[OrganisationApplicationsPage]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -75,6 +77,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         OrganisationActionServiceMock.aMock,
         addApplicationsView,
         addApplicationsSuccessView,
+        applicationsPage,
         ThirdPartyDeveloperConnectorMock.aMock,
         errorHandler,
         cookieSigner
@@ -185,7 +188,7 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     "return 400 when form has errors and org not found" in new Setup {
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
-      OrganisationServiceMock.Fetch.thenReturnsNone
+      OrganisationServiceMock.Fetch.thenReturnsNone()
       ApplicationServiceMock.GetAppsForResponsibleIndividualOrAdmin.thenReturns(List(standardApp, standardApp2))
       ApplicationServiceMock.AddOrgToApps.thenReturnsSuccess()
       val fakeRequest = CSRFTokenHelper.addCSRFToken(
@@ -212,6 +215,51 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
 
       intercept[InternalServerException] {
         await(underTest.addApplicationsAction(organisationIdOne)(fakeRequest))
+      }.responseCode shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "GET /organisation/:oid/applications" should {
+    "return 200 and list of applications for the organisation" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      ApplicationServiceMock.FetchApplicationsForOrganisation.thenReturns(List(standardApp, standardApp2))
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/applications").withUser(underTest)(sessionId))
+
+      val result = underTest.organisationApplicationsPage(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"Applications")
+      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include(s"${standardApp.name}")
+      contentAsString(result) should include(s"${standardApp2.name}")
+    }
+
+    "return 200 and empty list if no applications found" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      ApplicationServiceMock.FetchApplicationsForOrganisation.thenReturns(List.empty)
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/applications").withUser(underTest)(sessionId))
+
+      val result = underTest.organisationApplicationsPage(organisationIdOne)(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include(s"Applications")
+      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include("Your organisation does not have any applications yet.")
+    }
+
+    "return 500 if fetchApplicationsForOrganisation throws an exception" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      OrganisationActionServiceMock.givenOrganisationAction(organisation, userSession)
+      OrganisationServiceMock.Fetch.thenReturns(organisation)
+      ApplicationServiceMock.FetchApplicationsForOrganisation.thenThrowsException()
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/organisation/${organisationIdOne.toString()}/applications").withUser(underTest)(sessionId))
+
+      intercept[InternalServerException] {
+        await(underTest.organisationApplicationsPage(organisationIdOne)(fakeRequest))
       }.responseCode shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }

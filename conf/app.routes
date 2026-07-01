@@ -33,6 +33,7 @@ GET         /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatf
 POST        /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: OrganisationId)
 GET         /organisation/:oid/add-collaborator-success     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: OrganisationId, role: String)
 
+GET         /organisation/:oid/applications                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.organisationApplicationsPage(oid: OrganisationId)
 GET         /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: OrganisationId)
 POST        /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: OrganisationId)
 
