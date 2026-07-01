@@ -27,6 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.Applicati
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.{ApplicationWithCollaborators, ApplicationWithCollaboratorsFixtures}
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatformorganisationfrontend.WireMockExtensions.withJsonRequestBodySyntax
 
 object ThirdPartyOrchestratorStub extends ApplicationWithCollaboratorsFixtures {
@@ -50,6 +51,31 @@ object ThirdPartyOrchestratorStub extends ApplicationWithCollaboratorsFixtures {
       stubFor(
         post(urlPathEqualTo(s"/responsible-ind-or-admin/applications"))
           .withJsonRequestBody(request)
+          .willReturn(
+            aResponse()
+              .withStatus(INTERNAL_SERVER_ERROR)
+          )
+      )
+    }
+  }
+
+  object GetAppsForOrganisation {
+
+    def succeeds(organisationId: OrganisationId)(app: ApplicationWithCollaborators): StubMapping = {
+      stubFor(
+        get(urlEqualTo(s"/query?organisationId=${organisationId.toString()}"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(s"[${getBody(app)}]")
+          )
+      )
+    }
+
+    def throwsAnException(organisationId: OrganisationId) = {
+      stubFor(
+        get(urlEqualTo(s"/query?organisationId=${organisationId.toString()}"))
           .willReturn(
             aResponse()
               .withStatus(INTERNAL_SERVER_ERROR)

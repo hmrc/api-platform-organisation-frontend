@@ -74,6 +74,24 @@ class ThirdPartyOrchestratorConnectorIntegrationSpec extends BaseConnectorIntegr
     }
   }
 
+  "getAppsForOrganisation" should {
+    "return a list of applications" in new Setup {
+      ThirdPartyOrchestratorStub.GetAppsForOrganisation.succeeds(organisationIdOne)(standardApp)
+
+      private val result = await(underTest.getAppsForOrganisation(organisationIdOne))
+
+      result shouldBe List(standardApp)
+    }
+
+    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
+      ThirdPartyOrchestratorStub.GetAppsForOrganisation.throwsAnException(organisationIdOne)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.getAppsForOrganisation(organisationIdOne))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   "applicationCommandDispatch" should {
     "return Unit on success" in new Setup {
       ThirdPartyOrchestratorStub.ApplicationCommandDispatch.succeeds(applicationIdOne.toString(), dispatchRequest)
