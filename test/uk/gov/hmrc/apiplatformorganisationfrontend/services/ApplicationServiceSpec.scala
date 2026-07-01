@@ -95,4 +95,17 @@ class ApplicationServiceSpec extends AsyncHmrcSpec with OrganisationIdFixtures
       }.statusCode shouldBe INTERNAL_SERVER_ERROR
     }
   }
+
+  "fetchApplicationsForOrganisation" should {
+    val response = List(standardApp, standardApp2)
+
+    "return applications on success when found" in new Setup {
+      when(mockThirdPartyOrchestratorConnector.getAppsForOrganisation(*[OrganisationId])(*)).thenReturn(successful(response))
+
+      val result = await(underTest.fetchApplicationsForOrganisation(organisationIdOne))
+      result shouldBe response
+
+      verify(mockThirdPartyOrchestratorConnector).getAppsForOrganisation(eqTo(organisationIdOne))(*)
+    }
+  }
 }

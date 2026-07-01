@@ -48,19 +48,23 @@
   <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
   <h1 class="govuk-heading-l">Applications</h1>
 
-  @defining(DateTimeFormatter.ofPattern("d MMMM yyyy").withZone(ZoneId.of("Europe/London")).withLocale(Locale.UK)) { dateFormatter =>
-    @govukTable(Table(
-      classes = "govuk-!-margin-bottom-8",
-      head = Some(Seq(
-        HeadCell(content = Text("Name")),
-        HeadCell(content = Text("Environment")),
-        HeadCell(content = Text("Last API call"))
-      )),
-      rows = viewModel.applications.map(app => Seq(
-        TableRow(content = HtmlContent(s"<strong>${app.name.toString()}</strong>")),
-        TableRow(content = Text(app.deployedTo.displayText)),
-        TableRow(content = Text(formatMaybeDate(app.details.lastAccess, dateFormatter)))
+  @if(viewModel.applications.isEmpty) {
+    <p class="govuk-body">Your organisation does not have any applications yet.</p>
+  } else {
+    @defining(DateTimeFormatter.ofPattern("d MMMM yyyy").withZone(ZoneId.of("Europe/London")).withLocale(Locale.UK)) { dateFormatter =>
+      @govukTable(Table(
+        classes = "govuk-!-margin-bottom-8",
+        head = Some(Seq(
+          HeadCell(content = Text("Name")),
+          HeadCell(content = Text("Environment")),
+          HeadCell(content = Text("Last API call"))
+        )),
+        rows = viewModel.applications.map(app => Seq(
+          TableRow(content = HtmlContent(s"<strong><a class='govuk-link govuk-link--no-visited-state' href='${appConfig.thirdPartyDeveloperFrontendUrl}/developer/applications/${app.id.toString()}/manage'>${app.name.toString()}</a></strong>")),
+          TableRow(content = Text(app.deployedTo.displayText)),
+          TableRow(content = Text(formatMaybeDate(app.details.lastAccess, dateFormatter)))
+        ))
       ))
-    ))
+    }
   }
 }

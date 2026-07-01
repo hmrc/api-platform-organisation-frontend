@@ -54,6 +54,16 @@ trait ApplicationServiceMockModule extends MockitoSugar with ArgumentMatchersSug
       }
     }
 
+    object FetchApplicationsForOrganisation {
+
+      def thenReturns(apps: List[ApplicationWithCollaborators]) = {
+        when(aMock.fetchApplicationsForOrganisation(*[OrganisationId])(*)).thenReturn(successful((apps)))
+      }
+
+      def thenThrowsException() = {
+        when(aMock.fetchApplicationsForOrganisation(*[OrganisationId])(*)).thenThrow(new InternalServerException("Error"))
+      }
+    }
   }
 
   object ApplicationServiceMock extends BaseApplicationServiceMock {

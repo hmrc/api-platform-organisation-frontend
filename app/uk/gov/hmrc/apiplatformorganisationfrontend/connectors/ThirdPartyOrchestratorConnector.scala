@@ -45,7 +45,7 @@ class ThirdPartyOrchestratorConnector @Inject() (
       .execute[List[ApplicationWithCollaborators]]
 
   def getAppsForOrganisation(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[ApplicationWithCollaborators]] =
-    http.get(url"${config.serviceBaseUrl}/query?organisationId=${organisationId}")
+    http.get(url"${config.serviceBaseUrl}/query?${Seq("organisationId" -> organisationId.toString())}")
       .execute[List[ApplicationWithCollaborators]]
 
   def applicationCommandDispatch(applicationId: String, request: DispatchRequest)(implicit hc: HeaderCarrier): Future[Unit] =
