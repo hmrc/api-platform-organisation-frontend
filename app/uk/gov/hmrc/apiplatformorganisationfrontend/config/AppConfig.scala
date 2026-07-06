@@ -36,7 +36,6 @@ class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config)
   private val internalPlatformHost: Option[String] = config.getOptional[String]("internal.platform.host")
   lazy val apiDocumentationFrontendUrl: String     = internalPlatformHost.getOrElse("http://localhost:9680")
   lazy val thirdPartyDeveloperFrontendUrl: String  = internalPlatformHost.getOrElse("http://localhost:9685")
-  lazy val reportProblemHost: String               = internalPlatformHost.getOrElse("http://localhost:9250")
   lazy val securedCookie: Boolean                  = getConfigDefaulted("cookie.secure", true)
   lazy val devhubSupportFrontendBaseUrl            = internalPlatformHost.getOrElse(baseUrl("devhub-support-frontend"))
   lazy val devhubSupportFrontendUrl                = s"$devhubSupportFrontendBaseUrl/devhub-support"
