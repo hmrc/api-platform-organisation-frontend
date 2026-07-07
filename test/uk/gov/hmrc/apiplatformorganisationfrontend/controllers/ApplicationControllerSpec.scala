@@ -83,7 +83,8 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         cookieSigner
       )
 
-    val organisation = Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(user.userId)))
+    val organisation =
+      Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Administrator(user.userId)))
 
     implicit val loggedInUser: User = user
 
