@@ -40,7 +40,7 @@ abstract class BaseController(mcc: MessagesControllerComponents)
 
   implicit val appConfig: AppConfig
 
-  protected lazy val ETR = EitherTHelper.make[Result](ec)
+  protected lazy val ETR = EitherTHelper.make[Result]
 
   def whenTeamMemberOnOrg(organisationId: OrganisationId)(block: OrganisationRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>

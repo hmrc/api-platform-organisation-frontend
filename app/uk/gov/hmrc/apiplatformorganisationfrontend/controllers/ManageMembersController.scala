@@ -57,7 +57,7 @@ object ManageMembersController {
         "email" -> emailValidator(),
         "role"  -> optional(text)
           .verifying("member.error.confirmation.no.choice.field", _.isDefined)
-      )(AddMemberForm.apply)(AddMemberForm.unapply)
+      )(AddMemberForm.apply)(a => Some(a.email, a.role))
     )
   }
 
@@ -71,7 +71,7 @@ object ManageMembersController {
         "role"    -> text,
         "confirm" -> optional(text)
           .verifying("member.error.confirmation.no.choice.field", _.isDefined)
-      )(RemoveMemberForm.apply)(RemoveMemberForm.unapply)
+      )(RemoveMemberForm.apply)(r => Some(r.email, r.role, r.confirm))
     )
   }
 }

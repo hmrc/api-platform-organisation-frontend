@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{
 
 object ApiPlatformOrganisationStub {
 
-  import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission._
+  import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.given
 
   object CreateSubmission {
 

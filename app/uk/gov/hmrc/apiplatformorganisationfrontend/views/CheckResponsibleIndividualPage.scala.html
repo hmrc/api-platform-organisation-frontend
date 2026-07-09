@@ -33,7 +33,7 @@
     pageTitle = "Are you the responsible individual?",
     loggedInSession = loggedInSession
 ) {
-    @helper.form(action = routes.OrganisationRegistrationController.checkResponsibleIndividualAction) {
+    @helper.form(action = routes.OrganisationRegistrationController.checkResponsibleIndividualAction()) {
         @helper.CSRF.formField
 
         @govukRadios(Radios(

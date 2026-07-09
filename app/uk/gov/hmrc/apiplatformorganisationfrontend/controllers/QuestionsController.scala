@@ -35,7 +35,9 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
 
-object QuestionsController extends NonEmptyListFormatters {
+object QuestionsController {
+  import NonEmptyListFormatters.given
+
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
   implicit val readsInboundRecordAnswersRequest: Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
 

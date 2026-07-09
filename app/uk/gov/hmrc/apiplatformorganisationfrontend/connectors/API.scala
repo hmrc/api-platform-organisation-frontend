@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformorganisationfrontend
+package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-
-import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
-
-abstract class AsyncHmrcSpec extends HmrcSpec with MockitoSugar with ArgumentMatchersSugar with DefaultAwaitTimeout with FutureAwaits {}
+case class API(name: String)

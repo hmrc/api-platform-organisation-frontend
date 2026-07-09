@@ -39,7 +39,7 @@ object OrganisationRegistrationController {
     def form: Form[CheckResponsibleIndividualForm] = Form(
       mapping(
         "confirmResponsibleIndividual" -> oneOf("yes", "no")
-      )(CheckResponsibleIndividualForm.apply)(CheckResponsibleIndividualForm.unapply)
+      )(CheckResponsibleIndividualForm.apply)(c => Some(c.confirmResponsibleIndividual))
     )
   }
 }

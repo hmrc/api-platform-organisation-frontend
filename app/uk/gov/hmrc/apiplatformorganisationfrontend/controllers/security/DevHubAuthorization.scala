@@ -35,12 +35,10 @@ trait DevHubAuthorization extends FrontendHeaderCarrierProvider with CookieEncod
 
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
 
-  implicit val appConfig: AppConfig
-
   object DeveloperSessionFilter {
     type Type = UserSession => Boolean
 
-    val onlyTrueIfLoggedInFilter: DeveloperSessionFilter.Type = _.loggedInState == LoggedInState.LOGGED_IN
+    val onlyTrueIfLoggedInFilter: DeveloperSessionFilter.Type = _.loggedInState == LoggedInState.LoggedIn
   }
 
   def loggedInActionRefiner(filter: DeveloperSessionFilter.Type = DeveloperSessionFilter.onlyTrueIfLoggedInFilter): ActionRefiner[MessagesRequest, UserRequest] =
