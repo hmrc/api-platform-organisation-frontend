@@ -48,6 +48,12 @@
   <span class="govuk-caption-xl">@viewModel.organisationName.toString</span>
   <h1 class="govuk-heading-l">Applications</h1>
 
+  @if(viewModel.userIsAdministrator){
+    <div class="govuk-button-group">
+      <a href="@{appConfig.thirdPartyDeveloperFrontendUrl}/developer/applications/add/sandbox?organisationId=@{viewModel.organisationId}" class="govuk-link govuk-link--no-visited-state" id="create-sandbox-app">Create a sandbox application</a>
+    </div>
+  }
+
   @if(viewModel.applications.isEmpty) {
     <p class="govuk-body">Your organisation does not have any applications yet.</p>
   } else {

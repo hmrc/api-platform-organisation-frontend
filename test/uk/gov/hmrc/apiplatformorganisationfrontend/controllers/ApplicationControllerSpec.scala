@@ -83,7 +83,8 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
         cookieSigner
       )
 
-    val organisation = Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Member(user.userId)))
+    val organisation =
+      Organisation(organisationIdOne, OrganisationName("My org"), Organisation.OrganisationType.UkLimitedCompany, instant, Set(Collaborators.Administrator(user.userId)))
 
     implicit val loggedInUser: User = user
 
@@ -230,8 +231,9 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include(s"Applications")
-      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include("Applications")
+      contentAsString(result) should include(organisation.organisationName.value)
+      contentAsString(result) should include("Create a sandbox application")
       contentAsString(result) should include(s"${standardApp.name}")
       contentAsString(result) should include(s"${standardApp2.name}")
     }
@@ -246,8 +248,8 @@ class ApplicationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
       status(result) shouldBe Status.OK
       contentType(result) shouldBe Some("text/html")
       charset(result) shouldBe Some("utf-8")
-      contentAsString(result) should include(s"Applications")
-      contentAsString(result) should include(s"${organisation.organisationName}")
+      contentAsString(result) should include("Applications")
+      contentAsString(result) should include(organisation.organisationName.value)
       contentAsString(result) should include("Your organisation does not have any applications yet.")
     }
 

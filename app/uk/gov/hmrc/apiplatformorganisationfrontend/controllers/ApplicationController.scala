@@ -66,7 +66,12 @@ object ApplicationController {
       ))
   }
 
-  case class OrganisationApplicationsPageViewModel(organisationId: OrganisationId, organisationName: OrganisationName, applications: List[ApplicationWithCollaborators])
+  case class OrganisationApplicationsPageViewModel(
+      organisationId: OrganisationId,
+      organisationName: OrganisationName,
+      userIsAdministrator: Boolean,
+      applications: List[ApplicationWithCollaborators]
+    )
 }
 
 @Singleton
@@ -161,7 +166,7 @@ class ApplicationController @Inject() (
   def organisationApplicationsPage(organisationId: OrganisationId): Action[AnyContent] = whenTeamMemberOnOrg(organisationId) { implicit request =>
     applicationService.fetchApplicationsForOrganisation(organisationId)
       .map { list =>
-        val viewModel = OrganisationApplicationsPageViewModel(request.organisation.id, request.organisation.organisationName, list)
+        val viewModel = OrganisationApplicationsPageViewModel(request.organisation.id, request.organisation.organisationName, request.collaborator.isAdministrator, list)
         Ok(organisationApplicationsPage(Some(request.userSession), viewModel))
       }
   }
