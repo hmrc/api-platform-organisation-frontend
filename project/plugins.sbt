@@ -9,8 +9,7 @@ addSbtPlugin("org.scoverage"      % "sbt-scoverage"         % "2.4.4")
 addSbtPlugin("com.github.sbt"     % "sbt-gzip"              % "2.0.0")
 addSbtPlugin("io.github.irundaia" % "sbt-sassify"           % "1.5.2")
 
-addSbtPlugin("org.scalastyle"     % "scalastyle-sbt-plugin" % "1.0.0")
-addSbtPlugin("ch.epfl.scala"      % "sbt-bloop"             % "2.0.6")
+addSbtPlugin("ch.epfl.scala"      % "sbt-bloop"             % "2.0.19")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"          % "2.5.6")
 addSbtPlugin("ch.epfl.scala"      % "sbt-scalafix"          % "0.14.6")
 
