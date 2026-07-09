@@ -20,7 +20,7 @@ lazy val microservice = Project("api-platform-organisation-frontend", file("."))
     scalacOptions ++= Seq(
       "-Wconf:src=routes/.*:s",
       "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s", // TODO - remove once Play is really Scala 3
-      "-Wconf:msg=unused&src=html/.*:s"
+      "-Wconf:msg=unused import&src=html/.*:s"
     ),
     Test / scalacOptions ++= Seq(
       "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s"

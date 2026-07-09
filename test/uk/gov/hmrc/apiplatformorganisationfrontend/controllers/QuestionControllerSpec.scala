@@ -129,7 +129,9 @@ class QuestionControllerSpec
       status(result) shouldBe OK
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(result).contains("What date was your organisation founded?") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result).contains("""This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>""") shouldBe true withClue ("HTML content did not contain link")
+      contentAsString(result).contains(
+        """This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>"""
+      ) shouldBe true withClue ("HTML content did not contain link")
       contentAsString(result).contains("<title>") shouldBe true
     }
 
@@ -174,7 +176,9 @@ class QuestionControllerSpec
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(
         result
-      ).contains("Your customers will see the information you provide here when they authorise your software to interact with HMRC.") shouldBe true withClue ("HTML content did not contain statement")
+      ).contains(
+        "Your customers will see the information you provide here when they authorise your software to interact with HMRC."
+      ) shouldBe true withClue ("HTML content did not contain statement")
       contentAsString(result).contains("Customers authorising your software") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("<title>") shouldBe true
     }

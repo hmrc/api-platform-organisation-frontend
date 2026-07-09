@@ -64,8 +64,8 @@ class CheckAnswersController @Inject() (
   def checkAnswersAction(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     submissionService.submitSubmission(submissionId, request.email)
       .map(_ match {
-        case Right(_)   => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
-        case Left(msg)  => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
+        case Right(_)  => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
+        case Left(msg) => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
       })
   }
 
@@ -83,9 +83,9 @@ class CheckAnswersController @Inject() (
           )
 
           filteredViewModel.questionnaires.headOption match {
-            case Some(questionnaire) =>
+            case Some(_) =>
               Ok(sectionSummaryView(filteredViewModel))
-            case None                =>
+            case None    =>
               BadRequest("Questionnaire not found")
           }
         case None                =>

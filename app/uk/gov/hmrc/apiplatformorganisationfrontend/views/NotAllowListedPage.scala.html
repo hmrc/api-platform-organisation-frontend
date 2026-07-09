@@ -19,8 +19,7 @@
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 
-@this(layout: Layout,
-        govukButton: GovukButton)
+@this(layout: Layout)
 
 @(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
