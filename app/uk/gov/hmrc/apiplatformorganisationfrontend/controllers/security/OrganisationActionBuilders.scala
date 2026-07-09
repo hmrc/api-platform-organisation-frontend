@@ -54,7 +54,7 @@ trait OrganisationActionBuilders {
     }
   }
 
-  def forbiddenWhenNotFilter(cond: OrganisationRequest[_] => Boolean)(implicit ec: ExecutionContext): ActionFilter[OrganisationRequest] = new ActionFilter[OrganisationRequest] {
+  def forbiddenWhenNotFilter(cond: OrganisationRequest[?] => Boolean)(implicit ec: ExecutionContext): ActionFilter[OrganisationRequest] = new ActionFilter[OrganisationRequest] {
     override protected def executionContext: ExecutionContext = ec
 
     override protected def filter[A](request: OrganisationRequest[A]): Future[Option[Result]] = {
@@ -65,7 +65,7 @@ trait OrganisationActionBuilders {
   }
 
   def permissionFilter(permission: Permission)(implicit ec: ExecutionContext) = {
-    val test: OrganisationRequest[_] => Boolean = (req) => permission.hasPermissions(req.collaborator)
+    val test: OrganisationRequest[?] => Boolean = (req) => permission.hasPermissions(req.collaborator)
     forbiddenWhenNotFilter(req => test(req))
   }
 }

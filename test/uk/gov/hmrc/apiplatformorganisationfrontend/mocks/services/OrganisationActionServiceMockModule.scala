@@ -58,7 +58,7 @@ trait OrganisationActionServiceMockModule extends MockitoSugar with ArgumentMatc
       }
       reset(aMock)
       when(aMock.process[A](eqTo(org.id), *)(*))
-        .thenAnswer((o: OrganisationId, request: UserRequest[A], c: HeaderCarrier) => createReturn(request))
+        .thenAnswer((_: OrganisationId, request: UserRequest[A], _: HeaderCarrier) => createReturn(request))
     }
 
   }

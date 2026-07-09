@@ -153,8 +153,8 @@ class ApplicationController @Inject() (
   private def assembleModel(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
 
     val partitioned: (List[ApplicationWithCollaborators], List[ApplicationWithCollaborators]) = apps.partitionMap {
-      case principal: ApplicationWithCollaborators if principal.deployedTo == Environment.Production  => Left(principal)
-      case subordinate: ApplicationWithCollaborators if subordinate.deployedTo == Environment.Sandbox => Right(subordinate)
+      case app if app.deployedTo == Environment.Production => Left(app)
+      case app                                             => Right(app)
     }
 
     val principalApps   = partitioned._1.map(app => fromApplicationWithCollaborators(app))

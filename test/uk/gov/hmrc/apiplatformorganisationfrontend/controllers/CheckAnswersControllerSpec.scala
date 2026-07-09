@@ -100,7 +100,7 @@ class CheckAnswersControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()

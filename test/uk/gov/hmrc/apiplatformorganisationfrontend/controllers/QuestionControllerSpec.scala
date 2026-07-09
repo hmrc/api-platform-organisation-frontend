@@ -86,7 +86,7 @@ class QuestionControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )(global, appConfig)
 
-    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
@@ -100,7 +100,7 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
     }
 
     "succeed and check for label, hintText, text question" in new Setup {
@@ -110,14 +110,14 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      contentAsString(result) contains ("What is the company registration number?") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result) contains ("It is 8 characters. For example, 01234567 or AC012345.") shouldBe true withClue ("HTML content did not contain hintText")
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("What is the company registration number?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("It is 8 characters. For example, 01234567 or AC012345.") shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(
         result
-      ) contains (s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
-      contentAsString(result) contains ("<title>") shouldBe true
-      contentAsString(result) contains ("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
+      ).contains(s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      contentAsString(result).contains("<title>") shouldBe true
+      contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
     }
 
     "succeed and check for label, hintText, date question" in new Setup {
@@ -127,10 +127,10 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionDate.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      contentAsString(result) contains ("What date was your organisation founded?") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result) contains ("""This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>""") shouldBe true withClue ("HTML content did not contain link")
-      contentAsString(result) contains ("<title>") shouldBe true
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("What date was your organisation founded?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("""This is some details<a class="govuk-link" href="https://example.com" target="_blank">with a link</a>""") shouldBe true withClue ("HTML content did not contain link")
+      contentAsString(result).contains("<title>") shouldBe true
     }
 
     "succeed and check for label, hintText, address question" in new Setup {
@@ -140,15 +140,15 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionAddress.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       print(contentAsString(result))
-      contentAsString(result) contains ("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result) contains ("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
-      contentAsString(result) contains ("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
-      contentAsString(result) contains ("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
-      contentAsString(result) contains ("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
-      contentAsString(result) contains ("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
-      contentAsString(result) contains ("<title>") shouldBe true
+      contentAsString(result).contains("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
+      contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
+      contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
+      contentAsString(result).contains("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("<title>") shouldBe true
     }
 
     "succeed and check for label, hintText, multichoice question" in new Setup {
@@ -158,10 +158,10 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionMultiple.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      contentAsString(result) contains ("What is your favourite Colour?") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result) contains ("Red") shouldBe true withClue ("HTML content did not check boxes")
-      contentAsString(result) contains ("<title>") shouldBe true
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("What is your favourite Colour?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Red") shouldBe true withClue ("HTML content did not check boxes")
+      contentAsString(result).contains("<title>") shouldBe true
     }
 
     "succeed and check for label, hintText, acknowledgement question" in new Setup {
@@ -171,12 +171,12 @@ class QuestionControllerSpec
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionAcknowledgement.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(
         result
-      ) contains ("Your customers will see the information you provide here when they authorise your software to interact with HMRC.") shouldBe true withClue ("HTML content did not contain statement")
-      contentAsString(result) contains ("Customers authorising your software") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result) contains ("<title>") shouldBe true
+      ).contains("Your customers will see the information you provide here when they authorise your software to interact with HMRC.") shouldBe true withClue ("HTML content did not contain statement")
+      contentAsString(result).contains("Customers authorising your software") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("<title>") shouldBe true
     }
 
     "display fail and show error in title when applicable" in new Setup {
@@ -188,8 +188,8 @@ class QuestionControllerSpec
         )
 
       status(result) shouldBe BAD_REQUEST
-      contentAsString(result) contains ("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
-      contentAsString(result) contains ("blah") shouldBe true withClue ("Page should contain `blah` message")
+      contentAsString(result).contains("<title>Error:") shouldBe true withClue ("Page title should contain `Error: ` prefix")
+      contentAsString(result).contains("blah") shouldBe true withClue ("Page should contain `blah` message")
     }
 
     "fail with a BAD REQUEST for an invalid questionId" in new Setup {
@@ -217,7 +217,7 @@ class QuestionControllerSpec
       val result             = controller.updateQuestion(aSubmission.id, questionId)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
-      contentAsString(result) contains (formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
     }
 
     "fail with a BAD REQUEST for an invalid questionId" in new Setup {

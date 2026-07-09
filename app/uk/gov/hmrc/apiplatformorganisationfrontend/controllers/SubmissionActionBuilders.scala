@@ -71,7 +71,7 @@ trait SubmissionActionBuilders {
       }
     }
 
-  private def submissionFilter[SR[_] <: SubmissionRequest[_]]: ActionFilter[SR] =
+  private def submissionFilter[SR[_] <: SubmissionRequest[?]]: ActionFilter[SR] =
     new ActionFilter[SR] {
 
       override protected def executionContext: ExecutionContext = ec

@@ -64,7 +64,7 @@ class CheckAnswersController @Inject() (
   def checkAnswersAction(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     submissionService.submitSubmission(submissionId, request.email)
       .map(_ match {
-        case Right(sub) => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
+        case Right(_)   => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
         case Left(msg)  => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
       })
   }

@@ -49,7 +49,7 @@
   backLink: Option[BackLink] = None,
   crumbs: Seq[Crumb] = Seq.empty,
   loggedInSession: Option[UserSession] = None,
-  form: Option[Form[_]] = None,
+  form: Option[Form[?]] = None,
   twoThirds: Boolean = true
 )(
   contentBlock: Html
@@ -118,13 +118,13 @@
 @beforeContentBlock = {
   @feedbackBannerBlock
   <div class="before-content-banner">
-    @breadcrumbs(crumbs: _*)
+    @breadcrumbs(crumbs*)
     @buildABackLink(backLink)
     @userBanner
   </div>
 }
 
-@formErrorSummary(form: Option[Form[_]]) = {
+@formErrorSummary(form: Option[Form[?]]) = {
   @if(form.isDefined) {
     @errorSummary(form.get.errors)
   } else {}

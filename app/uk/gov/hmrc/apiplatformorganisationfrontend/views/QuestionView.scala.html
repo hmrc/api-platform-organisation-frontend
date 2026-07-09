@@ -55,7 +55,6 @@
     fragment match {
       case st: StatementText => renderStatementText(st)
       case sl: StatementLink => renderStatementLink(sl)
-      case _ => Html("<p />")
     }
   ).toList)
 }
@@ -304,7 +303,6 @@
     case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
     case q: Question.DateQuestion         => renderDateQuestion(q)
     case q: Question.AddressQuestion      => renderAddressQuestion(q)
-    case _ => <p>TODO</p>
   }
 }
 

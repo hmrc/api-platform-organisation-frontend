@@ -82,7 +82,7 @@ class OrganisationConnector @Inject() (
 
   def submitSubmission(submissionId: SubmissionId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
     import cats.implicits._
-    val failed = (err: UpstreamErrorResponse) => s"Failed to submit submission $submissionId"
+    val failed = (_: UpstreamErrorResponse) => s"Failed to submit submission $submissionId"
 
     metrics.record(api) {
       http.post(url"${config.serviceBaseUrl}/submission/${submissionId}")

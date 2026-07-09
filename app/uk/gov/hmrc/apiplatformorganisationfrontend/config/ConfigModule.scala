@@ -23,7 +23,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors._
 
 class ConfigModule extends Module {
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] = Seq(
     bind[AppConfig].toSelf.eagerly(),
     bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
     bind[ThirdPartyOrchestratorConnector.Config].toProvider[TPOConnectorConfigProvider],

@@ -143,7 +143,7 @@ class ManageMembersController @Inject() (
         val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
         organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
-            case Right(org) => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
+            case Right(_)   => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
             case Left(msg)  => BadRequest(addMemberPage(
                 Some(request.userSession),
                 addMemberForm.fill(memberAddData).withError("email", msg.message),
@@ -186,7 +186,7 @@ class ManageMembersController @Inject() (
           case Some("Yes") => {
             organisationService.removeCollaboratorFromOrganisation(organisationId, userId, LaxEmailAddress(memberRemoveData.email))
               .map(_ match {
-                case Right(org) => Redirect(routes.ManageMembersController.removeCollaboratorSuccess(organisationId, memberRemoveData.role))
+                case Right(_)   => Redirect(routes.ManageMembersController.removeCollaboratorSuccess(organisationId, memberRemoveData.role))
                 case Left(msg)  => BadRequest(msg.message)
               })
           }

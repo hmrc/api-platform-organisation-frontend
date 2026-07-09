@@ -18,8 +18,9 @@ lazy val microservice = Project("api-platform-organisation-frontend", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
     scalacOptions ++= Seq(
+      "-Wconf:src=routes/.*:s",
       "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s", // TODO - remove once Play is really Scala 3
-      "-Wconf:msg=unused import&src=html/.*:s"
+      "-Wconf:msg=unused&src=html/.*:s"
     ),
     Test / scalacOptions ++= Seq(
       "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s"

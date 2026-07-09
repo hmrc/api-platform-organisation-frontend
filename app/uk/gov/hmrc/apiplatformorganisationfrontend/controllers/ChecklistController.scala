@@ -25,7 +25,7 @@ import cats.data.NonEmptyList
 import play.api.data.Form
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
+import uk.gov.hmrc.play.bootstrap.controller.WithUrlEncodedOnlyFormBinding
 
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.NotApplicable
@@ -127,7 +127,7 @@ class ChecklistController @Inject() (
   ) extends LoggedInController(mcc)
     with EitherTHelper[String]
     with SubmissionActionBuilders
-    with WithUnsafeDefaultFormBinding {
+    with WithUrlEncodedOnlyFormBinding {
 
   import ChecklistController._
 
