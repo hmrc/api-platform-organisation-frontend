@@ -203,7 +203,7 @@ class CheckAnswersControllerSpec
 
       status(result) shouldBe OK
       val content = contentAsString(result)
-      content should include("Check your")
+      content should include("Check your answers")
     }
 
     "fail with BAD_REQUEST when questionnaire not found" in new Setup {

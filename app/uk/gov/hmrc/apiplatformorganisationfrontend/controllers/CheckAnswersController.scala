@@ -84,7 +84,7 @@ class CheckAnswersController @Inject() (
 
           filteredViewModel.questionnaires.headOption match {
             case Some(questionnaire) =>
-              Ok(sectionSummaryView(filteredViewModel, questionnaire.label))
+              Ok(sectionSummaryView(filteredViewModel))
             case None                =>
               BadRequest("Questionnaire not found")
           }

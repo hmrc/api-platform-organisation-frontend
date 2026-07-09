@@ -22,9 +22,9 @@
 
 @this(layout: Layout, govukButton: GovukButton)
 
-@(model: ViewModel, sectionLabel: String)(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
+@(model: ViewModel)(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
 
-@title = @{ s"Check your $sectionLabel" }
+@title = @{ "Check your answers" }
 
 @layout(
     backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
