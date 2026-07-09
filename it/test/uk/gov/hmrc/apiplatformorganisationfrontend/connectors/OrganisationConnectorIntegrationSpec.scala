@@ -18,10 +18,10 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{Json, Writes}
-import play.api.{Application => PlayApplication, Configuration, Mode}
+import play.api.{Application as PlayApplication, Configuration, Mode}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, OrganisationId}
@@ -40,8 +40,8 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
   )
 
   trait Setup extends SubmissionsTestData {
-    implicit val hc: HeaderCarrier                        = HeaderCarrier()
-    implicit val writesErrorMessage: Writes[ErrorMessage] = Json.writes[ErrorMessage]
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given Writes[ErrorMessage]     = Json.writes[ErrorMessage]
 
     val underTest = app.injector.instanceOf[OrganisationConnector]
 

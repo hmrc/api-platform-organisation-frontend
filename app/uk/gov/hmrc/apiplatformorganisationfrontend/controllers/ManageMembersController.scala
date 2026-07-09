@@ -33,7 +33,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.CollaboratorWithUserDetails
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object ManageMembersController {
 

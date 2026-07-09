@@ -21,5 +21,5 @@ import play.api.libs.json.{Json, Reads}
 case class ErrorMessage(message: String)
 
 object ErrorMessage {
-  implicit val readsErrorMessage: Reads[ErrorMessage] = Json.reads[ErrorMessage]
+  given Reads[ErrorMessage] = Json.reads[ErrorMessage]
 }

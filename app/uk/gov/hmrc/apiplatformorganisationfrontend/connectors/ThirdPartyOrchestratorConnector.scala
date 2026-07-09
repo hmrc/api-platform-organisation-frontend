@@ -23,10 +23,10 @@ import play.api.Logging
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.HttpReadsInstances.readFromJson
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
+import uk.gov.hmrc.http.{SessionId as _, StringContextOps, *}
 
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest

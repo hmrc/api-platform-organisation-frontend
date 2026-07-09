@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object OrganisationRegistrationController {
   case class CheckResponsibleIndividualForm(confirmResponsibleIndividual: String)

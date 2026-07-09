@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationN
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object OrganisationController {
   case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)

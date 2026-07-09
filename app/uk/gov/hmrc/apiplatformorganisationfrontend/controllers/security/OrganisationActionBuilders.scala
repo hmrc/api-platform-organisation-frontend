@@ -18,10 +18,10 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.mvc._
+import play.api.mvc.*
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models._
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.{BaseController, routes}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationActionService
 

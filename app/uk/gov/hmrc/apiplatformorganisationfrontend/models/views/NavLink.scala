@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.govukfrontend.views.Aliases.ServiceNavigationItem
 import uk.gov.hmrc.govukfrontend.views.html.components.Text
 
@@ -25,7 +25,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 case class NavLink(label: String, href: String, truncate: Boolean = false, openInNewWindow: Boolean = false, isSensitive: Boolean = false)
 
 object NavLink {
-  implicit val format: OFormat[NavLink] = Json.format[NavLink]
+  given OFormat[NavLink] = Json.format[NavLink]
 }
 
 case object StaticNavItems {

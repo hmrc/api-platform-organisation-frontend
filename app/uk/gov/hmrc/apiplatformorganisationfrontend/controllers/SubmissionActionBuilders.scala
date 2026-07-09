@@ -21,9 +21,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import cats.instances.future.catsStdInstancesForFuture
 
-import play.api.mvc.{ActionRefiner, _}
+import play.api.mvc.{ActionRefiner, *}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.BaseController
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService

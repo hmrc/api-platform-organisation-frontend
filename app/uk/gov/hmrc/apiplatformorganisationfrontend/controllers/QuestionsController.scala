@@ -24,22 +24,22 @@ import cats.data.NonEmptyList
 
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.{Json, Reads}
-import play.api.mvc.{MessagesControllerComponents, _}
+import play.api.mvc.{MessagesControllerComponents, *}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object QuestionsController {
   import NonEmptyListFormatters.given
 
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
-  implicit val readsInboundRecordAnswersRequest: Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
+  given Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
 
 }
 

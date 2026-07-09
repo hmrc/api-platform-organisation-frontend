@@ -23,12 +23,12 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 @Singleton
 class CheckAnswersController @Inject() (

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 import play.api.http.Status.OK

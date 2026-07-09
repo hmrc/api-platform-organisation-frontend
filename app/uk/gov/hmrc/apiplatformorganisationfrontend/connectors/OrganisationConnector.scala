@@ -21,16 +21,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 
-import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.given
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.ErrorMessage
 
 @Singleton
@@ -167,20 +167,20 @@ object OrganisationConnector {
   case class Config(serviceBaseUrl: String)
 
   case class OutboundRecordAnswersRequest(responses: Map[String, Seq[String]])
-  implicit val writesOutboundRecordAnswersRequest: Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
+  given Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val writesCreateSubmissionRequest: Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
+  given Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]
 
   case class SubmitSubmissionRequest(requestedBy: LaxEmailAddress)
-  implicit val writesSubmitSubmissionRequest: Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
+  given Writes[SubmitSubmissionRequest] = Json.writes[SubmitSubmissionRequest]
 
   case class AddMemberRequest(email: LaxEmailAddress, role: Role)
-  implicit val writesAddMembersRequest: Writes[AddMemberRequest] = Json.writes[AddMemberRequest]
+  given Writes[AddMemberRequest] = Json.writes[AddMemberRequest]
 
   case class RemoveMemberRequest(userId: UserId, email: LaxEmailAddress)
-  implicit val writesRemoveMemberRequest: Writes[RemoveMemberRequest] = Json.writes[RemoveMemberRequest]
+  given Writes[RemoveMemberRequest] = Json.writes[RemoveMemberRequest]
 
   case class CreateOrganisationRequest(organisationName: OrganisationName, organisationType: Organisation.OrganisationType, requestedBy: UserId)
-  implicit val writesCreateOrganisationRequest: Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
+  given Writes[CreateOrganisationRequest] = Json.writes[CreateOrganisationRequest]
 }
