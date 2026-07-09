@@ -28,8 +28,8 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.Collaborator.Role
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Organisation, OrganisationName}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.given
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services._
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.ErrorMessage
 
@@ -42,7 +42,6 @@ class OrganisationConnector @Inject() (
   ) {
 
   import OrganisationConnector._
-  import Submission._
 
   val api = API("api-platfrom-organisation")
 

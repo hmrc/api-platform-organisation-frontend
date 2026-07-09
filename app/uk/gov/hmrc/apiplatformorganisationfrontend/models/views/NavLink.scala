@@ -19,7 +19,6 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 import play.api.libs.json._
 import uk.gov.hmrc.govukfrontend.views.Aliases.ServiceNavigationItem
 import uk.gov.hmrc.govukfrontend.views.html.components.Text
-import uk.gov.hmrc.hmrcfrontend.views.viewmodels.header.NavigationItem
 
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
