@@ -4,7 +4,7 @@ object AppDependencies {
 
   private val bootstrapVersion = "10.7.0"
   private val tpdDomainVersion = "0.15.0"
-  private val orgDomainVersion = "0.20.0"
+  private val orgDomainVersion = "1.0.0-SNAPSHOT"  // "0.20.0"
   private val appDomainVersion = "1.1.0"
 
   val compile = Seq(

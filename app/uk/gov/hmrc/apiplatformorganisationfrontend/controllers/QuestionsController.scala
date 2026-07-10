@@ -120,6 +120,10 @@ class QuestionsController @Inject() (
             trimmedAnswers.get("region").flatMap(_.headOption),
             trimmedAnswers.get("postcode").flatMap(_.headOption)
           )))
+        case a: Question.NameQuestion    => Some(ActualAnswer.NameAnswer(FullName(
+            trimmedAnswers.get("firstName").flatMap(_.headOption),
+            trimmedAnswers.get("lastName").flatMap(_.headOption)
+          )))
         case _                           => None
       }
 

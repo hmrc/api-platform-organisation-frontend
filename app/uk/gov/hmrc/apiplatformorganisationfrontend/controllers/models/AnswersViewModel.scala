@@ -35,6 +35,8 @@ object AnswersViewModel {
     case ActualAnswer.MultipleChoiceAnswer(values) => Some(values.mkString)
     case ActualAnswer.AddressAnswer(add)           =>
       Some(Seq(add.addressLineOne, add.addressLineTwo, add.locality, add.region, add.postalCode).filter(_.isDefined).map(_.get).mkString(", "))
+    case ActualAnswer.NameAnswer(name)             =>
+      Some(Seq(name.firstName, name.lastName).filter(_.isDefined).map(_.get).mkString(" "))
     case ActualAnswer.NoAnswer                     => Some("n/a")
     case ActualAnswer.AcknowledgedAnswer           => None
   }
