@@ -115,7 +115,7 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
     }
 
     "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
-      ThirdPartyDeveloperStub.FetchDeveloper.throwsAnException(userId)
+      ThirdPartyDeveloperStub.FetchDeveloper.throwsAnException()
 
       intercept[UpstreamErrorResponse] {
         await(underTest.fetchDeveloper(userId))

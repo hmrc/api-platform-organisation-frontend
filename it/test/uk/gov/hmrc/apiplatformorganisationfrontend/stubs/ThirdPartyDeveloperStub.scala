@@ -133,7 +133,7 @@ object ThirdPartyDeveloperStub {
       )
     }
 
-    def throwsAnException(userId: UserId) = {
+    def throwsAnException() = {
       stubFor(
         get(urlPathEqualTo(s"/developer"))
           .willReturn(
