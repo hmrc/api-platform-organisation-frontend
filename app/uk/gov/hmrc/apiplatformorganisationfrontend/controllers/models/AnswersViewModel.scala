@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter
 
 import cats.data.NonEmptyList
 
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 
 object AnswersViewModel {
   case class ViewQuestion(id: Question.Id, text: String, answer: String)

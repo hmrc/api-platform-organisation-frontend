@@ -18,10 +18,10 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers.security
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.mvc._
+import play.api.mvc.*
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models._
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.{BaseController, routes}
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationActionService
 
@@ -54,7 +54,7 @@ trait OrganisationActionBuilders {
     }
   }
 
-  def forbiddenWhenNotFilter(cond: OrganisationRequest[_] => Boolean)(implicit ec: ExecutionContext): ActionFilter[OrganisationRequest] = new ActionFilter[OrganisationRequest] {
+  def forbiddenWhenNotFilter(cond: OrganisationRequest[?] => Boolean)(implicit ec: ExecutionContext): ActionFilter[OrganisationRequest] = new ActionFilter[OrganisationRequest] {
     override protected def executionContext: ExecutionContext = ec
 
     override protected def filter[A](request: OrganisationRequest[A]): Future[Option[Result]] = {
@@ -65,7 +65,7 @@ trait OrganisationActionBuilders {
   }
 
   def permissionFilter(permission: Permission)(implicit ec: ExecutionContext) = {
-    val test: OrganisationRequest[_] => Boolean = (req) => permission.hasPermissions(req.collaborator)
+    val test: OrganisationRequest[?] => Boolean = (req) => permission.hasPermissions(req.collaborator)
     forbiddenWhenNotFilter(req => test(req))
   }
 }

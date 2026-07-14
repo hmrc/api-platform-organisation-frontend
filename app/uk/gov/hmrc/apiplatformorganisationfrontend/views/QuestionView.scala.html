@@ -14,15 +14,14 @@
  * limitations under the License.
  *@
 
-@import include._
+@import include.*
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
-@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 @import play.api.mvc.Call
 @import play.api.mvc.Request
-@import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
@@ -36,11 +35,10 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession, appConfig: AppConfig)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
-@choiceAsId(choice: PossibleAnswer) = {question-@{choice.htmlValue}-id}
 
 @renderStatementText(st: StatementText) = @{Html(renderText(st.text))}
 
@@ -55,7 +53,6 @@
     fragment match {
       case st: StatementText => renderStatementText(st)
       case sl: StatementLink => renderStatementLink(sl)
-      case _ => Html("<p />")
     }
   ).toList)
 }
@@ -291,7 +288,7 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
-@renderAcknowledgementOnly(question: Question.AcknowledgementOnly) = {
+@renderAcknowledgementOnly() = {
     <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
 }
 
@@ -301,10 +298,9 @@
     case q: Question.SingleChoiceQuestion => renderSingleChoiceQuestion(q, false)
     case q: Question.MultiChoiceQuestion  => renderMultiChoiceQuestion(q)
     case q: Question.TextQuestion         => renderTextInputQuestion(q)
-    case q: Question.AcknowledgementOnly  => renderAcknowledgementOnly(q)
+    case _: Question.AcknowledgementOnly  => renderAcknowledgementOnly()
     case q: Question.DateQuestion         => renderDateQuestion(q)
     case q: Question.AddressQuestion      => renderAddressQuestion(q)
-    case _ => <p>TODO</p>
   }
 }
 

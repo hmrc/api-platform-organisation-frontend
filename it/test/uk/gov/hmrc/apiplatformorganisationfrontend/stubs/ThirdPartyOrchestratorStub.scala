@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.Json
 import play.api.test.Helpers.OK
 
-import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.ApplicationWithCollaborators._
 import uk.gov.hmrc.apiplatform.modules.applications.core.domain.models.{ApplicationWithCollaborators, ApplicationWithCollaboratorsFixtures}
 import uk.gov.hmrc.apiplatform.modules.applications.core.interface.models.GetAppsForAdminOrRIRequest
 import uk.gov.hmrc.apiplatform.modules.commands.applications.domain.models.DispatchRequest

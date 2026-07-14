@@ -19,11 +19,11 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.config
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors._
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.*
 
 class ConfigModule extends Module {
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] = Seq(
     bind[AppConfig].toSelf.eagerly(),
     bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
     bind[ThirdPartyOrchestratorConnector.Config].toProvider[TPOConnectorConfigProvider],

@@ -33,7 +33,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDevelope
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.emailValidator
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.CollaboratorWithUserDetails
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object ManageMembersController {
 
@@ -57,7 +57,7 @@ object ManageMembersController {
         "email" -> emailValidator(),
         "role"  -> optional(text)
           .verifying("member.error.confirmation.no.choice.field", _.isDefined)
-      )(AddMemberForm.apply)(AddMemberForm.unapply)
+      )(AddMemberForm.apply)(a => Some(a.email, a.role))
     )
   }
 
@@ -71,7 +71,7 @@ object ManageMembersController {
         "role"    -> text,
         "confirm" -> optional(text)
           .verifying("member.error.confirmation.no.choice.field", _.isDefined)
-      )(RemoveMemberForm.apply)(RemoveMemberForm.unapply)
+      )(RemoveMemberForm.apply)(r => Some(r.email, r.role, r.confirm))
     )
   }
 }
@@ -143,8 +143,8 @@ class ManageMembersController @Inject() (
         val role: Role = memberAddData.role.flatMap(Collaborator.Role(_)).getOrElse(Collaborator.Roles.Member)
         organisationService.addCollaboratorToOrganisation(organisationId, LaxEmailAddress(memberAddData.email), role)
           .map(_ match {
-            case Right(org) => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
-            case Left(msg)  => BadRequest(addMemberPage(
+            case Right(_)  => Redirect(routes.ManageMembersController.addCollaboratorSuccess(organisationId, role.displayText))
+            case Left(msg) => BadRequest(addMemberPage(
                 Some(request.userSession),
                 addMemberForm.fill(memberAddData).withError("email", msg.message),
                 AddMemberViewModel(organisationId, request.organisation.organisationName)
@@ -186,8 +186,8 @@ class ManageMembersController @Inject() (
           case Some("Yes") => {
             organisationService.removeCollaboratorFromOrganisation(organisationId, userId, LaxEmailAddress(memberRemoveData.email))
               .map(_ match {
-                case Right(org) => Redirect(routes.ManageMembersController.removeCollaboratorSuccess(organisationId, memberRemoveData.role))
-                case Left(msg)  => BadRequest(msg.message)
+                case Right(_)  => Redirect(routes.ManageMembersController.removeCollaboratorSuccess(organisationId, memberRemoveData.role))
+                case Left(msg) => BadRequest(msg.message)
               })
           }
           case _           => successful(Redirect(routes.ManageMembersController.manageCollaborators(organisationId)))

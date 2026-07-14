@@ -26,10 +26,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object OrganisationRegistrationController {
   case class CheckResponsibleIndividualForm(confirmResponsibleIndividual: String)
@@ -39,7 +39,7 @@ object OrganisationRegistrationController {
     def form: Form[CheckResponsibleIndividualForm] = Form(
       mapping(
         "confirmResponsibleIndividual" -> oneOf("yes", "no")
-      )(CheckResponsibleIndividualForm.apply)(CheckResponsibleIndividualForm.unapply)
+      )(CheckResponsibleIndividualForm.apply)(c => Some(c.confirmResponsibleIndividual))
     )
   }
 }
@@ -52,8 +52,6 @@ class OrganisationRegistrationController @Inject() (
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
     val submissionService: SubmissionService,
-    organisationService: OrganisationService,
-    organisationConnector: OrganisationConnector,
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,

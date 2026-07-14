@@ -23,12 +23,12 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 @Singleton
 class CheckAnswersController @Inject() (
@@ -64,8 +64,8 @@ class CheckAnswersController @Inject() (
   def checkAnswersAction(submissionId: SubmissionId) = withSubmission(submissionId) { implicit request =>
     submissionService.submitSubmission(submissionId, request.email)
       .map(_ match {
-        case Right(sub) => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
-        case Left(msg)  => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
+        case Right(_)  => Redirect(routes.CheckAnswersController.submitSuccessPage(submissionId: SubmissionId))
+        case Left(msg) => Redirect(routes.CheckAnswersController.checkAnswersPage(submissionId)).flashing("error" -> msg)
       })
   }
 
@@ -83,9 +83,9 @@ class CheckAnswersController @Inject() (
           )
 
           filteredViewModel.questionnaires.headOption match {
-            case Some(questionnaire) =>
+            case Some(_) =>
               Ok(sectionSummaryView(filteredViewModel))
-            case None                =>
+            case None    =>
               BadRequest("Questionnaire not found")
           }
         case None                =>

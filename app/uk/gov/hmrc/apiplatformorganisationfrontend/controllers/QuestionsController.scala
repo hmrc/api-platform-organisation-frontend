@@ -24,20 +24,22 @@ import cats.data.NonEmptyList
 
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.{Json, Reads}
-import play.api.mvc.{MessagesControllerComponents, _}
+import play.api.mvc.{MessagesControllerComponents, *}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, _}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
-object QuestionsController extends NonEmptyListFormatters {
+object QuestionsController {
+  import NonEmptyListFormatters.given
+
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
-  implicit val readsInboundRecordAnswersRequest: Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
+  given Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
 
 }
 
@@ -74,7 +76,7 @@ class QuestionsController @Inject() (
 
     (
       for {
-        flowItem      <- fromOption(oQuestion, "Question not found in questionnaire")
+        _             <- fromOption(oQuestion, "Question not found in questionnaire")
         question       = oQuestion.get
         questionnaire <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
       } yield {
@@ -112,8 +114,8 @@ class QuestionsController @Inject() (
       val question = request.submission.findQuestion(questionId).get
 
       val onFormAnswer = question match {
-        case q: Question.TextQuestion    => answers.headOption.map(ActualAnswer.TextAnswer)
-        case a: Question.AddressQuestion => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
+        case _: Question.TextQuestion    => answers.headOption.map(ActualAnswer.TextAnswer.apply)
+        case _: Question.AddressQuestion => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
             trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
             trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
             trimmedAnswers.get("locality").flatMap(_.headOption),

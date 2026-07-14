@@ -26,7 +26,7 @@
 
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
-@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.*
 @import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include.{breadcrumbs, errorSummary, headerNavLinks}
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.servicenavigation.{ServiceNavigation, ServiceNavigationItem}
 @this(
@@ -34,11 +34,8 @@
   govukLayout: GovukLayout,
         hmrcStandardHeader: HmrcStandardHeader,
   hmrcFooter: HmrcFooter,
-  hmrcLanguageSelectHelper: HmrcLanguageSelectHelper,
   hmrcScripts: HmrcScripts,
   govukBackLink: GovukBackLink,
-  govukExitThisPage: GovukExitThisPage,
-  defaultMainContent: TwoThirdsMainContent,
   fixedWidthPageLayout: FixedWidthPageLayout,
   hmrcTimeoutDialog: HmrcTimeoutDialog,
   hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet
@@ -49,7 +46,7 @@
   backLink: Option[BackLink] = None,
   crumbs: Seq[Crumb] = Seq.empty,
   loggedInSession: Option[UserSession] = None,
-  form: Option[Form[_]] = None,
+  form: Option[Form[?]] = None,
   twoThirds: Boolean = true
 )(
   contentBlock: Html
@@ -118,13 +115,13 @@
 @beforeContentBlock = {
   @feedbackBannerBlock
   <div class="before-content-banner">
-    @breadcrumbs(crumbs: _*)
+    @breadcrumbs(crumbs*)
     @buildABackLink(backLink)
     @userBanner
   </div>
 }
 
-@formErrorSummary(form: Option[Form[_]]) = {
+@formErrorSummary(form: Option[Form[?]]) = {
   @if(form.isDefined) {
     @errorSummary(form.get.errors)
   } else {}

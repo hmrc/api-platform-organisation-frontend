@@ -37,7 +37,7 @@ class ErrorHandler @Inject() (
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader): Future[Html] =
     Future.successful(errorTemplate(pageTitle, heading, message))
 
-  def forbiddenTemplate(implicit request: Request[_]): Future[Html] = {
+  def forbiddenTemplate(implicit request: Request[?]): Future[Html] = {
     Future.successful(forbiddenTemplateView())
   }
 }
