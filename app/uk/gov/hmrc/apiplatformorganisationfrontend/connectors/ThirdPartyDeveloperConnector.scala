@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.{SessionId => _, StringContextOps, _}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
-import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, GetUsersRequest}
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, GetUsersRequest, UpdateRequest}
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{UserSession, UserSessionId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 
@@ -58,5 +58,11 @@ class ThirdPartyDeveloperConnector @Inject() (
     http.post(url"$serviceBaseUrl/developers/get-users")
       .withBody(Json.toJson(GetUsersRequest(users)))
       .execute[List[User]]
+  }
+
+  def updateProfile(userId: UserId, profile: UpdateRequest)(implicit hc: HeaderCarrier): Future[User] = {
+    http.post(url"$serviceBaseUrl/developer/$userId")
+      .withBody(Json.toJson(profile))
+      .execute[User]
   }
 }

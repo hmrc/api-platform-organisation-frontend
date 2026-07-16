@@ -103,10 +103,10 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
     object SubmitSubmission {
 
       def thenReturns(out: Submission) =
-        when(aMock.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
+        when(aMock.submitSubmission(*[SubmissionId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(out)))
 
       def thenReturnsError() = {
-        when(aMock.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Failed to submit submission")))
+        when(aMock.submitSubmission(*[SubmissionId], *[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Left("Failed to submit submission")))
       }
     }
 
