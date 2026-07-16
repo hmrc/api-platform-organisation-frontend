@@ -59,7 +59,8 @@
     @helper.form(action = routes.CheckAnswersController.checkAnswersAction(model.submissionId)) {
       @helper.CSRF.formField
       @govukButton(Button(
-          id = Some("confirmAndSend"), 
-         content = Text("Confirm and send")))
+          id = Some("confirmAndSend"),
+          content = Text("Confirm and send"),
+          preventDoubleClick = Some(true)))
   }
 }

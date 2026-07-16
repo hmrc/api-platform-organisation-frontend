@@ -80,8 +80,9 @@
       </div>
 
       @govukButton(Button(
-        id = Some("removeMember"), 
+        id = Some("removeMember"),
         isStartButton = false,
-        content = Text("Save and continue")))
+        content = Text("Save and continue"),
+        preventDoubleClick = Some(true)))
     }
 }
