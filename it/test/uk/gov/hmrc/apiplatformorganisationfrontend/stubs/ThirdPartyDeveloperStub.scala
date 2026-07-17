@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
-import play.api.http.Status._
+import play.api.http.Status.*
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSessionId
@@ -133,7 +133,7 @@ object ThirdPartyDeveloperStub {
       )
     }
 
-    def throwsAnException(userId: UserId) = {
+    def throwsAnException() = {
       stubFor(
         get(urlPathEqualTo(s"/developer"))
           .willReturn(

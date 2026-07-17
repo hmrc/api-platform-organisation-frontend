@@ -22,5 +22,5 @@ import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.UserRequest
 
 abstract class LoggedInController(mcc: MessagesControllerComponents) extends BaseController(mcc) {
-  implicit def developerSessionFromRequest(implicit request: UserRequest[_]): UserSession = request.userSession
+  implicit def developerSessionFromRequest(implicit request: UserRequest[?]): UserSession = request.userSession
 }

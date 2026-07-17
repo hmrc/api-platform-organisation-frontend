@@ -25,7 +25,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.filters.csrf.CSRF
 
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
@@ -33,9 +33,9 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.Submissio
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithCSRFAddToken
-import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
+import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.controllers._
+import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.ChecklistView
@@ -78,7 +78,7 @@ class ChecklistControllerSpec
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
-    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams: _*)
+    val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()

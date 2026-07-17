@@ -25,7 +25,7 @@ import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{CSRFTokenHelper, FakeRequest}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
@@ -35,12 +35,11 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.Submissio
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
-import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession._
+import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, OrganisationServiceMockModule, SubmissionServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     with SubmissionServiceMockModule
@@ -66,15 +65,11 @@ class OrganisationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-    val mockOrganisationConnector = mock[OrganisationConnector]
-
     val underTest =
       new OrganisationController(
         mcc,
         organisationHomePage,
-        SubmissionServiceMock.aMock,
         OrganisationServiceMock.aMock,
-        mockOrganisationConnector,
         OrganisationActionServiceMock.aMock,
         cookieSigner,
         errorHandler,

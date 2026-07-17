@@ -15,13 +15,12 @@
  *@
 
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
-@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.OrganisationHomePageViewModel
 
-@this(layout: Layout,
-        govukButton: GovukButton)
+@this(layout: Layout)
 
 @(loggedInSession: Option[UserSession], viewModel: OrganisationHomePageViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 

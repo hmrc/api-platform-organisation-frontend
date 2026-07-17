@@ -25,9 +25,9 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService, SubmissionService}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html._
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, OrganisationService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object OrganisationController {
   case class OrganisationHomePageViewModel(organisationId: OrganisationId, organisationName: OrganisationName)
@@ -37,9 +37,7 @@ object OrganisationController {
 class OrganisationController @Inject() (
     mcc: MessagesControllerComponents,
     organisationHomePage: OrganisationHomePage,
-    submissionService: SubmissionService,
     organisationService: OrganisationService,
-    organisationConnector: OrganisationConnector,
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,

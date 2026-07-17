@@ -15,16 +15,16 @@
  *@
 
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
-@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel.*
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import include._
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import include.*
 
 @this(layout: Layout, govukButton: GovukButton)
 
-@(model: ViewModel, sectionLabel: String)(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
+@(model: ViewModel)(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider)
 
-@title = @{ s"Check your $sectionLabel" }
+@title = @{ "Check your answers" }
 
 @layout(
     backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),

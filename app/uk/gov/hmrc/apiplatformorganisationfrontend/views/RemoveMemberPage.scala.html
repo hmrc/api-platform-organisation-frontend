@@ -15,12 +15,12 @@
  *@
 
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
-@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.{ManageMemberViewModel, RemoveMemberForm}
 @import uk.gov.hmrc.apiplatformorganisationfrontend.models.CollaboratorWithUserDetails
-@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include._
+@import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include.*
 
 @this(
   layout: Layout,
@@ -28,7 +28,7 @@
   govukTable: GovukTable
 )
 
-@(loggedInSession: Option[UserSession], form: Form[RemoveMemberForm], viewModel: ManageMemberViewModel)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+@(loggedInSession: Option[UserSession], form: Form[RemoveMemberForm], viewModel: ManageMemberViewModel)(implicit request: RequestHeader, messages: Messages)
 
 @memberName(collaborator: CollaboratorWithUserDetails) = @{
   collaborator.maybeUserDetails match {

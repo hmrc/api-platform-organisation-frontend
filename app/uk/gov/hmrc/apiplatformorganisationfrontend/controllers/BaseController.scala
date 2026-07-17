@@ -19,7 +19,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
+import uk.gov.hmrc.play.bootstrap.controller.WithUrlEncodedOnlyFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
@@ -32,7 +32,7 @@ abstract class BaseController(mcc: MessagesControllerComponents)
     extends FrontendController(mcc)
     with DevHubAuthorization
     with OrganisationActionBuilders
-    with WithUnsafeDefaultFormBinding {
+    with WithUrlEncodedOnlyFormBinding {
 
   val errorHandler: ErrorHandler
 
@@ -40,7 +40,7 @@ abstract class BaseController(mcc: MessagesControllerComponents)
 
   implicit val appConfig: AppConfig
 
-  protected lazy val ETR = EitherTHelper.make[Result](ec)
+  protected lazy val ETR = EitherTHelper.make[Result]
 
   def whenTeamMemberOnOrg(organisationId: OrganisationId)(block: OrganisationRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>

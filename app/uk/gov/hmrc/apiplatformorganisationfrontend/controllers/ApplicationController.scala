@@ -45,7 +45,7 @@ object ApplicationController {
   object AppViewModel {
 
     def fromApplicationWithCollaborators(applicationWithCollaborators: ApplicationWithCollaborators) = {
-      AppViewModel(appId = applicationWithCollaborators.id, environment = applicationWithCollaborators.deployedTo, appName = applicationWithCollaborators.name.value)
+      AppViewModel(appId = applicationWithCollaborators.id, environment = applicationWithCollaborators.deployedTo, appName = applicationWithCollaborators.name)
     }
   }
 
@@ -58,7 +58,7 @@ object ApplicationController {
     def form: Form[SelectedAppsForm] = Form(mapping(
       "selectedPrincipalApps"   -> seq(text),
       "selectedSubordinateApps" -> seq(text)
-    )(SelectedAppsForm.apply)(SelectedAppsForm.unapply)
+    )(SelectedAppsForm.apply)(s => Some(s.selectedPrincipalApps, s.selectedSubordinateApps))
       .verifying(
         "You must select at least one application",
         data =>
@@ -153,8 +153,8 @@ class ApplicationController @Inject() (
   private def assembleModel(organisationId: OrganisationId, organisationName: String, apps: List[ApplicationWithCollaborators]) = {
 
     val partitioned: (List[ApplicationWithCollaborators], List[ApplicationWithCollaborators]) = apps.partitionMap {
-      case principal: ApplicationWithCollaborators if principal.deployedTo == Environment.PRODUCTION  => Left(principal)
-      case subordinate: ApplicationWithCollaborators if subordinate.deployedTo == Environment.SANDBOX => Right(subordinate)
+      case app if app.deployedTo == Environment.Production => Left(app)
+      case app                                             => Right(app)
     }
 
     val principalApps   = partitioned._1.map(app => fromApplicationWithCollaborators(app))
