@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
 
-@this(layout: Layout, govukTaskList: GovukTaskList)
+@this(layout: Layout, govukTaskList: GovukTaskList, govukButton: GovukButton)
 
 @(model: ViewModel, form: Form[DummyForm])(implicit request: play.api.mvc.Request[Any], loggedIn: UserSession, messagesProvider: MessagesProvider, appConfig: AppConfig)
 
@@ -74,7 +74,12 @@
 
         @if(model.isComplete) {
             <div class="govuk-button-group">
-                <button id="submit-ok" class="govuk-button" type="submit" name="submit-action">Review and send</button>
+                @govukButton(Button(
+                    id = Some("submit-ok"),
+                    name = Some("submit-action"),
+                    content = Text("Review and send"),
+                    preventDoubleClick = Some(true)
+                ))
             </div>
         }
     }
