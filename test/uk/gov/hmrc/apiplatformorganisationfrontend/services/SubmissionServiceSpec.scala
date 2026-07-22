@@ -26,23 +26,29 @@ import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
+import uk.gov.hmrc.apiplatform.modules.tpd.test.data.UserTestData
+import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 
-class SubmissionServiceSpec extends AsyncHmrcSpec {
+class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with UserTestData {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   trait Setup extends FixedClock with SubmissionsTestData {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val mockOrganisationConnector = mock[OrganisationConnector]
+    val mockOrganisationConnector        = mock[OrganisationConnector]
+    val mockThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
 
     val underTest = new SubmissionService(
-      mockOrganisationConnector
+      mockOrganisationConnector,
+      mockThirdPartyDeveloperConnector
     )
 
     val allowList = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
+    val email     = LaxEmailAddress("bob@example.com")
   }
 
   "fetch" should {
@@ -88,19 +94,37 @@ class SubmissionServiceSpec extends AsyncHmrcSpec {
     "create submisson" in new Setup {
       when(mockOrganisationConnector.createSubmission(*[UserId], *[LaxEmailAddress])(*)).thenReturn(successful(Some(submittedSubmission)))
 
-      val result = await(underTest.createSubmission(userId, LaxEmailAddress("bob@example.com")))
+      val result = await(underTest.createSubmission(userId, email))
 
       result.isDefined shouldBe true
     }
   }
 
   "submitSubmission" should {
-    "submit submisson" in new Setup {
+    "submit submisson and update profile when RI name given" in new Setup {
       when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
+      when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
 
-      val result = await(underTest.submitSubmission(submittedSubmission.id, LaxEmailAddress("bob@example.com")))
+      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email))
 
       result.isRight shouldBe true
+      verify(mockOrganisationConnector).submitSubmission(eqTo(submittedSubmission.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Roberts")))(*)
+    }
+
+    "submit submisson and not update profile when RI name not given" in new Setup {
+      val submissionWithNoRIName = aSubmission
+        .hasCompletelyAnsweredWith(sampleAnswersToQuestions1)
+        .withCompletedProgress()
+        .submission
+
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submissionWithNoRIName)))
+
+      val result = await(underTest.submitSubmission(submissionWithNoRIName.id, userId, email))
+
+      result.isRight shouldBe true
+      verify(mockOrganisationConnector).submitSubmission(eqTo(submissionWithNoRIName.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
     }
   }
 

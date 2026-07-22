@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress.Stri
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
-import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, RegisteredOrUnregisteredUser}
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.{GetRegisteredOrUnregisteredUsersResponse, RegisteredOrUnregisteredUser, UpdateRequest}
 import uk.gov.hmrc.apiplatform.modules.tpd.emailpreferences.domain.models.EmailPreferences
 import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.{LoggedInState, UserSession, UserSessionId}
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -137,6 +137,25 @@ class ThirdPartyDeveloperConnectorIntegrationSpec extends BaseConnectorIntegrati
 
       intercept[UpstreamErrorResponse] {
         await(underTest.fetchDevelopers(List(userId)))
+      }.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "updateProfile" should {
+    val updateRequest = UpdateRequest("Bob", "Roberts")
+    "update user's profile and return the user's details" in new Setup {
+      ThirdPartyDeveloperStub.UpdateProfile.succeeds(userId, nowAsText)
+
+      private val result = await(underTest.updateProfile(userId, updateRequest))
+
+      result shouldBe user
+    }
+
+    "throw an UpstreamErrorResponse when the call returns an internal server error" in new Setup {
+      ThirdPartyDeveloperStub.UpdateProfile.throwsAnException(userId)
+
+      intercept[UpstreamErrorResponse] {
+        await(underTest.updateProfile(userId, updateRequest))
       }.statusCode shouldBe INTERNAL_SERVER_ERROR
     }
   }

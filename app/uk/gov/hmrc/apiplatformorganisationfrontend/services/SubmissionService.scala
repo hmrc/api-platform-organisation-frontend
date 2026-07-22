@@ -19,24 +19,48 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.services
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
+import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.OrganisationConnector
+import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
+import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
 
 @Singleton
 class SubmissionService @Inject() (
-    organisationConnector: OrganisationConnector
+    organisationConnector: OrganisationConnector,
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext
-  ) {
+  ) extends EitherTHelper[String] with Logging {
 
   def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] =
     organisationConnector.createSubmission(userId, requestedBy)
 
-  def submitSubmission(submissionId: SubmissionId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] =
-    organisationConnector.submitSubmission(submissionId, requestedBy)
+  def submitSubmission(submissionId: SubmissionId, userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
+    (
+      for {
+        submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
+        user       <- liftF(updateUserProfileIfRequired(userId, submission))
+      } yield submission
+    ).value
+  }
+
+  private def updateUserProfileIfRequired(userId: UserId, submission: Submission)(implicit hc: HeaderCarrier): Future[Option[User]] = {
+    val nameAnswer = submission.getAnswerToQuestionOfInterest("responsibleIndividualNameId")
+    nameAnswer match {
+      case ActualAnswer.NameAnswer(FullName(Some(firstName), Some(lastName))) => updateUserProfile(userId, firstName, lastName)
+      case _                                                                  => Future.successful(None)
+    }
+  }
+
+  private def updateUserProfile(userId: UserId, firstName: String, lastName: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {
+    logger.info(s"Organisation registration updating user profile for userId: $userId")
+    thirdPartyDeveloperConnector.updateProfile(userId, UpdateRequest(firstName, lastName)).map(u => Some(u))
+  }
 
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = organisationConnector.fetchLatestSubmissionByUserId(userId)
 
