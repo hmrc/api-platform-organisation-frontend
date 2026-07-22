@@ -63,8 +63,9 @@
     @helper.form(action = routes.OrganisationRegistrationController.registrationStartAction()) {
         @helper.CSRF.formField
         @govukButton(Button(
-            id = Some("createSubmission"), 
+            id = Some("createSubmission"),
             isStartButton = true,
-            content = Text("Start now")))
+            content = Text("Start now"),
+            preventDoubleClick = Some(true)))
     }
 }

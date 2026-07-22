@@ -24,7 +24,7 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.SelectedAppsForm
 @import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.include.fieldError
 
-@this(layout: Layout)
+@this(layout: Layout, govukButton: GovukButton)
 
 @(loggedInSession: Option[UserSession], form: Form[SelectedAppsForm], manageApplicationsViewModel: ManageApplicationsViewModel)(implicit request: RequestHeader, messages: Messages)
 
@@ -87,7 +87,11 @@
         </div>
 
         <div class="govuk-button-group">
-            <button class="govuk-button" data-module="govuk-button" data-govuk-button-init="">Save and continue </button>
+            @govukButton(Button(
+                id = Some("save-and-continue"),
+                content = Text("Save and continue"),
+                preventDoubleClick = Some(true)
+            ))
         </div>
     }
 }

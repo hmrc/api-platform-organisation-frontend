@@ -87,9 +87,10 @@
 
     <div class="govuk-button-group">
       @govukButton(Button(
-        id = Some("addMember"), 
+        id = Some("addMember"),
         isStartButton = false,
-        content = Text("Add member")))
+        content = Text("Add member"),
+        preventDoubleClick = Some(true)))
       <a href="@routes.ManageMembersController.manageCollaborators(viewModel.organisationId)" class="govuk-link">Cancel</a>
     </div>
   }

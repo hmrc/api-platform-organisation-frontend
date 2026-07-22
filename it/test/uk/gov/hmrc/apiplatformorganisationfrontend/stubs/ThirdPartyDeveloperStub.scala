@@ -179,4 +179,40 @@ object ThirdPartyDeveloperStub {
       )
     }
   }
+
+  object UpdateProfile {
+
+    def succeeds(userId: UserId, nowAsText: String): StubMapping = {
+      stubFor(
+        post(urlPathEqualTo(s"/developer/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(s"""{
+                           |  "email": "bob@example.com",
+                           |  "firstName": "Bob",
+                           |  "lastName": "Fleming",
+                           |  "registrationTime": "${nowAsText}",
+                           |  "lastModified": "${nowAsText}",
+                           |  "verified": true,
+                           |  "mfaEnabled": false,
+                           |  "mfaDetails": [],
+                           |  "emailPreferences": { "interests" : [], "topics": [] },
+                           |  "userId": "$userId"
+                           |}""".stripMargin)
+          )
+      )
+    }
+
+    def throwsAnException(userId: UserId) = {
+      stubFor(
+        post(urlPathEqualTo(s"/developer/$userId"))
+          .willReturn(
+            aResponse()
+              .withStatus(INTERNAL_SERVER_ERROR)
+          )
+      )
+    }
+  }
 }
