@@ -114,19 +114,20 @@ class QuestionsController @Inject() (
       val question = request.submission.findQuestion(questionId).get
 
       val onFormAnswer = question match {
-        case _: Question.TextQuestion    => answers.headOption.map(ActualAnswer.TextAnswer.apply)
-        case _: Question.AddressQuestion => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
+        case _: Question.TextQuestion          => answers.headOption.map(ActualAnswer.TextAnswer.apply)
+        case _: Question.AddressQuestion       => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
             trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
             trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
             trimmedAnswers.get("locality").flatMap(_.headOption),
             trimmedAnswers.get("region").flatMap(_.headOption),
             trimmedAnswers.get("postcode").flatMap(_.headOption)
           )))
-        case a: Question.NameQuestion    => Some(ActualAnswer.NameAnswer(FullName(
+        case _: Question.NameQuestion          => Some(ActualAnswer.NameAnswer(FullName(
             trimmedAnswers.get("firstName").flatMap(_.headOption),
             trimmedAnswers.get("lastName").flatMap(_.headOption)
           )))
-        case _                           => None
+        case _: Question.CompanyNumberQuestion => answers.headOption.map(ActualAnswer.CompanyNumberAnswer.apply)
+        case _                                 => None
       }
 
       showQuestion(submissionId, questionId, onFormAnswer, errors.some)(request)
