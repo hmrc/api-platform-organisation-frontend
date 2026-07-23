@@ -23,7 +23,7 @@ import cats.data.NonEmptyList
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 
 object AnswersViewModel {
-  case class ViewQuestion(id: Question.Id, text: String, answer: String)
+  case class ViewQuestion(id: Question.Id, text: String, answer: String, questionSummary: Option[String])
   case class ViewQuestionnaire(label: String, state: String, id: Questionnaire.Id, questions: NonEmptyList[ViewQuestion])
   case class ViewModel(submissionId: SubmissionId, questionnaires: List[ViewQuestionnaire])
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
@@ -45,7 +45,7 @@ object AnswersViewModel {
     val id = item.question.id
 
     submission.latestInstance.answersToQuestions.get(id).flatMap(convertAnswer).map(answer =>
-      ViewQuestion(id, item.question.wording.value, answer)
+      ViewQuestion(id, item.question.wording.value, answer, item.question.summary)
     )
   }
 

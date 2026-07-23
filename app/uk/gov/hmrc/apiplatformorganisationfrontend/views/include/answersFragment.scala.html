@@ -16,8 +16,13 @@
 
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel.*
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 
-@(model: ViewModel, canChange: Boolean, returnContext: Option[String] = None)
+@(model: ViewModel, canChange: Boolean, returnContext: Option[String] = None, loggedIn: UserSession)
+
+@renderText(text: String): String = @{
+    text.replace("{userName}", loggedIn.developer.displayedName)
+}
 
   @for(questionnaire <- model.questionnaires.toList) {
     <h2 class="app-task-list__section">
@@ -27,7 +32,7 @@
     <dl class="govuk-summary-list govuk-!-margin-bottom-9">
       @for(question <- questionnaire.questions.toList) {
         <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key no-bold width-50">@question.text</dt>
+          <dt class="govuk-summary-list__key no-bold width-50">@renderText(question.questionSummary.getOrElse(question.text))</dt>
           <dd class="govuk-summary-list__value width-20">@question.answer</dd>
           <dd class="govuk-summary-list__actions width-10">
             @if(canChange) {
