@@ -103,6 +103,29 @@ class QuestionControllerSpec
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
     }
 
+    "succeed and check for label, hintText, name question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${ResponsibleIndividualDetails.question2.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, ResponsibleIndividualDetails.question2.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Who is responsible for the software in your organisation?") shouldBe true withClue ("HTML content did not contain title")
+      contentAsString(result).contains("Enter responsible individual details") shouldBe true withClue ("HTML content did not contain caption")
+      contentAsString(result).contains(
+        s"${loggedInUser.firstName} ${loggedInUser.lastName}"
+      ) shouldBe true withClue (s"HTML content did not contain User's name i.e. ${loggedInUser.firstName} ${loggedInUser.lastName}")
+      contentAsString(result).contains("Yes") shouldBe true withClue ("HTML content did not contain Radio button -> Yes")
+      contentAsString(result).contains("No") shouldBe true withClue ("HTML content did not contain Radio button -> No")
+      contentAsString(result).contains("First name") shouldBe true withClue ("HTML content did not contain label for First name")
+      contentAsString(result).contains("Last name") shouldBe true withClue ("HTML content did not contain label for Last name")
+      contentAsString(
+        result
+      ).contains(s"""govuk-radios--inline""") shouldBe true withClue ("HTML content did not contain class radios inline")
+    }
+
     "succeed and check for label, hintText, text question" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 

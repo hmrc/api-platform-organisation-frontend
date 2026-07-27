@@ -40,7 +40,8 @@ class SubmissionService @Inject() (
   def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] =
     organisationConnector.createSubmission(userId, requestedBy)
 
-  def submitSubmission(submissionId: SubmissionId, userId: UserId, requestedBy: LaxEmailAddress, developer: User)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
+  def submitSubmission(submissionId: SubmissionId, userId: UserId, requestedBy: LaxEmailAddress, developer: User)(implicit hc: HeaderCarrier)
+      : Future[Either[String, Submission]] = {
     (
       for {
         submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
@@ -53,10 +54,10 @@ class SubmissionService @Inject() (
     val nameAnswer = submission.getAnswerToQuestionOfInterest("responsibleIndividualNameId")
     nameAnswer match {
       case ActualAnswer.NameAnswer(FullName(Some(_), Some(firstName), Some(lastName))) if isNewName(developer, firstName, lastName) => updateUserProfile(userId, firstName, lastName)
-      case _                                                                  => Future.successful(None)
+      case _                                                                                                                        => Future.successful(None)
     }
   }
-  
+
   private def isNewName(developer: User, firstName: String, lastName: String): Boolean = {
     developer.firstName != firstName || developer.lastName != lastName
   }
