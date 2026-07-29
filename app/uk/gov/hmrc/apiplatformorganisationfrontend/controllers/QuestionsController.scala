@@ -123,6 +123,7 @@ class QuestionsController @Inject() (
             trimmedAnswers.get("postcode").flatMap(_.headOption)
           )))
         case a: Question.NameQuestion    => Some(ActualAnswer.NameAnswer(FullName(
+            trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
             trimmedAnswers.get("firstName").flatMap(_.headOption),
             trimmedAnswers.get("lastName").flatMap(_.headOption)
           )))
@@ -136,9 +137,27 @@ class QuestionsController @Inject() (
     val trimmedAnswers = formValues.map { case (k, v) => k -> v.map(_.trim()).filter(_.nonEmpty) }
     val rawAnswers     = formValues.get("answer").fold(List.empty[String])(_.toList.filter(_.nonEmpty))
     val answers        = rawAnswers.map(a => a.trim())
+    val question       = request.submission.findQuestion(questionId).get
 
-    submissionService.recordAnswer(submissionId, questionId, trimmedAnswers)
-      .map(_.fold(failed(answers, trimmedAnswers), success))
+    val onFormAnswer = question match {
+      case a: Question.NameQuestion => Some(ActualAnswer.NameAnswer(FullName(
+          trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
+          trimmedAnswers.get("firstName").flatMap(_.headOption),
+          trimmedAnswers.get("lastName").flatMap(_.headOption)
+        )))
+      case _                        => None
+    }
+
+    val trimmedNameAnswers = onFormAnswer match {
+      case Some(ActualAnswer.NameAnswer(FullName(Some("Yes"), Some(_), Some(_)))) => trimmedAnswers + (
+          "firstName" -> Seq(request.developer.firstName),
+          "lastName"  -> Seq(request.developer.lastName)
+        )
+      case _                                                                      => trimmedAnswers
+    }
+
+    submissionService.recordAnswer(submissionId, questionId, trimmedNameAnswers)
+      .map(_.fold(failed(answers, trimmedNameAnswers), success))
       .flatten
   }
 

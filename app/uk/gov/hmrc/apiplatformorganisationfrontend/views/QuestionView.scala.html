@@ -26,6 +26,7 @@
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+@import scala.collection.immutable.ListSet
 
 @this(layout: Layout,
         govukRadios: GovukRadios,
@@ -270,42 +271,69 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
-@renderNameQuestion(question: Question.NameQuestion) = {
-    @govukFieldset(Fieldset(
-        legend = None,
-        html = HtmlFormat.fill(Seq(
-            govukInput(Input(
-                id = "firstName",
-                name = "firstName",
-                label = Label(
-                    content = Text("First name")
-                ),
-                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "firstName")).map(err => ErrorMessage(content = Text(err.message))),
-                value = currentAnswers match {
-                  case Some(ActualAnswer.NameAnswer(name)) => name.firstName
-                  case _ => None
-              },
-                autocomplete = Some("first-name")
-            )),
-            govukInput(Input(
-                id = "lastName",
-                name = "lastName",
-                label = Label(
-                    content = Text("Last name")
-                ),
-                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "lastName")).map(err => ErrorMessage(content = Text(err.message))),
-                value = currentAnswers match {
-                    case Some(ActualAnswer.NameAnswer(name)) => name.lastName
-                    case _ => None
-                },
-                autocomplete = Some("last-name")
-            )),
-        ))
-    ))
-  
-    @renderMaybeStatement(question.afterStatement)
+@buildNameConditionalHtml(question: Question.NameQuestion) = {
+  @renderMaybeStatement(question.statement)
+  @govukFieldset(Fieldset(
+    legend = None,
+    html = HtmlFormat.fill(Seq(
+        govukInput(Input(
+            id = "firstName",
+            name = "firstName",
+            label = Label(
+                content = Text("First name")
+            ),
+            errorMessage = errorInfo.flatMap(_.errors.find(_.key == "firstName")).map(err => ErrorMessage(content = Text(err.message))),
+            value = currentAnswers match {
+                case Some(ActualAnswer.NameAnswer(name)) => name.firstName
+                case _ => Some(loggedIn.developer.firstName)
+            },
+            autocomplete = Some("first-name")
+        )),
+        govukInput(Input(
+            id = "lastName",
+            name = "lastName",
+            label = Label(
+                content = Text("Last name")
+            ),
+            errorMessage = errorInfo.flatMap(_.errors.find(_.key == "lastName")).map(err => ErrorMessage(content = Text(err.message))),
+            value = currentAnswers match {
+                case Some(ActualAnswer.NameAnswer(name)) => name.lastName
+                case _ => Some(loggedIn.developer.lastName)
+            },
+            autocomplete = Some("last-name")
+        )),
+      ))
+  ))
+}
 
-    @renderButtonOrButtons(question.absenceText)
+@renderNameQuestion(question: Question.NameQuestion) = {
+  @renderMaybeStatement(Some(Statement(StatementText("{userName}"))))
+  @govukRadios(Radios(name = "isThisYourName",
+    errorMessage = errorInfo.flatMap(_.errors.find(_.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message))),
+    fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
+    hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+    classes =  "govuk-radios--inline",
+    value = currentAnswers match {
+        case Some(ActualAnswer.NameAnswer(name)) => name.isThisYourName
+        case _ => None
+    },
+    items = Seq(
+        RadioItem(
+            content = Text("Yes"),
+            value = Some("Yes"),
+            id = Some("yes")
+        ),
+        RadioItem(
+            content = Text("No"),
+            value = Some("No"),
+            id = Some("no"),
+            conditionalHtml = Some(buildNameConditionalHtml(question))
+        )
+    )
+  ))
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
 }
 
 @renderTextInputQuestion(question: Question.TextQuestion) = {
@@ -377,7 +405,12 @@
     @pageHeading
   </h1>
 
-  @renderMaybeStatement(question.statement)
+  @{
+    question match {
+      case _: Question.NameQuestion  => ()
+      case q                         => renderMaybeStatement(q.statement)
+    }
+  }
 
   @helper.form(action = submitAction, Symbol("class") -> "form") {
     @helper.CSRF.formField

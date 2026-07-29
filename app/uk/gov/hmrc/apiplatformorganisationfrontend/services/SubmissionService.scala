@@ -40,21 +40,26 @@ class SubmissionService @Inject() (
   def createSubmission(userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Option[Submission]] =
     organisationConnector.createSubmission(userId, requestedBy)
 
-  def submitSubmission(submissionId: SubmissionId, userId: UserId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
+  def submitSubmission(submissionId: SubmissionId, userId: UserId, requestedBy: LaxEmailAddress, developer: User)(implicit hc: HeaderCarrier)
+      : Future[Either[String, Submission]] = {
     (
       for {
         submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
-        user       <- liftF(updateUserProfileIfRequired(userId, submission))
+        user       <- liftF(updateUserProfileIfRequired(userId, submission, developer))
       } yield submission
     ).value
   }
 
-  private def updateUserProfileIfRequired(userId: UserId, submission: Submission)(implicit hc: HeaderCarrier): Future[Option[User]] = {
+  private def updateUserProfileIfRequired(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[User]] = {
     val nameAnswer = submission.getAnswerToQuestionOfInterest("responsibleIndividualNameId")
     nameAnswer match {
-      case ActualAnswer.NameAnswer(FullName(Some(firstName), Some(lastName))) => updateUserProfile(userId, firstName, lastName)
-      case _                                                                  => Future.successful(None)
+      case ActualAnswer.NameAnswer(FullName(Some(_), Some(firstName), Some(lastName))) if isNewName(developer, firstName, lastName) => updateUserProfile(userId, firstName, lastName)
+      case _                                                                                                                        => Future.successful(None)
     }
+  }
+
+  private def isNewName(developer: User, firstName: String, lastName: String): Boolean = {
+    developer.firstName != firstName || developer.lastName != lastName
   }
 
   private def updateUserProfile(userId: UserId, firstName: String, lastName: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {

@@ -105,7 +105,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
       when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
 
-      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email))
+      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email, adminDeveloper))
 
       result.isRight shouldBe true
       verify(mockOrganisationConnector).submitSubmission(eqTo(submittedSubmission.id), eqTo(email))(*)
@@ -120,7 +120,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
 
       when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submissionWithNoRIName)))
 
-      val result = await(underTest.submitSubmission(submissionWithNoRIName.id, userId, email))
+      val result = await(underTest.submitSubmission(submissionWithNoRIName.id, userId, email, adminDeveloper))
 
       result.isRight shouldBe true
       verify(mockOrganisationConnector).submitSubmission(eqTo(submissionWithNoRIName.id), eqTo(email))(*)
