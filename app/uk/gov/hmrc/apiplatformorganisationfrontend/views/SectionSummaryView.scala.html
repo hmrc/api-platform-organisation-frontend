@@ -33,7 +33,7 @@
 ) {
     <h1 class="govuk-heading-xl">@title</h1>
 
-    @answersFragment(model, canChange = true, returnContext = Some("section-summary"))
+    @answersFragment(model, canChange = true, returnContext = Some("section-summary"), loggedIn = loggedIn)
 
     @helper.form(action = routes.CheckAnswersController.sectionSummaryAction(model.submissionId)) {
       @helper.CSRF.formField
