@@ -81,8 +81,8 @@ class QuestionsController @Inject() (
         questionnaire <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
       } yield {
         errorInfo.fold[Result](
-          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, None, returnTo))
-        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, Some(ei), returnTo)))
+          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, submission, None, returnTo))
+        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
@@ -141,7 +141,7 @@ class QuestionsController @Inject() (
     val question       = request.submission.findQuestion(questionId).get
 
     val onFormAnswer = question match {
-      case a: Question.NameQuestion => Some(ActualAnswer.NameAnswer(FullName(
+      case _: Question.NameQuestion => Some(ActualAnswer.NameAnswer(FullName(
           trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
           trimmedAnswers.get("firstName").flatMap(_.headOption),
           trimmedAnswers.get("lastName").flatMap(_.headOption)
@@ -150,7 +150,7 @@ class QuestionsController @Inject() (
     }
 
     val trimmedNameAnswers = onFormAnswer match {
-      case Some(ActualAnswer.NameAnswer(FullName(Some("Yes"), Some(_), Some(_)))) => trimmedAnswers + (
+      case Some(ActualAnswer.NameAnswer(FullName(Some("Yes"), Some(_), Some(_)))) => trimmedAnswers ++ Map(
           "firstName" -> Seq(request.developer.firstName),
           "lastName"  -> Seq(request.developer.lastName)
         )
