@@ -409,6 +409,35 @@ class QuestionControllerSpec
       body should include("Town or City required")
     }
 
+    "fail if invalid company number provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("The company number entered is not valid")
+      private val invalidCompanyNumber = "not-a-number"
+      private val request              = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidCompanyNumber, "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("The company number entered is not valid")
+    }
+
+    "fail and redirect to the company number not found page when the company number lookup fails" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey(ValidationError.companyNumberNotFoundKey, "The company number 12345678 was not found")
+      private val invalidCompanyNumber = "12345678"
+      private val request              = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidCompanyNumber, "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/registration/company-number-not-found/${aSubmission.id.value}/${OrganisationDetails.questionCompanyNumber.id.value}"
+      )
+    }
+
     "completing last question in section" should {
       "redirect to section summary instead of checklist" in new Setup {
         val submissionWithOneQuestionLeft = aSubmission.withIncompleteProgress()
