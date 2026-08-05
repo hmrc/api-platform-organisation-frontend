@@ -31,7 +31,7 @@ import play.api.test.{CSRFTokenHelper, FakeRequest}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.{Collaborators, Organisation, OrganisationName}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.OrganisationAllowList
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -65,6 +65,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
     val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
     val notAllowListedPage             = app.injector.instanceOf[NotAllowListedPage]
+    val companyNumberNotFoundPage      = app.injector.instanceOf[CompanyNumberNotFoundPage]
     val cookieSigner                   = app.injector.instanceOf[CookieSigner]
     val errorHandler                   = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig  = app.injector.instanceOf[AppConfig]
@@ -76,6 +77,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
         checkResponsibleIndividualPage,
         notResponsibleIndividualPage,
         notAllowListedPage,
+        companyNumberNotFoundPage,
         SubmissionServiceMock.aMock,
         OrganisationActionServiceMock.aMock,
         cookieSigner,
@@ -246,6 +248,21 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       val result = underTest.notResponsibleIndividualView(fakeRequest)
       status(result) shouldBe Status.OK
       contentAsString(result) should include("Ask someone else to complete these checks instead")
+    }
+  }
+
+  "GET /company-number-not-found/:sid/:qid" should {
+    "return 200 with the expected copy and a retry link back to the question the user came from" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val sid         = aSubmission.id
+      val qid         = Question.Id.random
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/registration/company-number-not-found/$sid/${qid.value}").withUser(underTest)(sessionId))
+
+      val result = underTest.companyNumberNotFoundView(sid, qid)(fakeRequest)
+      status(result) shouldBe Status.OK
+      val body   = contentAsString(result)
+      body should include("The details you entered did not match our records")
+      body should include(s"""href="${routes.QuestionsController.showQuestion(sid, qid).url}"""")
     }
   }
 }
