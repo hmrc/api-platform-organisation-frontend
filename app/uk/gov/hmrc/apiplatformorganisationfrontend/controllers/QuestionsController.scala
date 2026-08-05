@@ -28,6 +28,7 @@ import play.api.mvc.{MessagesControllerComponents, *}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
@@ -162,11 +163,18 @@ class QuestionsController @Inject() (
       .flatten
   }
 
+  private def findNextQuestion(extSubmission: ExtendedSubmission, questionId: Question.Id, questionnaireId: Questionnaire.Id) = {
+    extSubmission.submission.findQuestion(questionId) match {
+      case Some(ForwardToQuestion(id, forwardToQuestionId, _, _, _)) => Some(forwardToQuestionId)
+      case _                                                         => extSubmission.questionnaireProgress.get(questionnaireId)
+          .flatMap(_.questionsToAsk.dropWhile(_ != questionId).drop(1).headOption)
+    }
+  }
+
   def recordAnswer(submissionId: SubmissionId, questionId: Question.Id): Action[AnyContent] = withSubmission(submissionId) { implicit request =>
     val success = (extSubmission: ExtendedSubmission) => {
       val questionnaire = extSubmission.submission.findQuestionnaireContaining(questionId).get
-      val nextQuestion  = extSubmission.questionnaireProgress.get(questionnaire.id)
-        .flatMap(_.questionsToAsk.dropWhile(_ != questionId).drop(1).headOption)
+      val nextQuestion  = findNextQuestion(extSubmission, questionId, questionnaire.id)
 
       lazy val toSectionSummary =
         routes.CheckAnswersController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
