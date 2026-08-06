@@ -17,6 +17,7 @@
 @import include.*
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.CompanyDetails
 @import play.api.mvc.Call
 @import play.api.mvc.Request
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
@@ -36,7 +37,7 @@
         govukDateInput: GovukDateInput
 )
 
-@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], submission: Submission, errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -342,7 +343,7 @@
         name = Question.answerKey,
         inputType = "text",
         value = currentAnswers match {
-            case Some(ActualAnswer.TextAnswer(value)) => Some(value)
+            case Some(ActualAnswer.CompanyNumberAnswer(value)) => Some(value)
             case _ => None
         },
         hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
@@ -352,6 +353,25 @@
     @renderMaybeStatement(question.afterStatement)
 
     @renderButtonOrButtons(question.absenceText)
+}
+
+@renderConfirmCompanyNameQuestion(question: Question.SingleChoiceQuestion, inline: Boolean) = {
+  @renderStatement(Statement(StatementText(submission.organisationName.getOrElse("Not set"))))
+  @renderSingleChoiceQuestion(question, inline)
+}
+
+@getAddress(maybeCompanyDetails: Option[CompanyDetails]) = @{
+  maybeCompanyDetails match {
+    case Some(details) => Seq(details.careOf, details.poBox, details.premises, details.addressLineOne, details.addressLineTwo, details.locality, details.region, details.postalCode, details.country).filter(_.isDefined).map(_.get).mkString("<br>")
+    case _             => "Not set"
+  }
+}
+
+@renderConfirmCompanyAddressQuestion(question: Question.SingleChoiceQuestion, inline: Boolean) = {
+  <div class="govuk-inset-text">
+    @renderStatement(Statement(StatementText(getAddress(submission.latestInstance.companyDetails))))
+  </div>
+  @renderSingleChoiceQuestion(question, inline)
 }
 
 @renderTextInputQuestion(question: Question.TextQuestion) = {
@@ -376,17 +396,24 @@
     <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
 }
 
+@renderForwardToQuestion() = {
+    <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
+}
+
 @renderQuestionType(question: Question) = @{
   question match {
-    case q: Question.YesNoQuestion         => renderSingleChoiceQuestion(q, true)
-    case q: Question.SingleChoiceQuestion  => renderSingleChoiceQuestion(q, false)
-    case q: Question.MultiChoiceQuestion   => renderMultiChoiceQuestion(q)
-    case q: Question.TextQuestion          => renderTextInputQuestion(q)
-    case _: Question.AcknowledgementOnly   => renderAcknowledgementOnly()
-    case q: Question.DateQuestion          => renderDateQuestion(q)
-    case q: Question.AddressQuestion       => renderAddressQuestion(q)
-    case q: Question.NameQuestion          => renderNameQuestion(q)
-    case q: Question.CompanyNumberQuestion => renderCompanyNumberQuestion(q)
+    case q: Question.YesNoQuestion                 => renderSingleChoiceQuestion(q, true)
+    case q: Question.ConfirmCompanyNameQuestion    => renderConfirmCompanyNameQuestion(q, true)
+    case q: Question.ConfirmCompanyAddressQuestion => renderConfirmCompanyAddressQuestion(q, true)
+    case q: Question.SingleChoiceQuestion          => renderSingleChoiceQuestion(q, false)
+    case q: Question.MultiChoiceQuestion           => renderMultiChoiceQuestion(q)
+    case q: Question.TextQuestion                  => renderTextInputQuestion(q)
+    case _: Question.AcknowledgementOnly           => renderAcknowledgementOnly()
+    case _: Question.ForwardToQuestion             => renderForwardToQuestion()
+    case q: Question.DateQuestion                  => renderDateQuestion(q)
+    case q: Question.AddressQuestion               => renderAddressQuestion(q)
+    case q: Question.NameQuestion                  => renderNameQuestion(q)
+    case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
   }
 }
 

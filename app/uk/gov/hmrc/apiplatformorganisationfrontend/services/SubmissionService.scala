@@ -45,7 +45,7 @@ class SubmissionService @Inject() (
     (
       for {
         submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
-        user       <- liftF(updateUserProfileIfRequired(userId, submission, developer))
+        _          <- liftF(updateUserProfileIfRequired(userId, submission, developer))
       } yield submission
     ).value
   }

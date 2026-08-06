@@ -129,6 +129,24 @@ class QuestionControllerSpec
     "succeed and check for label, hintText, text question" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
 
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgUtr.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionLtdOrgUtr.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("What is your Corporation Tax Unique Taxpayer Reference (UTR)?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("It will be on tax returns and other letters about Corporation Tax.") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Your UTR can be 10 or 13 digits long.") shouldBe true withClue ("HTML content did not contain hintText")
+      contentAsString(
+        result
+      ).contains(s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
+      contentAsString(result).contains("<title>") shouldBe true
+      contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
+    }
+
+    "succeed and check for label, hintText, companyNumber question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
       val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionCompanyNumber.id.value}"
       val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(loggedInRequest.withCSRFToken)
 
@@ -186,6 +204,30 @@ class QuestionControllerSpec
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(result).contains("What is your favourite Colour?") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("Red") shouldBe true withClue ("HTML content did not check boxes")
+      contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, confirm company name question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgName.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionLtdOrgName.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Is this your company?") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, confirm company address question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionLtdOrgAddress.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionLtdOrgAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Is this the correct registered address for your company?") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("<title>") shouldBe true
     }
 
