@@ -17,7 +17,9 @@
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.jdk.CollectionConverters.*
 
+import org.jsoup.Jsoup
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.Application
@@ -30,8 +32,8 @@ import play.filters.csrf.CSRF
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.{Completed, InProgress}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Questionnaire, QuestionnaireProgress, Submission, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -150,6 +152,123 @@ class CheckAnswersControllerSpec
 
       status(result) shouldBe NOT_FOUND
     }
+
+    "show the company name after company lookup when the confirm company name question is answered yes" in new Setup {
+      val companyDetails = Submission.CompanyDetails("12345678", "Easysoft Ltd")
+      val submission     = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgName.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
+      )
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgName)(contentAsString(result)) shouldBe Seq("Easysoft Ltd")
+    }
+
+    "show 'Not confirmed' after company lookup when the confirm company name question is answered no" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgName.id -> ActualAnswer.SingleChoiceAnswer("No")))
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgName)(contentAsString(result)) shouldBe Seq("Not confirmed")
+    }
+
+    "show the company address with all fields after company lookup when the confirm company address question is answered yes" in new Setup {
+      val companyDetails = Submission.CompanyDetails(
+        companyNumber = "12345678",
+        companyName = "Easysoft Ltd",
+        addressLineOne = Some("1 High Street"),
+        addressLineTwo = Some("Suite 2"),
+        careOf = Some("John Smith"),
+        country = Some("United Kingdom"),
+        locality = Some("London"),
+        poBox = Some("PO123"),
+        postalCode = Some("SW1A 1AA"),
+        premises = Some("Unit 5"),
+        region = Some("Greater London")
+      )
+      val submission     = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
+      )
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgAddress)(contentAsString(result)) shouldBe Seq(
+        "John Smith",
+        "PO123",
+        "Unit 5",
+        "1 High Street",
+        "Suite 2",
+        "London",
+        "Greater London",
+        "SW1A 1AA",
+        "United Kingdom"
+      )
+    }
+
+    "show the company address after company lookup when the confirm company address question is answered no" in new Setup {
+      val companyDetails = Submission.CompanyDetails(
+        companyNumber = "12345678",
+        companyName = "Easysoft Ltd",
+        addressLineOne = Some("1 High Street")
+      )
+      val submission     = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.SingleChoiceAnswer("No")))
+      )
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgAddress)(contentAsString(result)) shouldBe Seq("1 High Street")
+    }
+
+    "show n/a when the company address question has been confirmed but no address fields are populated" in new Setup {
+      val companyDetails = Submission.CompanyDetails("12345678", "Acme Ltd")
+      val submission     = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgAddress.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
+      )
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgAddress)(contentAsString(result)) shouldBe Seq("n/a")
+    }
+
+    "fall back to n/a without throwing when companyDetails is absent" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgName.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(OrganisationDetails.questionLtdOrgName)(contentAsString(result)) shouldBe Seq("n/a")
+    }
+
+    "show all manual entry questions when the submission is fully answered" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val content = contentAsString(result)
+      summaryLinesFor(OrganisationDetails.questionOrgType)(content) shouldBe Seq(answerInFixtureFor(OrganisationDetails.questionOrgType))
+      summaryLinesFor(OrganisationDetails.questionCompanyNumber)(content) shouldBe Seq(answerInFixtureFor(OrganisationDetails.questionCompanyNumber))
+      summaryLinesFor(OrganisationDetails.questionLtdOrgUtr)(content) shouldBe Seq(answerInFixtureFor(OrganisationDetails.questionLtdOrgUtr))
+      summaryLinesFor(ResponsibleIndividualDetails.question1)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question1))
+      summaryLinesFor(ResponsibleIndividualDetails.question2)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question2))
+      summaryLinesFor(ResponsibleIndividualDetails.question3)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question3))
+      summaryLinesFor(ResponsibleIndividualDetails.question4)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question4))
+      summaryLinesFor(ResponsibleIndividualDetails.question5)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question5))
+      summaryLinesFor(ResponsibleIndividualDetails.question6)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question6))
+    }
   }
 
   "checkAnswersAction" should {
@@ -251,5 +370,22 @@ class CheckAnswersControllerSpec
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/checklist")
     }
+  }
+
+  private def answerInFixtureFor(question: Question): String =
+    samplePassAnswersToQuestions(question.id) match {
+      case ActualAnswer.SingleChoiceAnswer(value)                                => value
+      case ActualAnswer.TextAnswer(value)                                        => value
+      case ActualAnswer.CompanyNumberAnswer(value)                               => value
+      case ActualAnswer.NameAnswer(FullName(_, Some(firstName), Some(lastName))) => s"$firstName $lastName"
+      case other                                                                 => fail(s"Failed to get value for: $other")
+    }
+
+  private def summaryLinesFor(question: Question)(html: String): Seq[String] = {
+    val label = question.summary.getOrElse(question.wording.value)
+    Jsoup.parse(html).select("div.govuk-summary-list__row").asScala
+      .find(_.select("dt.govuk-summary-list__key").text == label)
+      .map(_.select("dd.govuk-summary-list__value").html.split("<br>").toSeq.map(_.trim))
+      .getOrElse(fail(s"No summary row labelled '$label'"))
   }
 }
