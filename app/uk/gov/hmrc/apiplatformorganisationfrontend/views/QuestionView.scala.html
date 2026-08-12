@@ -17,7 +17,6 @@
 @import include.*
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
-@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission.CompanyDetails
 @import play.api.mvc.Call
 @import play.api.mvc.Request
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
@@ -374,6 +373,10 @@
   @renderSingleChoiceQuestion(question, inline)
 }
 
+@renderAttachmentQuestion(question: Question.AttachmentQuestion) = {
+
+}
+
 @renderTextInputQuestion(question: Question.TextQuestion) = {
     @govukInput(Input(id = Question.answerKey,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
@@ -414,6 +417,7 @@
     case q: Question.AddressQuestion               => renderAddressQuestion(q)
     case q: Question.NameQuestion                  => renderNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
+    case q: Question.AttachmentQuestion   => renderAttachmentQuestion(q)
   }
 }
 

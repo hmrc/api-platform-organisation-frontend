@@ -11,3 +11,17 @@ please.select.an.option = Please select an option
 
 section.summary.title = Check your {0}
 section.summary.continue = Continue
+
+uploadFile.title = Upload your tax document
+uploadFile.heading = Upload the tax registration document for your company
+uploadFile.p1 = You can upload your registration document as a scanned copy or photo of the original. The selected file must be smaller than 20MB.
+uploadFile.callToAction = Save and continue
+uploadFile.chooseFile = Choose file
+uploadFile.noFileChosen = No file chosen
+uploadFile.label = Upload a file
+uploadFile.entityTooLarge = The selected file must be either in CSV or Excel format. The file size must be smaller than 20MB
+uploadFile.rejected = The file you uploaded is not recognised. The selected file must be in CSV or Excel format
+uploadFile.invalidArgument = Select a file that you want to submit as your tax document
+uploadFile.failed = There was a problem uploading your file
+uploadFile.uploading.heading = Your report file is uploading
+uploadFile.uploading.body = This may take a few minutes. Do not refresh or leave this page whilst the file is uploading.
