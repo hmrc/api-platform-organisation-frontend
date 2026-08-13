@@ -1,0 +1,37 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, SubmissionId}
+
+@this(layout: Layout)
+
+@(loggedInSession: Option[UserSession], submissionId: SubmissionId, questionId: Question.Id)(implicit request: RequestHeader, messages: Messages)
+
+@layout(
+    backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
+    pageTitle = "The details you entered did not match our records",
+    loggedInSession = loggedInSession
+) {
+
+    <h1 class="govuk-heading-l"><span class="govuk-caption-l">Your business</span>The details you entered did not match our records</h1>
+
+    <p class="govuk-body">We could not match the company registration number you entered with records held by HMRC.</p>
+    <p class="govuk-body">If you used the wrong company registration number, you can <a href="@routes.QuestionsController.showQuestion(submissionId, questionId)" class="govuk-link govuk-link--no-visited-state">try again using a different one</a>.</p>
+
+}

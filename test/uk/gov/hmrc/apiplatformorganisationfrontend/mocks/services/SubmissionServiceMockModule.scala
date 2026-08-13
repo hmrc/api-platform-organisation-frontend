@@ -82,6 +82,14 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
           errorMsg
         )))))
       }
+
+      def thenReturnsErrorWithKey(key: String, errorMsg: String) = {
+        when(aMock.recordAnswer(*[SubmissionId], *[Question.Id], *)(*)).thenReturn(successful(Left(ValidationErrors(ValidationError(
+          key = key,
+          message =
+            errorMsg
+        )))))
+      }
     }
 
     object CreateSubmission {
