@@ -21,6 +21,7 @@
 @import play.api.mvc.Call
 @import play.api.mvc.Request
 @import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.CompanyDetailsFormatter
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
@@ -362,7 +363,7 @@
 
 @getAddress(maybeCompanyDetails: Option[CompanyDetails]) = @{
   maybeCompanyDetails match {
-    case Some(details) => Seq(details.careOf, details.poBox, details.premises, details.addressLineOne, details.addressLineTwo, details.locality, details.region, details.postalCode, details.country).filter(_.isDefined).map(_.get).mkString("<br>")
+    case Some(details) => CompanyDetailsFormatter.addressLines(details).mkString("<br>")
     case _             => "Not set"
   }
 }
