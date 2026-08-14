@@ -23,7 +23,7 @@ import cats.data.NonEmptyList
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 
 object AnswersViewModel {
-  case class ViewQuestion(id: Question.Id, text: String, answer: String, questionSummary: Option[String])
+  case class ViewQuestion(id: Question.Id, text: String, answer: String, questionSummary: Option[String], canChange: Boolean)
   case class ViewQuestionnaire(label: String, state: String, id: Questionnaire.Id, questions: NonEmptyList[ViewQuestion])
   case class ViewModel(submissionId: SubmissionId, questionnaires: List[ViewQuestionnaire])
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
@@ -42,11 +42,19 @@ object AnswersViewModel {
     case ActualAnswer.AcknowledgedAnswer           => None
   }
 
+  private def canChange(question: Question): Boolean = {
+    question match {
+      case _: Question.ConfirmCompanyNameQuestion    => false
+      case _: Question.ConfirmCompanyAddressQuestion => false
+      case _                                         => true
+    }
+  }
+
   private def convertQuestion(submission: Submission)(item: QuestionItem): Option[ViewQuestion] = {
     val id = item.question.id
 
     submission.latestInstance.answersToQuestions.get(id).flatMap(convertAnswer).map(answer =>
-      ViewQuestion(id, item.question.wording.value, answer, item.question.summary)
+      ViewQuestion(id, item.question.wording.value, answer, item.question.summary, canChange(item.question))
     )
   }
 

@@ -35,7 +35,7 @@
           <dt class="govuk-summary-list__key no-bold width-50">@renderText(question.questionSummary.getOrElse(question.text))</dt>
           <dd class="govuk-summary-list__value width-20">@question.answer</dd>
           <dd class="govuk-summary-list__actions width-10">
-            @if(canChange) {
+            @if(canChange && question.canChange) {
               @defining(returnContext match {
                 case Some(context) => s"${routes.QuestionsController.updateQuestion(model.submissionId, question.id)}?returnTo=$context"
                 case None => routes.QuestionsController.updateQuestion(model.submissionId, question.id).url
