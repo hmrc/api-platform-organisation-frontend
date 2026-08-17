@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Q
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ActualAnswersAsText
 
 object AnswersViewModel {
-  case class ViewQuestion(id: Id, text: String, answerLines: Seq[String], questionSummary: Option[String])
+  case class ViewQuestion(id: Id, text: String, answerLines: Seq[String], questionSummary: Option[String], canChange: Boolean)
   case class ViewQuestionnaire(label: String, state: String, id: Questionnaire.Id, questions: NonEmptyList[ViewQuestion])
   case class ViewModel(submissionId: SubmissionId, questionnaires: List[ViewQuestionnaire])
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
@@ -52,12 +52,20 @@ object AnswersViewModel {
       case (_, AcknowledgedAnswer)                                    => None
     }
 
+  private def canChange(question: Question): Boolean = {
+    question match {
+      case _: Question.ConfirmCompanyNameQuestion    => false
+      case _: Question.ConfirmCompanyAddressQuestion => false
+      case _                                         => true
+    }
+  }
+
   private def convertQuestion(submission: Submission)(item: QuestionItem): Option[ViewQuestion] = {
     val id = item.question.id
 
     submission.latestInstance.answersToQuestions.get(id)
       .flatMap(answer => convertAnswer(item.question, answer, submission))
-      .map(lines => ViewQuestion(id, item.question.wording.value, lines, item.question.summary))
+      .map(lines => ViewQuestion(id, item.question.wording.value, lines, item.question.summary, canChange(item.question)))
   }
 
   private def convertQuestionnaire(extSubmission: ExtendedSubmission)(questionnaire: Questionnaire): Option[ViewQuestionnaire] = {
