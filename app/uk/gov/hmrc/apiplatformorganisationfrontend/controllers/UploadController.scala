@@ -25,7 +25,6 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDevelop
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.upscan.UploadError
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.OrganisationActionService
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.UploadFileView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +36,6 @@ class UploadController @Inject()(
                                   val errorHandler: ErrorHandler,
                                   val organisationActionService: OrganisationActionService,
                                   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-                                  val uploadFileView: UploadFileView,
                                   upscanInitiateConnector: UpscanInitiateConnector
                                 )(implicit val ec: ExecutionContext,
                                   val appConfig: AppConfig
@@ -48,20 +46,25 @@ class UploadController @Inject()(
     Redirect(routes.UploadController.onPageLoad().url, Map("errorCode" -> Seq(errorCode)))
   }
 
-  def onPageLoad(): Action[AnyContent] = Action.async { implicit request =>
-    val error: Option[String] =
-      request.getQueryString("errorCode").map(UploadError.toMessageKey)
+//  def onPageLoad(): Action[AnyContent] = Action.async { implicit request =>
+//    val error: Option[String] =
+//      request.getQueryString("errorCode").map(UploadError.toMessageKey)
+//
+//    upscanInitiateConnector
+//      .initiate()
+//      .map { upscanResponse =>
+//        val model = UploadViewModel(
+//          upscan = upscanResponse,
+//          error = error
+//        )
+//        Ok("")
+//      }
+//    }
 
-    upscanInitiateConnector
-      .initiate()
-      .map { upscanResponse =>
-        val model = UploadViewModel(
-          upscan = upscanResponse,
-          error = error
-        )
-        Ok(uploadFileView(model))
-      }
-    }
+  def onPageLoad(): Action[AnyContent] = Action.async { implicit request =>
+  Future.successful(Ok(""))
+    
+  }
 
   }
 

@@ -18,16 +18,18 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-
 import play.api.libs.json.{Format, Json, Reads}
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, Submission}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
-
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.{UpscanFileReference, UpscanInitiateResponse}
+
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 case class UpscanInitiateRequest(
     callbackUrl: String,
@@ -72,14 +74,26 @@ class UpscanInitiateConnector @Inject() (
     HeaderNames.CONTENT_TYPE -> "application/json"
   )
 
-  def initiate()(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
-    val successRedirectUrl = appConfig.organisationFrontendUrl + "/api-platform-organisation/upscan/result"
-    val errorRedirectUrl   = appConfig.organisationFrontendUrl + "/api-platform-organisation/upscan/result"
+  def initiate(question: Question, submission: Submission, returnTo: Option[String])(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
+    def queryParams = {
+      val qp = Seq(
+        "questionId" -> question.id.value,
+        "submissionId" -> submission.id.value.toString
+      )
+      val params = returnTo.fold(qp)(rt => qp ++ Seq("returnTo" -> rt))
+
+      params.collect {
+        case (key, value) =>
+          s"$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.toString)}"
+      }.mkString("&")
+    }
+
+    val redirectUrl = s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result?$queryParams"
 
     val request = UpscanInitiateRequest(
       callbackUrl = appConfig.callbackEndpointTarget,
-      successRedirect = Some(successRedirectUrl),
-      errorRedirect = Some(errorRedirectUrl)
+      successRedirect = Some(redirectUrl),
+      errorRedirect = Some(redirectUrl)
     )
 
     for {

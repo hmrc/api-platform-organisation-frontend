@@ -75,8 +75,10 @@ class SubmissionService @Inject() (
   def fetch(id: SubmissionId)(implicit hc: HeaderCarrier): Future[Option[ExtendedSubmission]] = organisationConnector.fetchSubmission(id)
 
   def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier)
-      : Future[Either[ValidationErrors, ExtendedSubmission]] =
+      : Future[Either[ValidationErrors, ExtendedSubmission]] = {
+    println(s"*****In SubmissionService.recordAnswer rawAnswers: $rawAnswers")
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
+  }
 
   def fetchAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[OrganisationAllowList]] = {
     organisationConnector.fetchOrganisationAllowList(userId)

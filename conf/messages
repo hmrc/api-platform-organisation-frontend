@@ -19,6 +19,7 @@ uploadFile.callToAction = Save and continue
 uploadFile.chooseFile = Choose file
 uploadFile.noFileChosen = No file chosen
 uploadFile.label = Upload a file
+uploadFile.hint = You can upload your registration document as a scanned copy or photo of the original. The selected file must be smaller than 20MB.
 uploadFile.entityTooLarge = The selected file must be either in CSV or Excel format. The file size must be smaller than 20MB
 uploadFile.rejected = The file you uploaded is not recognised. The selected file must be in CSV or Excel format
 uploadFile.invalidArgument = Select a file that you want to submit as your tax document
