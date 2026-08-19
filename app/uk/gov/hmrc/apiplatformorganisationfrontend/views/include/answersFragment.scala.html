@@ -17,11 +17,16 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.AnswersViewModel.*
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
 @import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import play.twirl.api.HtmlFormat
 
 @(model: ViewModel, canChange: Boolean, returnContext: Option[String] = None, loggedIn: UserSession)
 
 @renderText(text: String): String = @{
     text.replace("{userName}", loggedIn.developer.displayedName)
+}
+
+@renderAnswerLines(lines: Seq[String]) = @{
+    Html(lines.map(HtmlFormat.escape(_).body).mkString("<br>"))
 }
 
   @for(questionnaire <- model.questionnaires.toList) {
@@ -33,9 +38,9 @@
       @for(question <- questionnaire.questions.toList) {
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key no-bold width-50">@renderText(question.questionSummary.getOrElse(question.text))</dt>
-          <dd class="govuk-summary-list__value width-20">@question.answer</dd>
+          <dd class="govuk-summary-list__value width-20">@renderAnswerLines(question.answerLines)</dd>
           <dd class="govuk-summary-list__actions width-10">
-            @if(canChange) {
+            @if(canChange && question.canChange) {
               @defining(returnContext match {
                 case Some(context) => s"${routes.QuestionsController.updateQuestion(model.submissionId, question.id)}?returnTo=$context"
                 case None => routes.QuestionsController.updateQuestion(model.submissionId, question.id).url

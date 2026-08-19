@@ -24,7 +24,7 @@ import play.api.data.Forms.mapping
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Submission
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, Submission, SubmissionId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
@@ -51,6 +51,7 @@ class OrganisationRegistrationController @Inject() (
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
+    companyNumberNotFoundPage: CompanyNumberNotFoundPage,
     val submissionService: SubmissionService,
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
@@ -112,5 +113,9 @@ class OrganisationRegistrationController @Inject() (
 
   val notResponsibleIndividualView: Action[AnyContent] = loggedInAction { implicit request =>
     Future.successful(Ok(notResponsibleIndividualPage(Some(request.userSession))))
+  }
+
+  def companyNumberNotFoundView(sid: SubmissionId, qid: Question.Id): Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(companyNumberNotFoundPage(Some(request.userSession), sid, qid)))
   }
 }

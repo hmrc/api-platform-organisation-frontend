@@ -8,6 +8,7 @@ GET         /registration/not-allow-listed                  uk.gov.hmrc.apiplatf
 GET         /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualView
 POST        /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualAction()
 GET         /registration/not-responsible-individual        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notResponsibleIndividualView
+GET         /registration/company-number-not-found/:sid/:qid uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.companyNumberNotFoundView(sid: SubmissionId, qid: Question.Id)
 
 GET         /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
 POST        /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)

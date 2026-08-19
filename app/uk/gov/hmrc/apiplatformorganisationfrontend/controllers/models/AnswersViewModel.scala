@@ -21,33 +21,51 @@ import java.time.format.DateTimeFormatter
 import cats.data.NonEmptyList
 
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.ActualAnswer.*
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.*
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ActualAnswersAsText
 
 object AnswersViewModel {
-  case class ViewQuestion(id: Question.Id, text: String, answer: String, questionSummary: Option[String])
+  case class ViewQuestion(id: Id, text: String, answerLines: Seq[String], questionSummary: Option[String], canChange: Boolean)
   case class ViewQuestionnaire(label: String, state: String, id: Questionnaire.Id, questions: NonEmptyList[ViewQuestion])
   case class ViewModel(submissionId: SubmissionId, questionnaires: List[ViewQuestionnaire])
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+  private val notAvailable      = "n/a"
+  private val notConfirmed      = "Not confirmed"
 
-  private def convertAnswer(answer: ActualAnswer): Option[String] = answer match {
-    case ActualAnswer.SingleChoiceAnswer(value)    => Some(value)
-    case ActualAnswer.TextAnswer(value)            => Some(value)
-    case ActualAnswer.DateAnswer(value)            => Some(value.format(dateTimeFormatter))
-    case ActualAnswer.MultipleChoiceAnswer(values) => Some(values.mkString)
-    case ActualAnswer.AddressAnswer(add)           =>
-      Some(Seq(add.addressLineOne, add.addressLineTwo, add.locality, add.region, add.postalCode).filter(_.isDefined).map(_.get).mkString(", "))
-    case ActualAnswer.NameAnswer(name)             =>
-      Some(Seq(name.firstName, name.lastName).filter(_.isDefined).map(_.get).mkString(" "))
-    case ActualAnswer.CompanyNumberAnswer(value)   => Some(value)
-    case ActualAnswer.NoAnswer                     => Some("n/a")
-    case ActualAnswer.AcknowledgedAnswer           => None
+  private def convertAnswer(question: Question, answer: ActualAnswer, submission: Submission): Option[Seq[String]] =
+    (question, answer) match {
+      case (_: ConfirmCompanyNameQuestion, SingleChoiceAnswer("Yes")) =>
+        Some(Seq(submission.organisationName.filter(_.trim.nonEmpty).getOrElse(notAvailable)))
+      case (_: ConfirmCompanyNameQuestion, SingleChoiceAnswer("No"))  => Some(Seq(notConfirmed))
+      case (_: ConfirmCompanyAddressQuestion, _: SingleChoiceAnswer)  =>
+        Some(submission.latestInstance.companyDetails.map(CompanyDetailsFormatter.addressLines).filter(_.nonEmpty).getOrElse(Seq(notAvailable)))
+      case (_, SingleChoiceAnswer(value))                             => Some(Seq(value))
+      case (_, TextAnswer(value))                                     => Some(Seq(value))
+      case (_, DateAnswer(value))                                     => Some(Seq(value.format(dateTimeFormatter)))
+      case (_, MultipleChoiceAnswer(values))                          => Some(Seq(values.mkString))
+      case (_, AddressAnswer(_))                                      => Some(Seq(ActualAnswersAsText.apply(answer)))
+      case (_, NameAnswer(name))                                      =>
+        Some(Seq(Seq(name.firstName, name.lastName).filter(_.isDefined).map(_.get).mkString(" ")))
+      case (_, CompanyNumberAnswer(value))                            => Some(Seq(value))
+      case (_, NoAnswer)                                              => Some(Seq(notAvailable))
+      case (_, AcknowledgedAnswer)                                    => None
+    }
+
+  private def canChange(question: Question): Boolean = {
+    question match {
+      case _: Question.ConfirmCompanyNameQuestion    => false
+      case _: Question.ConfirmCompanyAddressQuestion => false
+      case _                                         => true
+    }
   }
 
   private def convertQuestion(submission: Submission)(item: QuestionItem): Option[ViewQuestion] = {
     val id = item.question.id
 
-    submission.latestInstance.answersToQuestions.get(id).flatMap(convertAnswer).map(answer =>
-      ViewQuestion(id, item.question.wording.value, answer, item.question.summary)
-    )
+    submission.latestInstance.answersToQuestions.get(id)
+      .flatMap(answer => convertAnswer(item.question, answer, submission))
+      .map(lines => ViewQuestion(id, item.question.wording.value, lines, item.question.summary, canChange(item.question)))
   }
 
   private def convertQuestionnaire(extSubmission: ExtendedSubmission)(questionnaire: Questionnaire): Option[ViewQuestionnaire] = {

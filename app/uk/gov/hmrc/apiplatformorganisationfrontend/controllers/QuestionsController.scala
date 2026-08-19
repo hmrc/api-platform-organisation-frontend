@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormat
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDeveloperConnector, UpscanInitiateConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
@@ -41,7 +41,6 @@ object QuestionsController {
 
   case class InboundRecordAnswersRequest(answers: NonEmptyList[String])
   given Reads[InboundRecordAnswersRequest] = Json.reads[InboundRecordAnswersRequest]
-
 }
 
 @Singleton
@@ -136,7 +135,7 @@ class QuestionsController @Inject() (
       success: (ExtendedSubmission) => Future[Result]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    def failed(answers: List[String], trimmedAnswers: Map[String, Seq[String]]) = (errors: ValidationErrors) => {
+    def redisplayQuestion(answers: List[String], trimmedAnswers: Map[String, Seq[String]])(errors: ValidationErrors) = {
       import cats.implicits._
 
       val question = request.submission.findQuestion(questionId).get
@@ -160,6 +159,14 @@ class QuestionsController @Inject() (
       }
 
       showQuestion(submissionId, questionId, onFormAnswer, errors.some)(request)
+    }
+
+    def failed(answers: List[String], trimmedAnswers: Map[String, Seq[String]]) = (errors: ValidationErrors) => {
+      if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
+        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundView(submissionId, questionId)))
+      } else {
+        redisplayQuestion(answers, trimmedAnswers)(errors)
+      }
     }
 
     val formValues     = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
