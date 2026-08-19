@@ -18,8 +18,11 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
 import java.time.Duration
 import javax.inject.{Inject, Singleton}
+import scala.io.Source
 
+import play.api.libs.json.{Json, Reads}
 import play.api.{ConfigLoader, Configuration}
+import uk.gov.hmrc.govukfrontend.views.viewmodels.select.SelectItem
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
@@ -47,5 +50,14 @@ class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config)
   val sessionTimeout: Duration                                                                       = config.underlying.getDuration("session.timeout")
   val sessionCountdown: Duration                                                                     = config.underlying.getDuration("session.countdown")
   private def getConfigDefaulted[A](key: String, default: => A)(implicit loader: ConfigLoader[A]): A = config.getOptional[A](key)(loader).getOrElse(default)
+
+  private case class Country(code: String, name: String)
+  private implicit val countryReads: Reads[Country] = Json.reads[Country]
+
+  lazy val countrySelectItems: Seq[SelectItem] = {
+    val countries = Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/countries.json")).mkString).as[Seq[Country]]
+    SelectItem(value = Some(""), text = "") +:
+      countries.map(country => SelectItem(value = Some(country.code), text = country.name))
+  }
 
 }
