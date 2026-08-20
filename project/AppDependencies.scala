@@ -19,7 +19,6 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc" %% "bootstrap-test-play-30"                    % bootstrapVersion,
-    "org.mockito" %% "mockito-scala-scalatest"                   % "2.2.1",
     "org.jsoup"    % "jsoup"                                     % "1.22.1",
     "uk.gov.hmrc" %% "api-platform-common-domain-fixtures"       % commonDomainVersion,
     "uk.gov.hmrc" %% "api-platform-organisation-domain-fixtures" % orgDomainVersion,
