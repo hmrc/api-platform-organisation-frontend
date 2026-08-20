@@ -116,6 +116,12 @@ class OrganisationRegistrationController @Inject() (
   }
 
   def companyNumberNotFoundView(sid: SubmissionId, qid: Question.Id): Action[AnyContent] = loggedInAction { implicit request =>
-    Future.successful(Ok(companyNumberNotFoundPage(Some(request.userSession), sid, qid)))
+    val returnUrl = routes.QuestionsController.showQuestion(sid, qid).url
+    Future.successful(Ok(companyNumberNotFoundPage(Some(request.userSession), returnUrl)))
+  }
+
+  def companyNumberNotFoundUpdateView(sid: SubmissionId, qid: Question.Id, returnTo: String): Action[AnyContent] = loggedInAction { implicit request =>
+    val returnUrl = s"${routes.QuestionsController.updateQuestion(sid, qid).url}?returnTo=$returnTo"
+    Future.successful(Ok(companyNumberNotFoundPage(Some(request.userSession), returnUrl)))
   }
 }

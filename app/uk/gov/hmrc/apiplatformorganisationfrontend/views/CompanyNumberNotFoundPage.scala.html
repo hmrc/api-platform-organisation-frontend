@@ -21,7 +21,7 @@
 
 @this(layout: Layout)
 
-@(loggedInSession: Option[UserSession], submissionId: SubmissionId, questionId: Question.Id)(implicit request: RequestHeader, messages: Messages)
+@(loggedInSession: Option[UserSession], returnUrl: String)(implicit request: RequestHeader, messages: Messages)
 
 @layout(
     backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
@@ -32,6 +32,6 @@
     <h1 class="govuk-heading-l"><span class="govuk-caption-l">Your business</span>The details you entered did not match our records</h1>
 
     <p class="govuk-body">We could not match the company registration number you entered with records held by HMRC.</p>
-    <p class="govuk-body">If you used the wrong company registration number, you can <a href="@routes.QuestionsController.showQuestion(submissionId, questionId)" class="govuk-link govuk-link--no-visited-state">try again using a different one</a>.</p>
+    <p class="govuk-body">If you used the wrong company registration number, you can <a href="@returnUrl" class="govuk-link govuk-link--no-visited-state">try again using a different one</a>.</p>
 
 }
