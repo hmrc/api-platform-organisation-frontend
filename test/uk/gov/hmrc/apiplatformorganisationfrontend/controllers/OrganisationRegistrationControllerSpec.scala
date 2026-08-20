@@ -265,4 +265,20 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       body should include(s"""href="${routes.QuestionsController.showQuestion(sid, qid).url}"""")
     }
   }
+
+  "GET /company-number-not-found/update/:sid/:qid/:ret" should {
+    "return 200 with the expected copy and a retry link back to update the question the user came from" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+      val sid         = aSubmission.id
+      val qid         = Question.Id.random
+      val fakeRequest =
+        CSRFTokenHelper.addCSRFToken(FakeRequest("GET", s"/registration/company-number-not-found/update/$sid/${qid.value}/section-summary").withUser(underTest)(sessionId))
+
+      val result = underTest.companyNumberNotFoundUpdateView(sid, qid, "section-summary")(fakeRequest)
+      status(result) shouldBe Status.OK
+      val body   = contentAsString(result)
+      body should include("The details you entered did not match our records")
+      body should include(s"""href="${routes.QuestionsController.updateQuestion(sid, qid).url}?returnTo=section-summary"""")
+    }
+  }
 }

@@ -215,7 +215,7 @@ class QuestionsController @Inject() (
   }
 
   def updateAnswer(submissionId: SubmissionId, questionId: Question.Id): Action[AnyContent] = withSubmission(submissionId) { implicit request =>
-    val returnTo = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption))
+    val returnTo = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption)).getOrElse("check-answers")
 
     def hasQuestionBeenAnswered(questionId: Question.Id) = {
       request.submission.latestInstance.answersToQuestions.get(questionId).fold(false)(_ => true)
@@ -247,9 +247,9 @@ class QuestionsController @Inject() (
 
     val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
       if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
-        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundView(submissionId, questionId)))
+        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundUpdateView(submissionId, questionId, returnTo)))
       } else {
-        redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, true, returnTo)(request)
+        redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, true, Some(returnTo))(request)
       }
     }
 
