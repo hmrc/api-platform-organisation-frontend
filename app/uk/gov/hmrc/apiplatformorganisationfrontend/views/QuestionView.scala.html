@@ -29,13 +29,17 @@
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 @import scala.collection.immutable.ListSet
+@import uk.gov.hmrc.govukfrontend.views.Implicits.RichSelect
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.accessibleautocomplete.AccessibleAutocomplete
 
 @this(layout: Layout,
         govukRadios: GovukRadios,
         govukInput: GovukInput,
         govukCheckboxes: GovukCheckboxes,
         govukFieldset: GovukFieldset,
-        govukDateInput: GovukDateInput
+        govukDateInput: GovukDateInput,
+        govukSelect: GovukSelect,
+        appConfig: AppConfig
 )
 
 @(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], submission: Submission, errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
@@ -267,7 +271,7 @@
             ))
         ))
     ))
-  
+
     @renderMaybeStatement(question.afterStatement)
 
     @renderButtonOrButtons(question.absenceText)
@@ -387,6 +391,23 @@
         hint = question.hintText.map(hint => Hint(id = Some(question.id.value), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
         errorMessage = errorInfo.flatMap(ei => ei.errors.find(e => e.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message)))
     ))
+
+    @* APIS-8292 spike: temp placement of the country autocomplete on a reachable page so it can be viewed. *@
+    @if(question.wording.value == "What is the company name?") {
+        @govukSelect(Select(
+            id = "country",
+            name = "country",
+            items = appConfig.countrySelectItems,
+            label = Label(
+                content = Text("Country")
+            )
+        ).asAccessibleAutocomplete(Some(
+            AccessibleAutocomplete(
+                showAllValues = true,
+                autoSelect = true
+            )
+        )))
+    }
 
     @renderMaybeStatement(question.afterStatement)
 
