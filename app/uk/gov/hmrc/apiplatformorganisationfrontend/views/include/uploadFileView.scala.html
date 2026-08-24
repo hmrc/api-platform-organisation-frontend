@@ -23,13 +23,8 @@
 @(model: UploadViewModel,
         govukButton: GovukButton,
         govukFileUpload: GovukFileUpload,
-        govukErrorSummary: GovukErrorSummary,
-        returnTo: Option[String] = None
-)(implicit request: Request[_], messages: Messages)
-
-@pageScripts = {
-    <script src="@routes.Assets.versioned("javascripts/uploadFile.js")" @CSPNonce.attr defer></script>
-}
+        govukErrorSummary: GovukErrorSummary
+)(implicit request: Request[?], messages: Messages)
 
     <div id="upload-live-region" class="govuk-visually-hidden" aria-live="polite" role="status"></div>
 
@@ -51,7 +46,6 @@
             <form method="POST" action="@model.upscan.postTarget" id="file-upload-form" enctype="multipart/form-data">
                 @helper.CSRF.formField
                 @for((key, value) <- model.upscan.formFields) {
-                  @println(s"$key -> $value")
                     <input type="hidden" name="@key" value="@value"/>
                 }
 

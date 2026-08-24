@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.libs.json.{Format, Json, Reads}
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, Submission}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, SubmissionId}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.AppConfig
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.{UpscanFileReference, UpscanInitiateResponse}
-
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 case class UpscanInitiateRequest(
     callbackUrl: String,
@@ -74,11 +75,11 @@ class UpscanInitiateConnector @Inject() (
     HeaderNames.CONTENT_TYPE -> "application/json"
   )
 
-  def initiate(question: Question, submission: Submission, returnTo: Option[String])(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
+  def initiate(questionId: Question.Id, submissionId: SubmissionId, returnTo: Option[String] = None)(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
     def queryParams = {
-      val qp = Seq(
-        "questionId" -> question.id.value,
-        "submissionId" -> submission.id.value.toString
+      val qp     = Seq(
+        "questionId"   -> questionId.value,
+        "submissionId" -> submissionId.value.toString
       )
       val params = returnTo.fold(qp)(rt => qp ++ Seq("returnTo" -> rt))
 

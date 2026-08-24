@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models
 
-import play.api.libs.json.{Format, Json, OFormat}
-
 import java.net.URL
+
+import play.api.libs.json.{Format, Json, OFormat}
 
 sealed trait UploadStatus
 
@@ -70,5 +70,5 @@ object BlobDetails {
 case class UploadedFile(fileReference: String, uploadStatus: UploadStatus)
 
 object UploadedFile {
-  implicit val format: OFormat[UploadedFile]  = Json.format[UploadedFile]
+  implicit val format: OFormat[UploadedFile] = Json.format[UploadedFile]
 }

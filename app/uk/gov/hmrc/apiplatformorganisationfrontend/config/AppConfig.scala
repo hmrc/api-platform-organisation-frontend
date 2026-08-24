@@ -39,10 +39,10 @@ class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config)
   lazy val securedCookie: Boolean                  = getConfigDefaulted("cookie.secure", true)
   lazy val devhubSupportFrontendBaseUrl            = internalPlatformHost.getOrElse(baseUrl("devhub-support-frontend"))
   lazy val devhubSupportFrontendUrl                = s"$devhubSupportFrontendBaseUrl/devhub-support"
-  lazy val organisationFrontendUrl                = internalPlatformHost.getOrElse("http://localhost:15503")
+  lazy val organisationFrontendUrl                 = internalPlatformHost.getOrElse("http://localhost:15503")
 
-  lazy val initiateV2Url            = baseUrl("upscan-initiate") + "/upscan/v2/initiate"
-  lazy val callbackEndpointTarget   = loadConfig("upscan.callback-endpoint")
+  lazy val initiateV2Url          = baseUrl("upscan-initiate") + "/upscan/v2/initiate"
+  lazy val callbackEndpointTarget = loadConfig("upscan.callback-endpoint")
 
   lazy val keepAliveUrl: String = s"$thirdPartyDeveloperFrontendUrl/developer/keep-alive"
   lazy val logOutUrl: String    = s"$thirdPartyDeveloperFrontendUrl/developer/logout"

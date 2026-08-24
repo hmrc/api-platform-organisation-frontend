@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-
 import java.time.Instant
+
+import play.api.libs.json.{Json, OFormat}
+
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 
 case class DeskproAttachment(filename: String, url: String)
 

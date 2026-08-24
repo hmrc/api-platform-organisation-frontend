@@ -19,13 +19,13 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.upscan
 import play.api.libs.json.*
 
 case class UpscanInitiateRequest(
-  callbackUrl: String,
-  successRedirect: Option[String],
-  errorRedirect: Option[String],
-  minimumFileSize: Option[Long],
-  maximumFileSize: Option[Long],
-  expectedFileType: Option[String]
-)
+    callbackUrl: String,
+    successRedirect: Option[String],
+    errorRedirect: Option[String],
+    minimumFileSize: Option[Long],
+    maximumFileSize: Option[Long],
+    expectedFileType: Option[String]
+  )
 
 object UpscanInitiateRequest {
 

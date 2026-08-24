@@ -38,11 +38,6 @@ GET         /organisation/:oid/applications                 uk.gov.hmrc.apiplatf
 GET         /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: SimpleOrganisationId)
 POST        /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: SimpleOrganisationId)
 
-GET         /file-upload                                    uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UploadController.onPageLoad()
-GET         /file-upload/error                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UploadController.onError()
-
-
-GET         /upscan/initiate                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UpscanController.initiateUpscan()
-GET         /upscan/result                                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UpscanController.upscanResultRedirect()
+GET         /upscan/result                                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UploadController.upscanResultRedirect()
 
 GET         /assets/*file                                   controllers.Assets.versioned(path = "/public", file: Asset)

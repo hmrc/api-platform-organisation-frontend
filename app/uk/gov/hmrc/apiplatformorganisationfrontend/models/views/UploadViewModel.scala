@@ -18,8 +18,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.models.views
 
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
 
-
 final case class UploadViewModel(
-  upscan: UpscanInitiateResponse,
-  error: Option[String]
-)
+    upscan: UpscanInitiateResponse,
+    error: Option[String]
+  )

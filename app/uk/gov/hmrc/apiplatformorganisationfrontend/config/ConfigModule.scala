@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.config
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.*
 
 class ConfigModule extends Module {
@@ -26,7 +27,6 @@ class ConfigModule extends Module {
     bind[AppConfig].toSelf.eagerly(),
     bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
     bind[ThirdPartyOrchestratorConnector.Config].toProvider[TPOConnectorConfigProvider],
-    bind[ApiPlatformDeskproConnector.Config].toProvider[LiveApiPlatformDeskproConnectorConfigProvider],
     bind[ConnectorMetrics].to[ConnectorMetricsImpl]
   )
 

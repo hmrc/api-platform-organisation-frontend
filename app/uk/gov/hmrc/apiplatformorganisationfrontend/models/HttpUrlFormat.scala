@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.models
 
-import play.api.libs.json.*
-
 import java.net.URL
 import scala.util.Try
+
+import play.api.libs.json.*
 
 object HttpUrlFormat {
 

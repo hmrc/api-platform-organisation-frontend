@@ -379,7 +379,7 @@
   @renderSingleChoiceQuestion(question, inline)
 }
 
-@renderAttachmentQuestion(question: Question.AttachmentQuestion) = {
+@renderAttachmentQuestion() = {
     @uploadViewModel.map(viewModel => uploadFileView(viewModel, govukButton, govukFileUpload, govukErrorSummary))
 }
 
@@ -423,7 +423,7 @@
     case q: Question.AddressQuestion               => renderAddressQuestion(q)
     case q: Question.NameQuestion                  => renderNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
-    case q: Question.AttachmentQuestion   => renderAttachmentQuestion(q)
+    case _: Question.AttachmentQuestion            => renderAttachmentQuestion()
   }
 }
 
@@ -447,8 +447,8 @@
 
 @form(question: Question) = {
   @question match {
-    case q: Question.AttachmentQuestion => {
-        @uploadViewModel.map(model => uploadFileView(model, govukButton, govukFileUpload, govukErrorSummary, returnTo))
+    case _: Question.AttachmentQuestion => {
+        @uploadViewModel.map(model => uploadFileView(model, govukButton, govukFileUpload, govukErrorSummary))
     }
     case _ => {
         @createForm(question)

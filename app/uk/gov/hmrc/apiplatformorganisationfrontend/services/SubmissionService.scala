@@ -76,7 +76,7 @@ class SubmissionService @Inject() (
 
   def recordAnswer(submissionId: SubmissionId, questionId: Question.Id, rawAnswers: Map[String, Seq[String]])(implicit hc: HeaderCarrier)
       : Future[Either[ValidationErrors, ExtendedSubmission]] = {
-    println(s"*****In SubmissionService.recordAnswer rawAnswers: $rawAnswers")
+    logger.info(s"In SubmissionService.recordAnswer() rawAnswers: $rawAnswers")
     organisationConnector.recordAnswer(submissionId, questionId, rawAnswers)
   }
 

@@ -40,7 +40,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithCSRFAddToken
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.{ThirdPartyDeveloperConnectorMockModule, UpscanInitiateConnectorMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, QuestionView}
 
@@ -62,6 +62,7 @@ class QuestionControllerSpec
       with SubmissionsTestData
       with ThirdPartyDeveloperConnectorMockModule
       with OrganisationActionServiceMockModule
+      with UpscanInitiateConnectorMockModule
       with HasSessionDeveloperFlow
       with AppendedClues
       with FixedClock
@@ -80,6 +81,7 @@ class QuestionControllerSpec
       errorHandler,
       SubmissionServiceMock.aMock,
       OrganisationActionServiceMock.aMock,
+      UpscanInitiateConnectorMock.aMock,
       cookieSigner,
       questionView,
       mcc,
@@ -246,6 +248,24 @@ class QuestionControllerSpec
       ) shouldBe true withClue ("HTML content did not contain statement")
       contentAsString(result).contains("Customers authorising your software") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, attachment question" in new Setup {
+      val upscanResponse     = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
+      val expectedHtmlAction = upscanResponse.postTarget.replace("&", "&amp;")
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+
+      contentAsString(result).contains(expectedHtmlAction) shouldBe true withClue (s"(HTML content did not contain $expectedHtmlAction)")
+      contentAsString(result).contains("Attach the tax document") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains(
+        "You can upload your registration document as a scanned copy or photo of the original. The selected file must be smaller than 10MB."
+      ) shouldBe true withClue ("HTML content did not contain hintText")
+      contentAsString(result).contains("<title>") shouldBe true
+      contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
     }
 
     "display fail and show error in title when applicable" in new Setup {
