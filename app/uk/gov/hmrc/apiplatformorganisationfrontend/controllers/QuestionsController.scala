@@ -126,9 +126,15 @@ class QuestionsController @Inject() (
       processQuestion(questionId, onFormAnswer, errorInfo)(submitAction)
     }
 
-  def updateQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =
+  def updateQuestion(
+      submissionId: SubmissionId,
+      questionId: Question.Id,
+      onFormAnswer: Option[ActualAnswer] = None,
+      errorInfo: Option[ValidationErrors] = None,
+      returnToSection: Option[String] = None
+    ): Action[AnyContent] =
     withSubmission(submissionId) { implicit request =>
-      val returnTo     = request.getQueryString("returnTo")
+      val returnTo     = returnToSection.fold(request.getQueryString("returnTo"))(r => Some(r))
       val submitAction = routes.QuestionsController.updateAnswer(submissionId, questionId)
       processQuestion(questionId, onFormAnswer, errorInfo, returnTo)(submitAction)
     }
@@ -137,42 +143,10 @@ class QuestionsController @Inject() (
       submissionId: SubmissionId,
       questionId: Question.Id
     )(
-      success: (ExtendedSubmission) => Future[Result]
+      success: (ExtendedSubmission) => Future[Result],
+      failed: (List[String], Map[String, Seq[String]], ValidationErrors) => Future[Result]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    def redisplayQuestion(answers: List[String], trimmedAnswers: Map[String, Seq[String]])(errors: ValidationErrors) = {
-      import cats.implicits.*
-
-      val question = request.submission.findQuestion(questionId).get
-
-      val onFormAnswer = question match {
-        case _: Question.TextQuestion          => answers.headOption.map(ActualAnswer.TextAnswer.apply)
-        case _: Question.AddressQuestion       => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
-            trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
-            trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
-            trimmedAnswers.get("locality").flatMap(_.headOption),
-            trimmedAnswers.get("region").flatMap(_.headOption),
-            trimmedAnswers.get("postcode").flatMap(_.headOption)
-          )))
-        case _: Question.NameQuestion          => Some(ActualAnswer.NameAnswer(FullName(
-            trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
-            trimmedAnswers.get("firstName").flatMap(_.headOption),
-            trimmedAnswers.get("lastName").flatMap(_.headOption)
-          )))
-        case _: Question.CompanyNumberQuestion => answers.headOption.map(ActualAnswer.CompanyNumberAnswer.apply)
-        case _                                 => None
-      }
-
-      showQuestion(submissionId, questionId, onFormAnswer, errors.some)(request)
-    }
-
-    def failed(answers: List[String], trimmedAnswers: Map[String, Seq[String]]) = (errors: ValidationErrors) => {
-      if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
-        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundView(submissionId, questionId)))
-      } else {
-        redisplayQuestion(answers, trimmedAnswers)(errors)
-      }
-    }
 
     val formValues     = request.body.asFormUrlEncoded.get.filterNot(_._1 == "csrfToken")
     val trimmedAnswers = formValues.map { case (k, v) => k -> v.map(_.trim()).filter(_.nonEmpty) }
@@ -198,8 +172,47 @@ class QuestionsController @Inject() (
     }
 
     submissionService.recordAnswer(submissionId, questionId, trimmedNameAnswers)
-      .map(_.fold(failed(answers, trimmedNameAnswers), success))
+      .map(_.fold(errs => failed(answers, trimmedNameAnswers, errs), success))
       .flatten
+  }
+
+  private def redisplayQuestion(
+      questionId: Question.Id,
+      submission: Submission,
+      answers: List[String],
+      trimmedAnswers: Map[String, Seq[String]],
+      errors: ValidationErrors,
+      isUpdate: Boolean,
+      returnTo: Option[String]
+    )(implicit request: SubmissionRequest[AnyContent]
+    ) = {
+    import cats.implicits._
+
+    val question = submission.findQuestion(questionId).get
+
+    val onFormAnswer = question match {
+      case _: Question.TextQuestion          => answers.headOption.map(ActualAnswer.TextAnswer.apply)
+      case _: Question.AddressQuestion       => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
+          trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
+          trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
+          trimmedAnswers.get("locality").flatMap(_.headOption),
+          trimmedAnswers.get("region").flatMap(_.headOption),
+          trimmedAnswers.get("postcode").flatMap(_.headOption)
+        )))
+      case _: Question.NameQuestion          => Some(ActualAnswer.NameAnswer(FullName(
+          trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
+          trimmedAnswers.get("firstName").flatMap(_.headOption),
+          trimmedAnswers.get("lastName").flatMap(_.headOption)
+        )))
+      case _: Question.CompanyNumberQuestion => answers.headOption.map(ActualAnswer.CompanyNumberAnswer.apply)
+      case _                                 => None
+    }
+
+    if (isUpdate) {
+      updateQuestion(submission.id, questionId, onFormAnswer, errors.some, returnTo)(request)
+    } else {
+      showQuestion(submission.id, questionId, onFormAnswer, errors.some)(request)
+    }
   }
 
   private def findNextQuestion(extSubmission: ExtendedSubmission, questionId: Question.Id, questionnaireId: Questionnaire.Id) = {
@@ -224,36 +237,56 @@ class QuestionsController @Inject() (
       successful(Redirect(nextQuestion.fold(toSectionSummary)(toNextQuestion)))
     }
 
-    processAnswer(submissionId, questionId)(success)
+    val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
+      if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
+        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundView(submissionId, questionId)))
+      } else {
+        redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, false, None)
+      }
+    }
+
+    processAnswer(submissionId, questionId)(success, failed)
   }
 
   def updateAnswer(submissionId: SubmissionId, questionId: Question.Id): Action[AnyContent] = withSubmission(submissionId) { implicit request =>
+    val returnTo = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption)).getOrElse("check-answers")
+
     def hasQuestionBeenAnswered(questionId: Question.Id) = {
       request.submission.latestInstance.answersToQuestions.get(questionId).fold(false)(_ => true)
     }
 
     val success = (extSubmission: ExtendedSubmission) => {
-      val questionnaire = extSubmission.submission.findQuestionnaireContaining(questionId).get
-      val nextQuestion  = extSubmission.questionnaireProgress.get(questionnaire.id)
+      val questionnaire       = extSubmission.submission.findQuestionnaireContaining(questionId).get
+      val maybeNextQuestionId = extSubmission.questionnaireProgress.get(questionnaire.id)
         .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
 
-      val returnTo             = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption))
       val isFromSectionSummary = returnTo.contains("section-summary")
 
       lazy val toCheckAnswers   = routes.CheckAnswersController.checkAnswersPage(request.submission.id)
       lazy val toSectionSummary = routes.CheckAnswersController.showSectionSummary(request.submission.id, questionnaire.id)
-      lazy val toNextQuestion   = (nextQuestionId: Question.Id) =>
-        if (hasQuestionBeenAnswered(nextQuestionId)) {
-          if (isFromSectionSummary) toSectionSummary else toCheckAnswers
-        } else {
-          routes.QuestionsController.updateQuestion(submissionId, nextQuestionId)
+      lazy val toNextQuestion   = maybeNextQuestionId match {
+        case Some(nextQuestionId) => {
+          if (hasQuestionBeenAnswered(nextQuestionId)) {
+            if (isFromSectionSummary) toSectionSummary else toCheckAnswers
+          } else {
+            routes.QuestionsController.updateQuestion(submissionId, nextQuestionId)
+          }
         }
+        case _                    =>
+          if (isFromSectionSummary) toSectionSummary else toCheckAnswers
+      }
 
-      successful(Redirect(nextQuestion.fold(
-        if (isFromSectionSummary) toSectionSummary else toCheckAnswers
-      )(toNextQuestion)))
+      successful(Redirect(toNextQuestion))
     }
 
-    processAnswer(submissionId, questionId)(success)
+    val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
+      if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
+        successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundUpdateView(submissionId, questionId, returnTo)))
+      } else {
+        redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, true, Some(returnTo))(request)
+      }
+    }
+
+    processAnswer(submissionId, questionId)(success, failed)
   }
 }

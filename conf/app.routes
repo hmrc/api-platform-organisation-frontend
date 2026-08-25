@@ -1,43 +1,44 @@
 # microservice specific routes
 
-->          /hmrc-frontend                                  hmrcfrontend.Routes
+->          /hmrc-frontend                                               hmrcfrontend.Routes
 
-GET         /registration                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartView()
-POST        /registration                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartAction()
-GET         /registration/not-allow-listed                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notAllowListedView
-GET         /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualView
-POST        /registration/check-responsible-individual      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualAction()
-GET         /registration/not-responsible-individual        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notResponsibleIndividualView
-GET         /registration/company-number-not-found/:sid/:qid uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.companyNumberNotFoundView(sid: SubmissionId, qid: Question.Id)
+GET         /registration                                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartView()
+POST        /registration                                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartAction()
+GET         /registration/not-allow-listed                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notAllowListedView
+GET         /registration/check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualView
+POST        /registration/check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualAction()
+GET         /registration/not-responsible-individual                     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notResponsibleIndividualView
+GET         /registration/company-number-not-found/:sid/:qid             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.companyNumberNotFoundView(sid: SubmissionId, qid: Question.Id)
+GET         /registration/company-number-not-found/update/:sid/:qid/:ret uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.companyNumberNotFoundUpdateView(sid: SubmissionId, qid: Question.Id, ret: String)
 
-GET         /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
-POST        /submission/:sid/checklist                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
+GET         /submission/:sid/checklist                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistPage(sid: SubmissionId)
+POST        /submission/:sid/checklist                                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ChecklistController.checklistAction(sid: SubmissionId)
 
-GET         /submission/:sid/question/:qid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.showQuestion(sid: SubmissionId, qid: Question.Id)
-POST        /submission/:sid/question/:qid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.recordAnswer(sid: SubmissionId, qid: Question.Id)
-GET         /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
-POST        /submission/:sid/question/:qid/update           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
+GET         /submission/:sid/question/:qid                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.showQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.recordAnswer(sid: SubmissionId, qid: Question.Id)
+GET         /submission/:sid/question/:qid/update                        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateQuestion(sid: SubmissionId, qid: Question.Id)
+POST        /submission/:sid/question/:qid/update                        uk.gov.hmrc.apiplatformorganisationfrontend.controllers.QuestionsController.updateAnswer(sid: SubmissionId, qid: Question.Id)
 
-GET         /submission/:sid/questionnaire/:qnid/summary    uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.showSectionSummary(sid: SubmissionId, qnid: Questionnaire.Id)
-POST        /submission/:sid/questionnaire/summary          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.sectionSummaryAction(sid: SubmissionId)
-GET         /submission/:sid/check-answers                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
-POST        /submission/:sid/submit-request                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
-GET         /submission/:sid/submit-success                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
+GET         /submission/:sid/questionnaire/:qnid/summary                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.showSectionSummary(sid: SubmissionId, qnid: Questionnaire.Id)
+POST        /submission/:sid/questionnaire/summary                       uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.sectionSummaryAction(sid: SubmissionId)
+GET         /submission/:sid/check-answers                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersPage(sid: SubmissionId)
+POST        /submission/:sid/submit-request                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.checkAnswersAction(sid: SubmissionId)
+GET         /submission/:sid/submit-success                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.CheckAnswersController.submitSuccessPage(sid: SubmissionId)
 
-GET         /organisation/:oid                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationHomePage(oid: SimpleOrganisationId)
-GET         /organisation/:oid/manage-collaborators         uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborators(oid: SimpleOrganisationId)
-GET         /organisation/:oid/manage-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborator(oid: SimpleOrganisationId, uid: SimpleUserId)
-GET         /organisation/:oid/remove-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaborator(oid: SimpleOrganisationId, uid: SimpleUserId)
-POST        /organisation/:oid/remove-collaborator/:uid     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorAction(oid: SimpleOrganisationId, uid: SimpleUserId)
-GET         /organisation/:oid/remove-collaborator-success  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorSuccess(oid: SimpleOrganisationId, role: String)
-GET         /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaborator(oid: SimpleOrganisationId)
-POST        /organisation/:oid/add-collaborator             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: SimpleOrganisationId)
-GET         /organisation/:oid/add-collaborator-success     uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: SimpleOrganisationId, role: String)
+GET         /organisation/:oid                                           uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationController.organisationHomePage(oid: SimpleOrganisationId)
+GET         /organisation/:oid/manage-collaborators                      uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborators(oid: SimpleOrganisationId)
+GET         /organisation/:oid/manage-collaborator/:uid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.manageCollaborator(oid: SimpleOrganisationId, uid: SimpleUserId)
+GET         /organisation/:oid/remove-collaborator/:uid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaborator(oid: SimpleOrganisationId, uid: SimpleUserId)
+POST        /organisation/:oid/remove-collaborator/:uid                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorAction(oid: SimpleOrganisationId, uid: SimpleUserId)
+GET         /organisation/:oid/remove-collaborator-success               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.removeCollaboratorSuccess(oid: SimpleOrganisationId, role: String)
+GET         /organisation/:oid/add-collaborator                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaborator(oid: SimpleOrganisationId)
+POST        /organisation/:oid/add-collaborator                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorAction(oid: SimpleOrganisationId)
+GET         /organisation/:oid/add-collaborator-success                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ManageMembersController.addCollaboratorSuccess(oid: SimpleOrganisationId, role: String)
 
-GET         /organisation/:oid/applications                 uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.organisationApplicationsPage(oid: SimpleOrganisationId)
-GET         /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: SimpleOrganisationId)
-POST        /organisation/:oid/add-applications             uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: SimpleOrganisationId)
+GET         /organisation/:oid/applications                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.organisationApplicationsPage(oid: SimpleOrganisationId)
+GET         /organisation/:oid/add-applications                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplications(oid: SimpleOrganisationId)
+POST        /organisation/:oid/add-applications                          uk.gov.hmrc.apiplatformorganisationfrontend.controllers.ApplicationController.addApplicationsAction(oid: SimpleOrganisationId)
 
 GET         /upscan/result                                  uk.gov.hmrc.apiplatformorganisationfrontend.controllers.UploadController.upscanResultRedirect()
 
-GET         /assets/*file                                   controllers.Assets.versioned(path = "/public", file: Asset)
+GET         /assets/*file                                                controllers.Assets.versioned(path = "/public", file: Asset)

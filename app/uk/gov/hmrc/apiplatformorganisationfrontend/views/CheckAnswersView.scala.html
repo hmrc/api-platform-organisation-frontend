@@ -54,7 +54,7 @@
     </h1>
 
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-    @answersFragment(model, canChange = true, loggedIn = loggedIn)
+    @answersFragment(model, canChange = true, returnContext = Some("check-answers"), loggedIn = loggedIn)
 
     @helper.form(action = routes.CheckAnswersController.checkAnswersAction(model.submissionId)) {
       @helper.CSRF.formField

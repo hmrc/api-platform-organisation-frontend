@@ -2,9 +2,9 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "10.7.0"
-  private val tpdDomainVersion = "1.0.0"
+  private val bootstrapVersion = "10.8.0"
   private val commonDomainVersion = "1.4.0"
+  private val tpdDomainVersion = "1.3.0"
   private val orgDomainVersion = "1.11.0"
   private val appDomainVersion = "1.6.0"
 
@@ -18,14 +18,13 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "uk.gov.hmrc" %% "bootstrap-test-play-30"                    % bootstrapVersion % Test,
-    "org.mockito" %% "mockito-scala-scalatest"                   % "2.2.1"          % Test,
-    "org.jsoup"    % "jsoup"                                     % "1.22.1"         % Test,
+    "uk.gov.hmrc" %% "bootstrap-test-play-30"                    % bootstrapVersion,
+    "org.jsoup"    % "jsoup"                                     % "1.22.1",
     "uk.gov.hmrc" %% "api-platform-common-domain-fixtures"       % commonDomainVersion,
-    "uk.gov.hmrc" %% "api-platform-organisation-domain-fixtures" % orgDomainVersion % Test,
-    "uk.gov.hmrc" %% "api-platform-test-tpd-domain"              % tpdDomainVersion % Test,
-    "uk.gov.hmrc" %% "api-platform-application-domain-fixtures"  % appDomainVersion % Test
-  )
+    "uk.gov.hmrc" %% "api-platform-organisation-domain-fixtures" % orgDomainVersion,
+    "uk.gov.hmrc" %% "api-platform-tpd-domain-fixtures"          % tpdDomainVersion,
+    "uk.gov.hmrc" %% "api-platform-application-domain-fixtures"  % appDomainVersion
+  ).map(_ % Test)
 
   val it = Seq.empty
 }

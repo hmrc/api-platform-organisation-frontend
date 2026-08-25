@@ -507,6 +507,32 @@ class QuestionControllerSpec
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id}/check-answers")
     }
 
+    "succeed when given an answer and redirect to summary page if no more questions need answering" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+      SubmissionServiceMock.RecordAnswer.thenReturns(fullyAnsweredSubmission)
+
+      private val answer1 = "Yes"
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer1, "returnTo" -> "section-summary", "submit-action" -> "save")
+
+      val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, questionId)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id}/questionnaire/${questionnaireId.value}/summary")
+    }
+
     "succeed when given no answer and redirect to check answers page if no more questions need answering" in new Setup {
       val fullyAnsweredSubmission = Submission.create(
         "bob@example.com",
