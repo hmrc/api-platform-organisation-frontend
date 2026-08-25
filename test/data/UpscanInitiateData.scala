@@ -16,6 +16,9 @@
 
 package data
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.{QuestionnaireTestData, SubmissionsTestData}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.{UpscanFileReference, UpscanInitiateResponse}
@@ -38,5 +41,12 @@ trait UpscanInitiateData extends QuestionnaireTestData with SubmissionsTestData 
       "questionId"   -> questionId.value,
       "submissionId" -> submissionId.value.toString
     )
+  }
+
+  def queryParamsAsString(questionId: Question.Id, submissionId: SubmissionId) = {
+    queryParams(questionId, submissionId).collect {
+      case (key, value) =>
+        s"$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.toString)}"
+    }.mkString("&")
   }
 }

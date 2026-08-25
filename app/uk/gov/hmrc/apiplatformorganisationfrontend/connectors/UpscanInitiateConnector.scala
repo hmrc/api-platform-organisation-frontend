@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json.{Format, Json, Reads}
+import play.api.libs.json.{Format, JsString, Json, Reads, Writes}
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -61,8 +61,11 @@ case class PreparedUpload(
   )
 
 object PreparedUpload {
-  implicit val UploadFormFormat: Reads[UploadForm]         = Json.reads[UploadForm]
-  implicit val PreparedUploadFormat: Reads[PreparedUpload] = Json.reads[PreparedUpload]
+  implicit val UploadFormFormat: Reads[UploadForm]          = Json.reads[UploadForm]
+  implicit val PreparedUploadFormat: Reads[PreparedUpload]  = Json.reads[PreparedUpload]
+  implicit val referenceWrites: Writes[Reference]           = Writes(r => JsString(r.value))
+  implicit val uploadFormWrites: Writes[UploadForm]         = Json.writes[UploadForm]
+  implicit val preparedUploadWrites: Writes[PreparedUpload] = Json.writes[PreparedUpload]
 }
 
 class UpscanInitiateConnector @Inject() (
