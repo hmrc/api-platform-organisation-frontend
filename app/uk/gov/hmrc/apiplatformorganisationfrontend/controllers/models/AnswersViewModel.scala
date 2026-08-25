@@ -50,7 +50,7 @@ object AnswersViewModel {
       case (_, CompanyNumberAnswer(value))                            => Some(Seq(value))
       case (_, NoAnswer)                                              => Some(Seq(notAvailable))
       case (_, AcknowledgedAnswer)                                    => None
-      case (_, AttachmentAnswer(value))                               => Some(Seq("File uploaded"))
+      case (_, AttachmentAnswer(value))                               => Some(Seq("Uploaded"))
     }
 
   private def canChange(question: Question): Boolean = {
