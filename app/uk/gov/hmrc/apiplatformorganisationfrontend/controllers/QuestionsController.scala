@@ -88,9 +88,6 @@ class QuestionsController @Inject() (
         updatedSubmitAction = getSubmitAction(uploadViewModel, submitAction)
       } yield {
         errorInfo.fold[Result] {
-          logger.info(s"In QuestionsController.processQuestion() uploadViewModel: $uploadViewModel")
-          logger.info(s"In QuestionsController.processQuestion() updatedSubmitAction: $updatedSubmitAction")
-          logger.info(s"In QuestionsController.processQuestion() returnTo: $returnTo")
           Ok(questionView(question, questionnaire, updatedSubmitAction, persistedAnswer, submission, None, returnTo, uploadViewModel))
         }(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
       }
@@ -231,8 +228,6 @@ class QuestionsController @Inject() (
       lazy val toSectionSummary =
         routes.CheckAnswersController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
       lazy val toNextQuestion   = (nextQuestionId) => routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
-
-      logger.info(s"In QuestionsController.recordAnswer() match submissionId:$submissionId and questionId:$questionId")
 
       successful(Redirect(nextQuestion.fold(toSectionSummary)(toNextQuestion)))
     }
