@@ -21,18 +21,21 @@ import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 import cats.data.NonEmptyList
+import cats.implicits.catsSyntaxOptionId
 
+import play.api.Logging
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.{Json, Reads}
-import play.api.mvc.{MessagesControllerComponents, *}
+import play.api.mvc.*
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDeveloperConnector, UpscanInitiateConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
@@ -48,6 +51,7 @@ class QuestionsController @Inject() (
     val errorHandler: ErrorHandler,
     override val submissionService: SubmissionService,
     val organisationActionService: OrganisationActionService,
+    val upscanInitiateConnector: UpscanInitiateConnector,
     val cookieSigner: CookieSigner,
     questionView: QuestionView,
     mcc: MessagesControllerComponents,
@@ -56,7 +60,8 @@ class QuestionsController @Inject() (
     val appConfig: AppConfig
   ) extends LoggedInController(mcc)
     with SubmissionActionBuilders
-    with EitherTHelper[String] {
+    with EitherTHelper[String]
+    with Logging {
 
   import cats.instances.future.catsStdInstancesForFuture
 
@@ -76,16 +81,40 @@ class QuestionsController @Inject() (
 
     (
       for {
-        _             <- fromOption(oQuestion, "Question not found in questionnaire")
-        question       = oQuestion.get
-        questionnaire <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
+        _                  <- fromOption(oQuestion, "Question not found in questionnaire")
+        question            = oQuestion.get
+        questionnaire      <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
+        uploadViewModel    <- liftF(initiateUpscan(question, submission, returnTo))
+        updatedSubmitAction = getSubmitAction(uploadViewModel, submitAction)
       } yield {
-        errorInfo.fold[Result](
-          Ok(questionView(question, questionnaire, submitAction, persistedAnswer, submission, None, returnTo))
-        )(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
+        errorInfo.fold[Result] {
+          Ok(questionView(question, questionnaire, updatedSubmitAction, persistedAnswer, submission, None, returnTo, uploadViewModel))
+        }(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
+  }
+
+  private def initiateUpscan(question: Question, submission: Submission, returnTo: Option[String])(implicit request: SubmissionRequest[AnyContent]) = {
+    question match {
+      case _: Question.AttachmentQuestion =>
+        upscanInitiateConnector
+          .initiate(question.id, submission.id, returnTo)
+          .map { upscanResponse =>
+            val model = Some(
+              UploadViewModel(
+                upscan = upscanResponse,
+                error = None
+              )
+            )
+            model
+          }
+      case _                              => Future.successful(None)
+    }
+  }
+
+  private def getSubmitAction(uploadViewModel: Option[UploadViewModel], submitAction: Call) = {
+    uploadViewModel.fold(submitAction)(model => Call(method = "POST", url = model.upscan.postTarget))
   }
 
   def showQuestion(submissionId: SubmissionId, questionId: Question.Id, onFormAnswer: Option[ActualAnswer] = None, errorInfo: Option[ValidationErrors] = None): Action[AnyContent] =

@@ -29,16 +29,20 @@
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 @import scala.collection.immutable.ListSet
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 
 @this(layout: Layout,
         govukRadios: GovukRadios,
         govukInput: GovukInput,
         govukCheckboxes: GovukCheckboxes,
         govukFieldset: GovukFieldset,
-        govukDateInput: GovukDateInput
+        govukDateInput: GovukDateInput,
+        govukButton: GovukButton,
+        govukFileUpload: GovukFileUpload,
+        govukErrorSummary: GovukErrorSummary
 )
 
-@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], submission: Submission, errorInfo: Option[ValidationErrors], returnTo: Option[String] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
+@(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], submission: Submission, errorInfo: Option[ValidationErrors], returnTo: Option[String] = None, uploadViewModel: Option[UploadViewModel] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
 
 @pageHeading = @{ question.wording.value }
 @questionId = @{s"question-${question.id.value}-id"}
@@ -375,6 +379,10 @@
   @renderSingleChoiceQuestion(question, inline)
 }
 
+@renderAttachmentQuestion() = {
+    @uploadViewModel.map(viewModel => uploadFileView(viewModel, govukButton, govukFileUpload, govukErrorSummary))
+}
+
 @renderTextInputQuestion(question: Question.TextQuestion) = {
     @govukInput(Input(id = Question.answerKey,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
@@ -415,6 +423,7 @@
     case q: Question.AddressQuestion               => renderAddressQuestion(q)
     case q: Question.NameQuestion                  => renderNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
+    case _: Question.AttachmentQuestion            => renderAttachmentQuestion()
   }
 }
 
@@ -426,47 +435,62 @@
   }
 }
 
+@createForm(question: Question) = {
+    @helper.form(action = submitAction, Symbol("class") -> "form") {
+        @helper.CSRF.formField
+        @returnTo.map { rt =>
+            <input type="hidden" name="returnTo" value="@rt" />
+        }
+        @renderQuestionType(question)
+    }
+}
+
+@form(question: Question) = {
+  @question match {
+    case _: Question.AttachmentQuestion => {
+        @uploadViewModel.map(model => uploadFileView(model, govukButton, govukFileUpload, govukErrorSummary))
+    }
+    case _ => {
+        @createForm(question)
+    }
+  }
+}
+
 @layout(
     backLink = Some(BackLink.mimicsBrowserBackButtonViaJavaScript),
     pageTitle = pageTitle,
     loggedInSession = Some(loggedIn)
 ) {
 
-  @if(errorInfo.isDefined) {
-    <div id="error-summary-display" class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-      <h2 id="error-summary-title" class="govuk-error-summary__title">
-        There is a problem
-      </h2>
-      <div class="govuk-error-summary__body">
-        <ul class="govuk-list govuk-error-summary__list">
-        @errorInfo.map(ei=>ei.errors.map(err=> {
-                <li><a href={s"#${err.key}"}>{err.message}</a></li>
-        }))
-        </ul>
-      </div>
-    </div>
-  }
-
-  <h1 class="govuk-heading-l">
-    <span class='govuk-caption-l'>@{questionnaire.label.value}</span>
-    @pageHeading
-  </h1>
-
-  @{
-    question match {
-      case _: Question.NameQuestion  => ()
-      case q                         => renderMaybeStatement(q.statement)
-    }
-  }
-
-  @helper.form(action = submitAction, Symbol("class") -> "form") {
-    @helper.CSRF.formField
-    
-    @returnTo.map { rt =>
-      <input type="hidden" name="returnTo" value="@rt" />
+    @if(errorInfo.isDefined) {
+        <div id="error-summary-display" class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+            <h2 id="error-summary-title" class="govuk-error-summary__title">
+                There is a problem
+            </h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                @errorInfo.map(ei => ei.errors.map(err => {
+                        <li><a href={s"#${err.key}"}>{err.message}</a></li>
+                }))
+                </ul>
+            </div>
+        </div>
     }
 
-    @renderQuestionType(question)
-  }
+    <h1 class="govuk-heading-l">
+        <span class='govuk-caption-l'>@{
+            questionnaire.label.value
+        }</span>
+        @pageHeading
+    </h1>
+
+    @{
+        question match {
+            case _: Question.NameQuestion => ()
+            case q => renderMaybeStatement(q.statement)
+        }
+    }
+
+  @form(question)
 
 }
