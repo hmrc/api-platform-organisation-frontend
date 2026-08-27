@@ -630,6 +630,21 @@ class QuestionControllerSpec
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${followUpQuestionId.value}/update")
     }
+
+    "fail if invalid international address answer provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("Town or City required")
+      private val request =
+        loggedInRequest.withFormUrlEncodedBody("addressLineOne" -> "123 High Street", "postcode" -> "NW1 3PQ", "country" -> "United Kingdom", "submit-action" -> "save")
+
+      val result = controller.updateAnswer(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("Town or City required")
+    }
   }
 
   "PossibleAnswer.htmlValue" should {
