@@ -45,6 +45,7 @@ object AnswersViewModel {
       case (_, DateAnswer(value))                                     => Some(Seq(value.format(dateTimeFormatter)))
       case (_, MultipleChoiceAnswer(values))                          => Some(Seq(values.mkString))
       case (_, AddressAnswer(_))                                      => Some(Seq(ActualAnswersAsText.apply(answer)))
+      case (_, InternationalAddressAnswer(_))                         => Some(Seq(ActualAnswersAsText.apply(answer)))
       case (_, NameAnswer(name))                                      =>
         Some(Seq(Seq(name.firstName, name.lastName).filter(_.isDefined).map(_.get).mkString(" ")))
       case (_, CompanyNumberAnswer(value))                            => Some(Seq(value))

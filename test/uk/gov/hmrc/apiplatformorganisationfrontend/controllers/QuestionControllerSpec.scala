@@ -186,13 +186,31 @@ class QuestionControllerSpec
 
       status(result) shouldBe OK
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      print(contentAsString(result))
       contentAsString(result).contains("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
       contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
       contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
       contentAsString(result).contains("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
       contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, international address question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionNonUkWithoutAddress.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Enter the registered address for the company") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
+      contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
+      contentAsString(result).contains("Address line 3 (optional)") shouldBe true withClue ("HTML content did not contain 3rd input")
+      contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result).contains("Region (optional)") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 6th input")
+      contentAsString(result).contains("Country") shouldBe true withClue ("HTML content did not contain 7th input")
       contentAsString(result).contains("<title>") shouldBe true
     }
 
