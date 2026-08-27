@@ -204,9 +204,7 @@ class QuestionControllerSpec
       status(result) shouldBe OK
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       contentAsString(result).contains("Enter the registered address for the company") shouldBe true withClue ("HTML content did not contain label")
-      contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
-      contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
-      contentAsString(result).contains("Address line 3 (optional)") shouldBe true withClue ("HTML content did not contain 3rd input")
+      contentAsString(result).contains("Building and street") shouldBe true withClue ("HTML content did not contain first input")
       contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 4th input")
       contentAsString(result).contains("Region (optional)") shouldBe true withClue ("HTML content did not contain 5th input")
       contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 6th input")
