@@ -285,7 +285,7 @@
                 id = "addressLineOne",
                 name = "addressLineOne",
                 label = Label(
-                    content = Text("Address line 1")
+                    content = Text("Building and street")
                 ),
                 errorMessage = errorInfo.flatMap(_.errors.find(_.key == "addressLineOne")).map(err => ErrorMessage(content = Text(err.message))),
                 value = currentAnswers match {
@@ -297,11 +297,7 @@
             govukInput(Input(
                 id = "addressLineTwo",
                 name = "addressLineTwo",
-                label = Label(
-                    content = Text("Address line 2 (optional)")
-                ),
-
-                value = currentAnswers match {
+                 value = currentAnswers match {
                     case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.addressLineTwo
                     case _ => None
                 },
@@ -310,10 +306,6 @@
             govukInput(Input(
                 id = "addressLineThree",
                 name = "addressLineThree",
-                label = Label(
-                    content = Text("Address line 3 (optional)")
-                ),
-
                 value = currentAnswers match {
                     case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.addressLineThree
                     case _ => None
