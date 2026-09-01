@@ -277,6 +277,104 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
+@renderInternationalAddressQuestion(question: Question.InternationalAddressQuestion) = {
+    @govukFieldset(Fieldset(
+        legend = None,
+        html = HtmlFormat.fill(Seq(
+            govukInput(Input(
+                id = "addressLineOne",
+                name = "addressLineOne",
+                label = Label(
+                    content = Text("Building and street")
+                ),
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "addressLineOne")).map(err => ErrorMessage(content = Text(err.message))),
+                value = currentAnswers match {
+                  case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.addressLineOne
+                  case _ => None
+              },
+                autocomplete = Some("address-line1")
+            )),
+            govukInput(Input(
+                id = "addressLineTwo",
+                name = "addressLineTwo",
+                 value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.addressLineTwo
+                    case _ => None
+                },
+                autocomplete = Some("address-line2")
+            )),
+            govukInput(Input(
+                id = "addressLineThree",
+                name = "addressLineThree",
+                value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.addressLineThree
+                    case _ => None
+                },
+                autocomplete = Some("address-line3")
+            )),
+            govukInput(Input(
+                id = "town",
+                name = "locality",
+                label = Label(
+                    content = Text("Town or city")
+                ),
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "locality")).map(err => ErrorMessage(content = Text(err.message))),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.locality
+                    case _ => None
+                },
+                classes = "govuk-!-width-two-thirds",
+                autocomplete = Some("address-level2")
+            )),
+            govukInput(Input(
+                id = "region",
+                name = "region",
+                label = Label(
+                    content = Text("Region (optional)")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.region
+                    case _ => None
+                },
+                classes = "govuk-!-width-two-thirds",
+                autocomplete = Some("address-level1")
+            )),
+            govukInput(Input(
+                id = "postcode",
+                name = "postcode",
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "postcode")).map(err => ErrorMessage(content = Text(err.message))),
+                label = Label(
+                    content = Text("Postcode")
+                ),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.postalCode
+                    case _ => None
+                },
+                classes = "govuk-input--width-10",
+                autocomplete = Some("postal-code")
+            )),
+            govukInput(Input(
+                id = "country",
+                name = "country",
+                label = Label(
+                    content = Text("Country")
+                ),
+                errorMessage = errorInfo.flatMap(_.errors.find(_.key == "country")).map(err => ErrorMessage(content = Text(err.message))),
+                value = currentAnswers match {
+                    case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.country
+                    case _ => None
+                },
+                classes = "govuk-!-width-two-thirds",
+                autocomplete = Some("country")
+            ))
+        ))
+    ))
+  
+    @renderMaybeStatement(question.afterStatement)
+
+    @renderButtonOrButtons(question.absenceText)
+}
+
 @buildNameConditionalHtml(question: Question.NameQuestion) = {
   @renderMaybeStatement(question.statement)
   @govukFieldset(Fieldset(
@@ -421,6 +519,7 @@
     case _: Question.ForwardToQuestion             => renderForwardToQuestion()
     case q: Question.DateQuestion                  => renderDateQuestion(q)
     case q: Question.AddressQuestion               => renderAddressQuestion(q)
+    case q: Question.InternationalAddressQuestion  => renderInternationalAddressQuestion(q)
     case q: Question.NameQuestion                  => renderNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
     case _: Question.AttachmentQuestion            => renderAttachmentQuestion()

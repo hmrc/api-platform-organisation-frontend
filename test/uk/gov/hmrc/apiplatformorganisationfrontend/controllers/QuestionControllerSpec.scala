@@ -186,13 +186,29 @@ class QuestionControllerSpec
 
       status(result) shouldBe OK
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      print(contentAsString(result))
       contentAsString(result).contains("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
       contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
       contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
       contentAsString(result).contains("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
       contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, international address question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionNonUkWithoutAddress.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Enter the registered address for the company") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Building and street") shouldBe true withClue ("HTML content did not contain first input")
+      contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result).contains("Region (optional)") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 6th input")
+      contentAsString(result).contains("Country") shouldBe true withClue ("HTML content did not contain 7th input")
       contentAsString(result).contains("<title>") shouldBe true
     }
 
@@ -611,6 +627,21 @@ class QuestionControllerSpec
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${followUpQuestionId.value}/update")
+    }
+
+    "fail if invalid international address answer provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("Town or City required")
+      private val request =
+        loggedInRequest.withFormUrlEncodedBody("addressLineOne" -> "123 High Street", "postcode" -> "NW1 3PQ", "country" -> "United Kingdom", "submit-action" -> "save")
+
+      val result = controller.updateAnswer(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("Town or City required")
     }
   }
 

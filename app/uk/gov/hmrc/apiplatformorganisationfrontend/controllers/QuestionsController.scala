@@ -188,21 +188,30 @@ class QuestionsController @Inject() (
     val question = submission.findQuestion(questionId).get
 
     val onFormAnswer = question match {
-      case _: Question.TextQuestion          => answers.headOption.map(ActualAnswer.TextAnswer.apply)
-      case _: Question.AddressQuestion       => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
+      case _: Question.TextQuestion                 => answers.headOption.map(ActualAnswer.TextAnswer.apply)
+      case _: Question.AddressQuestion              => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
           trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
           trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
           trimmedAnswers.get("locality").flatMap(_.headOption),
           trimmedAnswers.get("region").flatMap(_.headOption),
           trimmedAnswers.get("postcode").flatMap(_.headOption)
         )))
-      case _: Question.NameQuestion          => Some(ActualAnswer.NameAnswer(FullName(
+      case _: Question.InternationalAddressQuestion => Some(ActualAnswer.InternationalAddressAnswer(InternationalAddress(
+          trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
+          trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
+          trimmedAnswers.get("addressLineThree").flatMap(_.headOption),
+          trimmedAnswers.get("locality").flatMap(_.headOption),
+          trimmedAnswers.get("region").flatMap(_.headOption),
+          trimmedAnswers.get("postcode").flatMap(_.headOption),
+          trimmedAnswers.get("country").flatMap(_.headOption)
+        )))
+      case _: Question.NameQuestion                 => Some(ActualAnswer.NameAnswer(FullName(
           trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
           trimmedAnswers.get("firstName").flatMap(_.headOption),
           trimmedAnswers.get("lastName").flatMap(_.headOption)
         )))
-      case _: Question.CompanyNumberQuestion => answers.headOption.map(ActualAnswer.CompanyNumberAnswer.apply)
-      case _                                 => None
+      case _: Question.CompanyNumberQuestion        => answers.headOption.map(ActualAnswer.CompanyNumberAnswer.apply)
+      case _                                        => None
     }
 
     if (isUpdate) {
