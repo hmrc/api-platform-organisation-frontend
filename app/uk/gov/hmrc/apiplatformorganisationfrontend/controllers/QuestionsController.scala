@@ -255,32 +255,34 @@ class QuestionsController @Inject() (
   def updateAnswer(submissionId: SubmissionId, questionId: Question.Id): Action[AnyContent] = withSubmission(submissionId) { implicit request =>
     val returnTo = request.body.asFormUrlEncoded.flatMap(_.get("returnTo").flatMap(_.headOption)).getOrElse("check-answers")
 
-    def hasQuestionBeenAnswered(questionId: Question.Id) = {
-      request.submission.latestInstance.answersToQuestions.get(questionId).fold(false)(_ => true)
-    }
-
     val success = (extSubmission: ExtendedSubmission) => {
+      def hasQuestionBeenAnswered(questionId: Question.Id) =
+        extSubmission.submission.latestInstance.answersToQuestions.get(questionId).fold(false)(_ => true)
+
       val questionnaire       = extSubmission.submission.findQuestionnaireContaining(questionId).get
-      val maybeNextQuestionId = extSubmission.questionnaireProgress.get(questionnaire.id)
-        .flatMap(_.questionsToAsk.dropWhile(_ != questionId).tail.headOption)
+      val maybeNextQuestionId = findNextQuestion(extSubmission, questionId, questionnaire.id)
 
       val isFromSectionSummary = returnTo.contains("section-summary")
 
-      lazy val toCheckAnswers   = routes.CheckAnswersController.checkAnswersPage(request.submission.id)
-      lazy val toSectionSummary = routes.CheckAnswersController.showSectionSummary(request.submission.id, questionnaire.id)
+      val isForwardToQuestion = extSubmission.submission.findQuestion(questionId) match {
+        case Some(_: ForwardToQuestion) => true
+        case _                          => false
+      }
+
+      lazy val toCheckAnswers   = Redirect(routes.CheckAnswersController.checkAnswersPage(request.submission.id))
+      lazy val toSectionSummary = Redirect(routes.CheckAnswersController.showSectionSummary(request.submission.id, questionnaire.id))
       lazy val toNextQuestion   = maybeNextQuestionId match {
-        case Some(nextQuestionId) => {
-          if (hasQuestionBeenAnswered(nextQuestionId)) {
+        case Some(nextQuestionId) =>
+          if (hasQuestionBeenAnswered(nextQuestionId) && !isForwardToQuestion) {
             if (isFromSectionSummary) toSectionSummary else toCheckAnswers
           } else {
-            routes.QuestionsController.updateQuestion(submissionId, nextQuestionId)
+            Redirect(routes.QuestionsController.updateQuestion(submissionId, nextQuestionId).url, Map("returnTo" -> Seq(returnTo)))
           }
-        }
         case _                    =>
           if (isFromSectionSummary) toSectionSummary else toCheckAnswers
       }
 
-      successful(Redirect(toNextQuestion))
+      successful(toNextQuestion)
     }
 
     val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
