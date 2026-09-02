@@ -27,7 +27,8 @@ class ConfigModule extends Module {
     bind[AppConfig].toSelf.eagerly(),
     bind[OrganisationConnector.Config].toProvider[OrganisationConnectorConfigProvider],
     bind[ThirdPartyOrchestratorConnector.Config].toProvider[TPOConnectorConfigProvider],
-    bind[ConnectorMetrics].to[ConnectorMetricsImpl]
+    bind[ConnectorMetrics].to[ConnectorMetricsImpl],
+    bind[ApiPlatformDeskproConnector.Config].toProvider[ApiPlatformDeskproConnectorConfigProvider]
   )
 
 }

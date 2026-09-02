@@ -30,7 +30,7 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatform.modules.tpd.test.data.UserTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
 
 class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with UserTestData {
 
@@ -41,10 +41,12 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
 
     val mockOrganisationConnector        = mock[OrganisationConnector]
     val mockThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
+    val mockApiPlatformDeskproConnector  = mock[ApiPlatformDeskproConnector]
 
     val underTest = new SubmissionService(
       mockOrganisationConnector,
-      mockThirdPartyDeveloperConnector
+      mockThirdPartyDeveloperConnector,
+      mockApiPlatformDeskproConnector
     )
 
     val allowList = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
