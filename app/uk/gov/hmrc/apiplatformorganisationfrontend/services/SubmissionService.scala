@@ -16,7 +16,12 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
@@ -25,10 +30,6 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{Attachment, CreateTicketRequest}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionService @Inject() (
@@ -72,7 +73,7 @@ class SubmissionService @Inject() (
   private def createDeskproTicketIfRequired(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
     val organisationTypeAnswer = submission.getAnswerToQuestionOfInterest("organisationTypeId")
     organisationTypeAnswer match {
-      case ActualAnswer.TextAnswer("Non-UK company without a branch or place of business in the UK") => createDeskproTicket(userId, submission, developer)
+      case ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK") => createDeskproTicket(userId, submission, developer)
       case _                                                                                         => Future.successful(None)
     }
   }

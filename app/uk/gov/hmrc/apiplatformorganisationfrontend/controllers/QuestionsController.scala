@@ -16,12 +16,18 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
+
 import cats.data.NonEmptyList
 import cats.implicits.catsSyntaxOptionId
+
 import play.api.Logging
 import play.api.libs.crypto.CookieSigner
 import play.api.libs.json.{Json, Reads}
 import play.api.mvc.*
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.NonEmptyListFormatters
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
@@ -32,10 +38,6 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDevelop
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
-import scala.concurrent.{ExecutionContext, Future}
 
 object QuestionsController {
   import NonEmptyListFormatters.given

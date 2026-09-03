@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
-import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, OK}
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.DeskproTicket
-import uk.gov.hmrc.http.HttpReads.Implicits.*
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse, StringContextOps}
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
+import play.api.Logging
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, StringContextOps}
+
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 
 object ApiPlatformDeskproConnector {
 
