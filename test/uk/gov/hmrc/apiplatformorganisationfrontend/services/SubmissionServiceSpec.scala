@@ -103,7 +103,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
   }
 
   "submitSubmission" should {
-    "submit submisson and update profile when RI name given" in new Setup {
+    "submit submission and update profile when RI name given" in new Setup {
       when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
       when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
 
@@ -114,7 +114,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Roberts")))(*)
     }
 
-    "submit submisson and not update profile when RI name not given" in new Setup {
+    "submit submission and not update profile when RI name not given" in new Setup {
       val submissionWithNoRIName = aSubmission
         .hasCompletelyAnsweredWith(sampleAnswersToQuestions1)
         .withCompletedProgress()
@@ -128,6 +128,37 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       verify(mockOrganisationConnector).submitSubmission(eqTo(submissionWithNoRIName.id), eqTo(email))(*)
       verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
     }
+
+    "submit submission and create support ticket when company type is Non-UK without a branch or place of business in the UK" in new Setup {
+      val nonUkSubmission = aSubmission
+        .hasCompletelyAnsweredWith(sampleAnswersToQuestions2)
+        .withCompletedProgress()
+        .submission
+      val ticketRef       = Some("12345")
+
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(nonUkSubmission)))
+      when(mockApiPlatformDeskproConnector.createTicket(*, *)).thenReturn(successful(ticketRef))
+
+      val result = await(underTest.submitSubmission(nonUkSubmission.id, userId, email, adminDeveloper))
+
+      result.isRight shouldBe true
+      verify(mockOrganisationConnector).submitSubmission(eqTo(nonUkSubmission.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
+      verify(mockApiPlatformDeskproConnector, times(1)).createTicket(*, *)
+    }
+
+    "submit submission and not create support ticket when company type is UK Ltd" in new Setup {
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
+      when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
+
+      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email, adminDeveloper))
+
+      result.isRight shouldBe true
+      verify(mockOrganisationConnector).submitSubmission(eqTo(submittedSubmission.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Roberts")))(*)
+      verify(mockApiPlatformDeskproConnector, never).createTicket(*, *)
+    }
+
   }
 
   "fetchAllowList" should {
