@@ -74,7 +74,7 @@ class SubmissionService @Inject() (
     val organisationTypeAnswer = submission.getAnswerToQuestionOfInterest("organisationTypeId")
     organisationTypeAnswer match {
       case ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK") => createDeskproTicket(userId, submission, developer)
-      case _                                                                                         => Future.successful(None)
+      case _                                                                                                 => Future.successful(None)
     }
   }
 
@@ -88,10 +88,13 @@ class SubmissionService @Inject() (
       fullName = developer.displayedName,
       email = developer.email.text,
       subject = "Organisation Registration Request",
-      message = s"""${developer.displayedName} has submitted their organisation ${organisationName.getOrElse("")} for production use on the Developer Hub.""",
+      message =
+        s"""${developer.displayedName} has submitted their organisation ${organisationName.getOrElse("")} for
+           | use on the Developer Hub.""".stripMargin,
       organisation = organisationName,
       supportReason = Some("Organisation Registration Submission"),
       reasonKey = Some("organisation-registration-submission"),
+      organisationSubmissionId = Some(submission.id.value.toString),
       attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
     )
 

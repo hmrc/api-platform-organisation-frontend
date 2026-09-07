@@ -49,6 +49,7 @@ object ApiPlatformDeskproConnector {
       referrer: Option[String] = None,
       sessionId: Option[String] = None,
       userAgent: Option[String] = None,
+      organisationSubmissionId: Option[String] = None,
       attachments: List[Attachment] = List.empty
     )
 
