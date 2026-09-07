@@ -186,13 +186,29 @@ class QuestionControllerSpec
 
       status(result) shouldBe OK
       contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
-      print(contentAsString(result))
       contentAsString(result).contains("What is your organisation&#x27;s address?") shouldBe true withClue ("HTML content did not contain label")
       contentAsString(result).contains("Address line 1") shouldBe true withClue ("HTML content did not contain first input")
       contentAsString(result).contains("Address line 2 (optional)") shouldBe true withClue ("HTML content did not contain 2nd input")
       contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 3rd input")
       contentAsString(result).contains("County (optional)") shouldBe true withClue ("HTML content did not contain 4th input")
       contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("<title>") shouldBe true
+    }
+
+    "succeed and check for label, hintText, international address question" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+
+      val formSubmissionLink = s"${aSubmission.id.value}/question/${OrganisationDetails.questionNonUkWithoutAddress.id.value}"
+      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      contentAsString(result).contains("Enter the registered address for the company") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains("Building and street") shouldBe true withClue ("HTML content did not contain first input")
+      contentAsString(result).contains("Town or city") shouldBe true withClue ("HTML content did not contain 4th input")
+      contentAsString(result).contains("Region (optional)") shouldBe true withClue ("HTML content did not contain 5th input")
+      contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 6th input")
+      contentAsString(result).contains("Country") shouldBe true withClue ("HTML content did not contain 7th input")
       contentAsString(result).contains("<title>") shouldBe true
     }
 
@@ -610,7 +626,167 @@ class QuestionControllerSpec
       val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, firstQuestionId)(request.withCSRFToken)
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${followUpQuestionId.value}/update")
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${followUpQuestionId.value}/update?returnTo=check-answers"
+      )
+    }
+
+    "succeed when an answer is removed after answering a question and redirect to re-ask it" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      val modifiedAnswersToQuestions = samplePassAnswersToQuestions -
+        OrganisationDetails.questionLtdOrgName.id
+
+      val modifiedProgress = Map(OrganisationDetails.questionnaire.id ->
+        QuestionnaireProgress(
+          state = QuestionnaireState.InProgress,
+          questionsToAsk = List(
+            OrganisationDetails.questionCompanyNumber.id,
+            OrganisationDetails.questionLtdOrgName.id
+          )
+        ))
+
+      val modifiedSubmission: ExtendedSubmission = fullyAnsweredSubmission.copy(
+        submission = fullyAnsweredSubmission.submission.copy(
+          instances = NonEmptyList(
+            fullyAnsweredSubmission.submission.latestInstance.copy(
+              answersToQuestions = modifiedAnswersToQuestions
+            ),
+            Nil
+          )
+        ),
+        questionnaireProgress = fullyAnsweredSubmission.questionnaireProgress ++ modifiedProgress
+      )
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+      SubmissionServiceMock.RecordAnswer.thenReturns(modifiedSubmission)
+
+      val answer  = "12345678"
+      val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save")
+
+      val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionCompanyNumber.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${OrganisationDetails.questionLtdOrgName.id.value}/update?returnTo=check-answers"
+      )
+    }
+
+    "succeed when an answer is removed after answering a question from the section summary and redirect to re-ask it, keeping the section summary as the return page" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      val modifiedAnswersToQuestions = samplePassAnswersToQuestions -
+        OrganisationDetails.questionLtdOrgName.id
+
+      val modifiedProgress = Map(OrganisationDetails.questionnaire.id ->
+        QuestionnaireProgress(
+          state = QuestionnaireState.InProgress,
+          questionsToAsk = List(
+            OrganisationDetails.questionCompanyNumber.id,
+            OrganisationDetails.questionLtdOrgName.id
+          )
+        ))
+
+      val modifiedSubmission: ExtendedSubmission = fullyAnsweredSubmission.copy(
+        submission = fullyAnsweredSubmission.submission.copy(
+          instances = NonEmptyList(
+            fullyAnsweredSubmission.submission.latestInstance.copy(
+              answersToQuestions = modifiedAnswersToQuestions
+            ),
+            Nil
+          )
+        ),
+        questionnaireProgress = fullyAnsweredSubmission.questionnaireProgress ++ modifiedProgress
+      )
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+      SubmissionServiceMock.RecordAnswer.thenReturns(modifiedSubmission)
+
+      private val answer  = "12345678"
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save", "returnTo" -> "section-summary")
+
+      val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionCompanyNumber.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/question/${OrganisationDetails.questionLtdOrgName.id.value}/update?returnTo=section-summary"
+      )
+    }
+
+    "succeed when a question jumps to an already answered question and re-ask it" in new Setup {
+      val fullyAnsweredSubmission = Submission.create(
+        "bob@example.com",
+        SubmissionId.random,
+        Some(organisationId),
+        instant,
+        userId,
+        testGroups,
+        testQuestionIdsOfInterest,
+        standardContext
+      )
+        .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+        .withCompletedProgress()
+
+      val modifiedProgress = Map(OrganisationDetails.questionnaire.id ->
+        QuestionnaireProgress(
+          state = QuestionnaireState.InProgress,
+          questionsToAsk = List(OrganisationDetails.questionForwardToQuestion.id)
+        ))
+
+      val modifiedSubmission: ExtendedSubmission = fullyAnsweredSubmission.copy(
+        questionnaireProgress = fullyAnsweredSubmission.questionnaireProgress ++ modifiedProgress
+      )
+
+      SubmissionServiceMock.Fetch.thenReturns(fullyAnsweredSubmission)
+      SubmissionServiceMock.RecordAnswer.thenReturns(modifiedSubmission)
+
+      private val answer  = "acknowledged"
+      private val request = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> answer, "submit-action" -> "save", "returnTo" -> "section-summary")
+
+      val result = controller.updateAnswer(fullyAnsweredSubmission.submission.id, OrganisationDetails.questionForwardToQuestion.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/submission/${fullyAnsweredSubmission.submission.id.value}/" +
+          s"question/${OrganisationDetails.questionForwardToQuestion.forwardToQuestionId.value}/update?returnTo=section-summary"
+      )
+    }
+
+    "fail if invalid international address answer provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("Town or City required")
+      private val request =
+        loggedInRequest.withFormUrlEncodedBody("addressLineOne" -> "123 High Street", "postcode" -> "NW1 3PQ", "country" -> "United Kingdom", "submit-action" -> "save")
+
+      val result = controller.updateAnswer(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("Town or City required")
     }
   }
 
