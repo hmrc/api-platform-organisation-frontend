@@ -183,7 +183,7 @@ class QuestionsController @Inject() (
       returnTo: Option[String]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    import cats.implicits._
+    import cats.implicits.*
 
     val question = submission.findQuestion(questionId).get
 

@@ -24,16 +24,18 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{SubmissionId, *}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{Attachment, CreateTicketRequest}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
 
 @Singleton
 class SubmissionService @Inject() (
     organisationConnector: OrganisationConnector,
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
+    apiPlatformDeskproConnector: ApiPlatformDeskproConnector
   )(implicit val ec: ExecutionContext
   ) extends EitherTHelper[String] with Logging {
 
@@ -46,6 +48,7 @@ class SubmissionService @Inject() (
       for {
         submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
         _          <- liftF(updateUserProfileIfRequired(userId, submission, developer))
+        _          <- liftF(createDeskproTicketIfRequired(userId, submission, developer))
       } yield submission
     ).value
   }
@@ -65,6 +68,37 @@ class SubmissionService @Inject() (
   private def updateUserProfile(userId: UserId, firstName: String, lastName: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {
     logger.info(s"Organisation registration updating user profile for userId: $userId")
     thirdPartyDeveloperConnector.updateProfile(userId, UpdateRequest(firstName, lastName)).map(u => Some(u))
+  }
+
+  private def createDeskproTicketIfRequired(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+    val organisationTypeAnswer = submission.getAnswerToQuestionOfInterest("organisationTypeId")
+    organisationTypeAnswer match {
+      case ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK") => createDeskproTicket(userId, submission, developer)
+      case _                                                                                                 => Future.successful(None)
+    }
+  }
+
+  private def createDeskproTicket(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId")
+
+    val organisationName = submission.organisationName
+    val attachment       = submission.attachment
+
+    val createTicketRequest = CreateTicketRequest(
+      fullName = developer.displayedName,
+      email = developer.email.text,
+      subject = "Organisation Registration Request",
+      message =
+        s"""${developer.displayedName} has submitted their organisation ${organisationName.getOrElse("")} for
+           | use on the Developer Hub.""".stripMargin,
+      organisation = organisationName,
+      supportReason = Some("Organisation Registration Submission"),
+      reasonKey = Some("organisation-registration-submission"),
+      organisationSubmissionId = Some(submission.id.value.toString),
+      attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
+    )
+
+    apiPlatformDeskproConnector.createTicket(createTicketRequest, hc)
   }
 
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = organisationConnector.fetchLatestSubmissionByUserId(userId)
