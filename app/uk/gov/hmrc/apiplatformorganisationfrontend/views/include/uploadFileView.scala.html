@@ -44,7 +44,6 @@
         <div class="govuk-body">
 
             <form method="POST" action="@model.upscan.postTarget" id="file-upload-form" enctype="multipart/form-data">
-                @helper.CSRF.formField
                 @for((key, value) <- model.upscan.formFields) {
                     <input type="hidden" name="@key" value="@value"/>
                 }
