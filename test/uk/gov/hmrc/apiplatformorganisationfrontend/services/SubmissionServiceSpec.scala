@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question, SubmissionId}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question, Submission, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatform.modules.tpd.test.data.UserTestData
@@ -51,6 +51,11 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
 
     val allowList = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
     val email     = LaxEmailAddress("bob@example.com")
+
+    val ukLtdSubmission: Submission = aSubmission
+      .hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+      .withCompletedProgress()
+      .submission
   }
 
   "fetch" should {
@@ -104,14 +109,14 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
 
   "submitSubmission" should {
     "submit submission and update profile when RI name given" in new Setup {
-      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(ukLtdSubmission)))
       when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
 
-      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email, adminDeveloper))
+      val result = await(underTest.submitSubmission(ukLtdSubmission.id, userId, email, adminDeveloper))
 
       result.isRight shouldBe true
-      verify(mockOrganisationConnector).submitSubmission(eqTo(submittedSubmission.id), eqTo(email))(*)
-      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Roberts")))(*)
+      verify(mockOrganisationConnector).submitSubmission(eqTo(ukLtdSubmission.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Fleming")))(*)
     }
 
     "submit submission and not update profile when RI name not given" in new Setup {
@@ -148,14 +153,14 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
     }
 
     "submit submission and not create support ticket when company type is UK Ltd" in new Setup {
-      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(submittedSubmission)))
+      when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(ukLtdSubmission)))
       when(mockThirdPartyDeveloperConnector.updateProfile(*[UserId], *)(*)).thenReturn(successful(standardDeveloper))
 
-      val result = await(underTest.submitSubmission(submittedSubmission.id, userId, email, adminDeveloper))
+      val result = await(underTest.submitSubmission(ukLtdSubmission.id, userId, email, adminDeveloper))
 
       result.isRight shouldBe true
-      verify(mockOrganisationConnector).submitSubmission(eqTo(submittedSubmission.id), eqTo(email))(*)
-      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Roberts")))(*)
+      verify(mockOrganisationConnector).submitSubmission(eqTo(ukLtdSubmission.id), eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector).updateProfile(eqTo(userId), eqTo(UpdateRequest("Bob", "Fleming")))(*)
       verify(mockApiPlatformDeskproConnector, never).createTicket(*, *)
     }
 
