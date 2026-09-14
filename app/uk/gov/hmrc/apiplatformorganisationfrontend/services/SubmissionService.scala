@@ -95,7 +95,7 @@ class SubmissionService @Inject() (
       organisationSubmissionId = Some(submission.id.value.toString),
       attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
     )
-    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId, createTicketRequest: $createTicketRequest")
+    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId, attachments: ${createTicketRequest.attachments}")
     apiPlatformDeskproConnector.createTicket(createTicketRequest, hc)
   }
 
