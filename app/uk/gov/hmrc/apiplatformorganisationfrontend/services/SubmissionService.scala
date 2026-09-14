@@ -79,8 +79,6 @@ class SubmissionService @Inject() (
   }
 
   private def createDeskproTicket(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
-    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId")
-
     val organisationName = submission.organisationName
     val attachment       = submission.attachment
 
@@ -97,7 +95,7 @@ class SubmissionService @Inject() (
       organisationSubmissionId = Some(submission.id.value.toString),
       attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
     )
-
+    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId, createTicketRequest: $createTicketRequest")
     apiPlatformDeskproConnector.createTicket(createTicketRequest, hc)
   }
 
