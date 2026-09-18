@@ -152,20 +152,20 @@ class QuestionsController @Inject() (
     val question       = request.submission.findQuestion(questionId).get
 
     val onFormAnswer = question match {
-      case _: Question.NameQuestion => Some(ActualAnswer.NameAnswer(FullName(
+      case _: Question.ConfirmNameQuestion => Some(ActualAnswer.ConfirmNameAnswer(ConfirmFullName(
           trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
           trimmedAnswers.get("firstName").flatMap(_.headOption),
           trimmedAnswers.get("lastName").flatMap(_.headOption)
         )))
-      case _                        => None
+      case _                               => None
     }
 
     val trimmedNameAnswers = onFormAnswer match {
-      case Some(ActualAnswer.NameAnswer(FullName(Some("Yes"), Some(_), Some(_)))) => trimmedAnswers ++ Map(
+      case Some(ActualAnswer.ConfirmNameAnswer(ConfirmFullName(Some("Yes"), Some(_), Some(_)))) => trimmedAnswers ++ Map(
           "firstName" -> Seq(request.developer.firstName),
           "lastName"  -> Seq(request.developer.lastName)
         )
-      case _                                                                      => trimmedAnswers
+      case _                                                                                    => trimmedAnswers
     }
 
     submissionService.recordAnswer(submissionId, questionId, trimmedNameAnswers)
@@ -205,8 +205,12 @@ class QuestionsController @Inject() (
           trimmedAnswers.get("postcode").flatMap(_.headOption),
           trimmedAnswers.get("country").flatMap(_.headOption)
         )))
-      case _: Question.NameQuestion                 => Some(ActualAnswer.NameAnswer(FullName(
+      case _: Question.ConfirmNameQuestion          => Some(ActualAnswer.ConfirmNameAnswer(ConfirmFullName(
           trimmedAnswers.get("isThisYourName").flatMap(_.headOption),
+          trimmedAnswers.get("firstName").flatMap(_.headOption),
+          trimmedAnswers.get("lastName").flatMap(_.headOption)
+        )))
+      case _: Question.NameQuestion                 => Some(ActualAnswer.NameAnswer(FullName(
           trimmedAnswers.get("firstName").flatMap(_.headOption),
           trimmedAnswers.get("lastName").flatMap(_.headOption)
         )))

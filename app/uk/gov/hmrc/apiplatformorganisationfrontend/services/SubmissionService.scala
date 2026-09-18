@@ -56,8 +56,9 @@ class SubmissionService @Inject() (
   private def updateUserProfileIfRequired(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[User]] = {
     val nameAnswer = submission.getAnswerToQuestionOfInterest("responsibleIndividualNameId")
     nameAnswer match {
-      case ActualAnswer.NameAnswer(FullName(Some(_), Some(firstName), Some(lastName))) if isNewName(developer, firstName, lastName) => updateUserProfile(userId, firstName, lastName)
-      case _                                                                                                                        => Future.successful(None)
+      case ActualAnswer.ConfirmNameAnswer(ConfirmFullName(Some(_), Some(firstName), Some(lastName))) if isNewName(developer, firstName, lastName) =>
+        updateUserProfile(userId, firstName, lastName)
+      case _                                                                                                                                      => Future.successful(None)
     }
   }
 
