@@ -374,11 +374,12 @@ class CheckAnswersControllerSpec
 
   private def answerInFixtureFor(question: Question): String =
     samplePassAnswersToQuestions(question.id) match {
-      case ActualAnswer.SingleChoiceAnswer(value)                                => value
-      case ActualAnswer.TextAnswer(value)                                        => value
-      case ActualAnswer.CompanyNumberAnswer(value)                               => value
-      case ActualAnswer.NameAnswer(FullName(_, Some(firstName), Some(lastName))) => s"$firstName $lastName"
-      case other                                                                 => fail(s"Failed to get value for: $other")
+      case ActualAnswer.SingleChoiceAnswer(value)                                              => value
+      case ActualAnswer.TextAnswer(value)                                                      => value
+      case ActualAnswer.CompanyNumberAnswer(value)                                             => value
+      case ActualAnswer.NameAnswer(FullName(Some(firstName), Some(lastName)))                  => s"$firstName $lastName"
+      case ActualAnswer.ConfirmNameAnswer(ConfirmFullName(_, Some(firstName), Some(lastName))) => s"$firstName $lastName"
+      case other                                                                               => fail(s"Failed to get value for: $other")
     }
 
   private def summaryLinesFor(question: Question)(html: String): Seq[String] = {
