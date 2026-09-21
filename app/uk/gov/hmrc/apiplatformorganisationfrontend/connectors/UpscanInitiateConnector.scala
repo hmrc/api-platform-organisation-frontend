@@ -80,11 +80,7 @@ class UpscanInitiateConnector @Inject() (
 
   def initiate(questionId: Question.Id, submissionId: SubmissionId, returnTo: Option[String] = None)(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
     def queryParams = {
-      val qp     = Seq(
-        "questionId"   -> questionId.value,
-        "submissionId" -> submissionId.value.toString
-      )
-      val params = returnTo.fold(qp)(rt => qp ++ Seq("returnTo" -> rt))
+      val params = returnTo.fold(Seq.empty)(rt => Seq("returnTo" -> rt))
 
       params.collect {
         case (key, value) =>
@@ -92,7 +88,7 @@ class UpscanInitiateConnector @Inject() (
       }.mkString("&")
     }
 
-    val redirectUrl = s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result?$queryParams"
+    val redirectUrl = s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result/submission/${submissionId.value.toString}/question/${questionId.value}?$queryParams"
 
     val request = UpscanInitiateRequest(
       callbackUrl = appConfig.callbackEndpointTarget,

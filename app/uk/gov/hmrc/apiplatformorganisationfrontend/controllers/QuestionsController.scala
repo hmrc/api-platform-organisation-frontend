@@ -89,7 +89,7 @@ class QuestionsController @Inject() (
       } yield {
         errorInfo.fold[Result] {
           Ok(questionView(question, questionnaire, updatedSubmitAction, persistedAnswer, submission, None, returnTo, uploadViewModel))
-        }(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
+        }(ei => BadRequest(questionView(question, questionnaire, updatedSubmitAction, onFormAnswer, submission, Some(ei), returnTo)))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
