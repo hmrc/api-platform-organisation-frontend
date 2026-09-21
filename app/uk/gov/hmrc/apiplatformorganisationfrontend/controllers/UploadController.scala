@@ -69,12 +69,11 @@ class UploadController @Inject() (
 
     (maybeFileReference, maybeErrorCode, maybeErrorMessage) match {
       case (Some(fr), Some(ec), Some(em)) =>
-        logger.warn(s"upscanResultRedirect failure submissionId:$sid, fileReference:$maybeFileReference, error:$em")
-        val validationErrors = ValidationErrors(ValidationError(Question.answerKey, em))
-        showQuestionViewWithErrors(sid, qid, ec, em)(hc, request)
+        logger.warn(s"upscanResultRedirect failure submissionId:$sid, fileReference:$fr, error:$em")
+        showQuestionViewWithErrors(qid, ec, em)(hc, request)
       case (Some(fr), None, None) =>
         val answer       = Map("fileRef" -> Seq(fr))
-        logger.info(s"upscanResultRedirect success submissionId:$sid, fileReference:$maybeFileReference")
+        logger.info(s"upscanResultRedirect success submissionId:$sid, fileReference:$fr")
         submissionService.recordAnswer(sid, qid, answer)(hc)
           .map(_.fold(failed, success(_, qid, sid)))
       case _                                =>
@@ -82,29 +81,30 @@ class UploadController @Inject() (
     }
   }
 
-  private def showQuestionViewWithErrors(submissionId: SubmissionId, questionId: Question.Id, errorCode:String, errorMessage: String)
-                                        (implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] = {
-    submissionService.fetch(submissionId)(hc).flatMap {
-      case None => Future.successful(BadRequest(s"Could not find submission for submissionId: ${submissionId.toString()}"))
-      case Some(extendedSubmission: ExtendedSubmission) =>
-        val persistedAnswer = extendedSubmission.submission.latestInstance.answersToQuestions.get(questionId)
-        val submission = extendedSubmission.submission
-        val maybeQuestion = submission.findQuestion(questionId)
-        val maybeQuestionnaire = submission.findQuestionnaireContaining(questionId)
-        val validationErrors = ValidationErrors(ValidationError(Question.answerKey, errorMessage))
-        
-        (maybeQuestion, maybeQuestionnaire) match {
-          case (Some(question), Some(questionnaire)) =>
-            submissionService.initiateUpscan(question, submission, None)(hc) map {
-              case None => BadRequest("Error calling initiateUpscan")
-              case Some(uploadViewModel: UploadViewModel) =>
-                val call = Call(method = "POST", url = uploadViewModel.upscan.postTarget)
-                Ok(questionView(question = question, questionnaire = questionnaire, submitAction = call, currentAnswers = None,
-                  submission = submission, errorInfo = Some(validationErrors), returnTo = None, uploadViewModel = Some(uploadViewModel)))
-            }
-          case (_, _) => Future.successful(BadRequest("submissionId, questionId or fileReference missing"))
-        }
-    }
+  private def showQuestionViewWithErrors(questionId: Question.Id, errorCode:String, errorMessage: String)
+                                        (implicit hc: HeaderCarrier, request: SubmissionRequest[AnyContent]): Future[Result] = {
+      val submission = request.submission
+      val maybeQuestion = submission.findQuestion(questionId)
+      val maybeQuestionnaire = submission.findQuestionnaireContaining(questionId)
+      val message = errorCode match {
+        case "EntityTooLarge" => "File upload failed: The selected file must be smaller than 10MB"
+        case "EntityTooSmall" => "File upload failed: The selected file is empty"
+        case _ => "File upload failed. Please choose a different file"
+      }
+
+      val validationErrors = ValidationErrors(ValidationError(Question.answerKey, s"$message. $errorMessage"))
+
+      (maybeQuestion, maybeQuestionnaire) match {
+        case (Some(question), Some(questionnaire)) =>
+          submissionService.initiateUpscan(question, submission, None)(hc) map {
+            case None => BadRequest("Error initiating Upscan")
+            case Some(uploadViewModel: UploadViewModel) =>
+              val call = Call(method = "POST", url = uploadViewModel.upscan.postTarget)
+              Ok(questionView(question = question, questionnaire = questionnaire, submitAction = call, currentAnswers = None,
+                submission = submission, errorInfo = Some(validationErrors), returnTo = None, uploadViewModel = Some(uploadViewModel)))
+          }
+        case (_, _) => Future.successful(BadRequest("submissionId, questionId or fileReference missing"))
+      }
   }
 
   private def success(extSubmission: ExtendedSubmission, questionId: Question.Id, submissionId: SubmissionId): Result = {
