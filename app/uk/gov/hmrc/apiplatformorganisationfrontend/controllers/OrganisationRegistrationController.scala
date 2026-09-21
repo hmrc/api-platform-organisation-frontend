@@ -52,6 +52,7 @@ class OrganisationRegistrationController @Inject() (
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
     companyNumberNotFoundPage: CompanyNumberNotFoundPage,
+    companyNotActivePage: CompanyNotActivePage,
     val submissionService: SubmissionService,
     val organisationActionService: OrganisationActionService,
     val cookieSigner: CookieSigner,
@@ -123,5 +124,15 @@ class OrganisationRegistrationController @Inject() (
   def companyNumberNotFoundUpdateView(sid: SubmissionId, qid: Question.Id, returnTo: String): Action[AnyContent] = loggedInAction { implicit request =>
     val returnUrl = s"${routes.QuestionsController.updateQuestion(sid, qid).url}?returnTo=$returnTo"
     Future.successful(Ok(companyNumberNotFoundPage(Some(request.userSession), returnUrl)))
+  }
+
+  def companyNotActiveView(sid: SubmissionId, qid: Question.Id): Action[AnyContent] = loggedInAction { implicit request =>
+    val returnUrl = routes.QuestionsController.showQuestion(sid, qid).url
+    Future.successful(Ok(companyNotActivePage(Some(request.userSession), returnUrl)))
+  }
+
+  def companyNotActiveUpdateView(sid: SubmissionId, qid: Question.Id, returnTo: String): Action[AnyContent] = loggedInAction { implicit request =>
+    val returnUrl = s"${routes.QuestionsController.updateQuestion(sid, qid).url}?returnTo=$returnTo"
+    Future.successful(Ok(companyNotActivePage(Some(request.userSession), returnUrl)))
   }
 }

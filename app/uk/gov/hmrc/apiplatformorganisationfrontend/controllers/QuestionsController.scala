@@ -183,7 +183,6 @@ class QuestionsController @Inject() (
       returnTo: Option[String]
     )(implicit request: SubmissionRequest[AnyContent]
     ) = {
-    import cats.implicits.*
 
     val question = submission.findQuestion(questionId).get
 
@@ -248,6 +247,8 @@ class QuestionsController @Inject() (
     val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
       if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
         successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundView(submissionId, questionId)))
+      } else if (errors.errors.exists(_.key == ValidationError.companyNotActiveKey)) {
+        successful(Redirect(routes.OrganisationRegistrationController.companyNotActiveView(submissionId, questionId)))
       } else {
         redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, false, None)
       }
@@ -292,6 +293,8 @@ class QuestionsController @Inject() (
     val failed = (answers: List[String], trimmedAnswers: Map[String, Seq[String]], errors: ValidationErrors) => {
       if (errors.errors.exists(_.key == ValidationError.companyNumberNotFoundKey)) {
         successful(Redirect(routes.OrganisationRegistrationController.companyNumberNotFoundUpdateView(submissionId, questionId, returnTo)))
+      } else if (errors.errors.exists(_.key == ValidationError.companyNotActiveKey)) {
+        successful(Redirect(routes.OrganisationRegistrationController.companyNotActiveUpdateView(submissionId, questionId, returnTo)))
       } else {
         redisplayQuestion(questionId, request.submission, answers, trimmedAnswers, errors, true, Some(returnTo))(request)
       }
