@@ -57,7 +57,7 @@
 
 @renderText(text: String): String = @{
   val withUserName = replaceToken(text, "{userName}", loggedIn.developer.displayedName)
-  replaceToken(withUserName, "{companyName}", submission.organisationName.get)
+  replaceToken(withUserName, "{companyName}", submission.organisationName.getOrElse("your company"))
 }
 
 @renderCompoundFragment(cs: CompoundFragment) = @{
