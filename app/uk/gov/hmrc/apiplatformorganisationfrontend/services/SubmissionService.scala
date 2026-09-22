@@ -118,11 +118,11 @@ class SubmissionService @Inject() (
     organisationConnector.fetchOrganisationAllowList(userId)
   }
 
-  def initiateUpscan(question: Question, submission: Submission, returnTo: Option[String])(implicit hc: HeaderCarrier): Future[Option[UploadViewModel]] = {
+  def initiateUpscan(question: Question, submissionId: SubmissionId, returnTo: Option[String] = None)(implicit hc: HeaderCarrier): Future[Option[UploadViewModel]] = {
     question match {
       case _: Question.AttachmentQuestion =>
         upscanInitiateConnector
-          .initiate(question.id, submission.id, returnTo)
+          .initiate(question.id, submissionId, returnTo)
           .map { upscanResponse =>
             val model = Some(
               UploadViewModel(

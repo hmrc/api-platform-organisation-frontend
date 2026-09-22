@@ -25,6 +25,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.SubmissionService
 
 trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSugar {
@@ -125,6 +126,22 @@ trait SubmissionServiceMockModule extends MockitoSugar with ArgumentMatchersSuga
 
       def thenReturnsNone() =
         when(aMock.fetchAllowList(*[UserId])(*)).thenReturn(successful(None))
+    }
+
+    object InitiateUpscan {
+
+      def thenReturns(out: UploadViewModel) =
+        when(aMock.initiateUpscan(*[Question], *[SubmissionId], *)(*)).thenReturn(successful(Some(out)))
+
+      def thenReturnsNone() = {
+        when(aMock.initiateUpscan(*[Question], *[SubmissionId], *)(*)).thenReturn(successful(None))
+      }
+
+      def verifyCalledWith(question: Question, submissionId: SubmissionId) =
+        verify(aMock).initiateUpscan(eqTo(question), eqTo(submissionId), *)(*)
+
+      def verifyNotCalled() =
+        verify(aMock, never).initiateUpscan(*[Question], *[SubmissionId], *)(*)
     }
   }
 

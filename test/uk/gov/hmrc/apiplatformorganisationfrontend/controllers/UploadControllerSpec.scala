@@ -41,6 +41,8 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandl
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.{ThirdPartyDeveloperConnectorMockModule, UpscanInitiateConnectorMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.QuestionView
 
 class UploadControllerSpec
     extends HmrcSpec
@@ -70,6 +72,7 @@ class UploadControllerSpec
     val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
     val cookieSigner: CookieSigner        = app.injector.instanceOf[CookieSigner]
     val errorHandler: ErrorHandler        = app.injector.instanceOf[ErrorHandler]
+    val questionView: QuestionView        = app.injector.instanceOf[QuestionView]
 
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
@@ -79,8 +82,8 @@ class UploadControllerSpec
       errorHandler,
       OrganisationActionServiceMock.aMock,
       ThirdPartyDeveloperConnectorMock.aMock,
-      UpscanInitiateConnectorMock.aMock,
-      SubmissionServiceMock.aMock
+      SubmissionServiceMock.aMock,
+      questionView
     )(global, appConfig)
 
     val loggedInRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
@@ -90,29 +93,53 @@ class UploadControllerSpec
   }
 
   "upscanResultRedirect" should {
-    "succeed" in new Setup {
+    "show QuestionView with validation errors when errorCode EntityTooLarge present" in new Setup {
       val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
+      SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
       SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
-        FakeRequest("GET", s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}&key=$fileReference")
+        FakeRequest(
+          "GET",
+          s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference&errorCode=EntityTooLarge&errorMessage=Error"
+        )
           .withUser(controller)(sessionId)
           .withSession(sessionParams*)
           .withCSRFToken
 
-      val result: Future[Result] = controller.upscanResultRedirect()(attachmentRequest)
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(
+        "File upload failed: The selected file must be smaller than 10MB"
+      ) shouldBe true withClue ("HTML content did not contain the error message: File upload failed: The selected file must be smaller than 10MB")
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
+    }
+
+    "succeed and redirect to next question when no errorCode params present" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
+
+      val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest("GET", s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference")
+          .withUser(controller)(sessionId)
+          .withSession(sessionParams*)
+          .withCSRFToken
+
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe
         Some(s"/api-platform-organisation/submission/${aSubmission.id}/questionnaire/ac69b129-524a-4d10-89a5-7bfa46ed95c7/summary")
+
+      SubmissionServiceMock.InitiateUpscan.verifyNotCalled()
     }
 
-    "fail with BadRequest" in new Setup {
-      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+    "fail with BadRequest when no fileReference present in request" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
       SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
@@ -121,26 +148,26 @@ class UploadControllerSpec
           .withSession(sessionParams*)
           .withCSRFToken
 
-      val result: Future[Result] = controller.upscanResultRedirect()(attachmentRequest)
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
 
       status(result) shouldBe BAD_REQUEST
+      SubmissionServiceMock.InitiateUpscan.verifyNotCalled()
     }
 
-    "fail with InternalServerError" in new Setup {
-      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+    "fail with InternalServerError when recordAnswer fails" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
       SubmissionServiceMock.RecordAnswer.thenReturnsError("Failure")
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
-        FakeRequest("GET", s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}&key=$fileReference")
+        FakeRequest("GET", s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference")
           .withUser(controller)(sessionId)
           .withSession(sessionParams*)
           .withCSRFToken
 
-      val result: Future[Result] = controller.upscanResultRedirect()(attachmentRequest)
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
+      SubmissionServiceMock.InitiateUpscan.verifyNotCalled()
     }
   }
 }

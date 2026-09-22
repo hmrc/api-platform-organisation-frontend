@@ -16,24 +16,25 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.libs.crypto.CookieSigner
 import play.api.mvc.*
 import play.filters.headers.SecurityHeadersFilter
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Question, Questionnaire, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDeveloperConnector, UpscanInitiateConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.QuestionView
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadController @Inject() (
@@ -42,7 +43,6 @@ class UploadController @Inject() (
     val errorHandler: ErrorHandler,
     val organisationActionService: OrganisationActionService,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    val upscanInitiateConnector: UpscanInitiateConnector,
     val submissionService: SubmissionService,
     questionView: QuestionView
   )(implicit val ec: ExecutionContext,
@@ -75,23 +75,23 @@ class UploadController @Inject() (
     }
   }
 
-  private def showQuestionViewWithErrors(questionId: Question.Id, errorCode: String, errorMessage: String)
-                                        (implicit hc: HeaderCarrier, request: SubmissionRequest[AnyContent]): Future[Result] = {
+  private def showQuestionViewWithErrors(questionId: Question.Id, errorCode: String, errorMessage: String)(implicit hc: HeaderCarrier, request: SubmissionRequest[AnyContent])
+      : Future[Result] = {
     val submission         = request.submission
     val maybeQuestion      = submission.findQuestion(questionId)
     val maybeQuestionnaire = submission.findQuestionnaireContaining(questionId)
     val message            = (errorCode, errorMessage) match {
-      case ("EntityTooLarge", _) => "File upload failed: The selected file must be smaller than 10MB"
-      case ("EntityTooSmall", _) => "File upload failed: The selected file is empty"
-      case ("InvalidArgument","'file' field not found") => "Please select a non-empty file"
-      case _                => "File upload failed. Please select a different file"
+      case ("EntityTooLarge", _)                         => "File upload failed: The selected file must be smaller than 10MB"
+      case ("EntityTooSmall", _)                         => "File upload failed: The selected file is empty"
+      case ("InvalidArgument", "'file' field not found") => "Please select a non-empty file"
+      case _                                             => "File upload failed. Please select a different file"
     }
 
     val validationErrors = ValidationErrors(ValidationError(Question.answerKey, s"$message"))
 
     (maybeQuestion, maybeQuestionnaire) match {
       case (Some(question), Some(questionnaire)) =>
-        submissionService.initiateUpscan(question, submission, None)(hc) map {
+        submissionService.initiateUpscan(question, submission.id, None)(hc) map {
           case None                                   => BadRequest("Error initiating Upscan")
           case Some(uploadViewModel: UploadViewModel) =>
             val call = Call(method = "POST", url = uploadViewModel.upscan.postTarget)

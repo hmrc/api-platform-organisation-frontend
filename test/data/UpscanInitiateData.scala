@@ -16,9 +16,6 @@
 
 package data
 
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{Question, SubmissionId}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.{QuestionnaireTestData, SubmissionsTestData}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.{UpscanFileReference, UpscanInitiateResponse}
@@ -29,24 +26,11 @@ trait UpscanInitiateData extends QuestionnaireTestData with SubmissionsTestData 
   val formFields: Map[String, String] = Map("key1" -> "value1", "key2" -> "value2", "key3" -> "value3")
 
   def postTarget(questionId: Question.Id, submissionId: SubmissionId): String = {
-    s"/upscan/result?questionId=${questionId.value}&submissionId=${submissionId.value.toString}"
+    s"/upscan/result/submission/${submissionId.value.toString}/question/${questionId.value}"
   }
 
   def upscanInitiateResponse(questionId: Question.Id, submissionId: SubmissionId): UpscanInitiateResponse = {
     UpscanInitiateResponse(fileReference, postTarget(questionId, submissionId), formFields)
   }
 
-  def queryParams(questionId: Question.Id, submissionId: SubmissionId): Seq[(String, String)] = {
-    Seq(
-      "questionId"   -> questionId.value,
-      "submissionId" -> submissionId.value.toString
-    )
-  }
-
-  def queryParamsAsString(questionId: Question.Id, submissionId: SubmissionId) = {
-    queryParams(questionId, submissionId).collect {
-      case (key, value) =>
-        s"$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.toString)}"
-    }.mkString("&")
-  }
 }
