@@ -18,8 +18,10 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
@@ -35,7 +37,7 @@ class SubmissionService @Inject() (
     organisationConnector: OrganisationConnector,
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     apiPlatformDeskproConnector: ApiPlatformDeskproConnector,
-    upscanInitiateConnector: UpscanInitiateConnector,
+    upscanInitiateConnector: UpscanInitiateConnector
   )(implicit val ec: ExecutionContext
   ) extends EitherTHelper[String] with Logging {
 
@@ -116,7 +118,7 @@ class SubmissionService @Inject() (
     organisationConnector.fetchOrganisationAllowList(userId)
   }
 
-  def initiateUpscan(question: Question, submission: Submission, returnTo: Option[String])(implicit hc: HeaderCarrier) = {
+  def initiateUpscan(question: Question, submission: Submission, returnTo: Option[String])(implicit hc: HeaderCarrier): Future[Option[UploadViewModel]] = {
     question match {
       case _: Question.AttachmentQuestion =>
         upscanInitiateConnector
@@ -130,7 +132,7 @@ class SubmissionService @Inject() (
             )
             model
           }
-      case _ => Future.successful(None)
+      case _                              => Future.successful(None)
     }
   }
 }

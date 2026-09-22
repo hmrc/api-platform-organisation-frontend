@@ -88,7 +88,8 @@ class UpscanInitiateConnector @Inject() (
       }.mkString("&")
     }
 
-    val redirectUrl = s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result/submission/${submissionId.value.toString}/question/${questionId.value}?$queryParams"
+    val redirectUrl =
+      s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result/submission/${submissionId.value.toString}/question/${questionId.value}?$queryParams"
 
     val request = UpscanInitiateRequest(
       callbackUrl = appConfig.callbackEndpointTarget,
