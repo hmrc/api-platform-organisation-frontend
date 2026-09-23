@@ -98,7 +98,6 @@ class UploadControllerSpec
       val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
-      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest(
@@ -124,7 +123,6 @@ class UploadControllerSpec
       val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
-      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest(
@@ -150,7 +148,6 @@ class UploadControllerSpec
       val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
-      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest(
@@ -176,7 +173,6 @@ class UploadControllerSpec
       val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
-      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
 
       val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest(
@@ -193,6 +189,29 @@ class UploadControllerSpec
       contentAsString(result).contains(
         "File upload failed. Please select a different file"
       ) shouldBe true withClue ("HTML content did not contain the error message: File upload failed. Please select a different file")
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
+    }
+
+    "fail with InternalServerError when Upscan fails to initiate" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest(
+          "GET",
+          s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference&errorCode=SomethingElse&errorMessage=message"
+        )
+          .withUser(controller)(sessionId)
+          .withSession(sessionParams*)
+          .withCSRFToken
+
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsString(result).contains(
+        "Error initiating Upscan"
+      ) shouldBe true withClue ("Error did not include message: Error initiating Upscan")
 
       SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
     }

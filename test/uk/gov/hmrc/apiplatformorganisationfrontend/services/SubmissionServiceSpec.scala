@@ -196,8 +196,6 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       }
     }
     "return None when question is not AttachmentQuestion" in new Setup {
-//      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionCompanyNumber.id, aSubmission.id)
-//      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionCompanyNumber.id, aSubmission.id)(upscanResponse)
       val result: Option[UploadViewModel] = await(underTest.initiateUpscan(OrganisationDetails.questionCompanyNumber, aSubmission.id, returnTo = None))
 
       result shouldBe None

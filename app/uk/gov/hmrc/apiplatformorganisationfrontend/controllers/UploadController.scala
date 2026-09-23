@@ -87,12 +87,12 @@ class UploadController @Inject() (
       case _                                             => "File upload failed. Please select a different file"
     }
 
-    val validationErrors = ValidationErrors(ValidationError(Question.answerKey, s"$message"))
+    val validationErrors = ValidationErrors(ValidationError(Question.answerKey, message))
 
     (maybeQuestion, maybeQuestionnaire) match {
       case (Some(question), Some(questionnaire)) =>
         submissionService.initiateUpscan(question, submission.id, None)(hc) map {
-          case None                                   => BadRequest("Error initiating Upscan")
+          case None                                   => InternalServerError("Error initiating Upscan")
           case Some(uploadViewModel: UploadViewModel) =>
             val call = Call(method = "POST", url = uploadViewModel.upscan.postTarget)
             Ok(questionView(
