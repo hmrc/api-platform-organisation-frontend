@@ -119,6 +119,84 @@ class UploadControllerSpec
       SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
     }
 
+    "show QuestionView with validation errors when errorCode EntityTooSmall present" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
+      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
+
+      val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest(
+          "GET",
+          s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference&errorCode=EntityTooSmall&errorMessage=Error"
+        )
+          .withUser(controller)(sessionId)
+          .withSession(sessionParams*)
+          .withCSRFToken
+
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(
+        "File upload failed: The selected file must not be empty"
+      ) shouldBe true withClue ("HTML content did not contain the error message: File upload failed: The selected file must not be empty")
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
+    }
+
+    "show QuestionView with validation errors when errorCode InvalidArgument and errorMessage 'file' field not found present" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
+      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
+
+      val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest(
+          "GET",
+          s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference&errorCode=InvalidArgument&errorMessage='file' field not found"
+        )
+          .withUser(controller)(sessionId)
+          .withSession(sessionParams*)
+          .withCSRFToken
+
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(
+        "Please select a non-empty file"
+      ) shouldBe true withClue ("HTML content did not contain the error message: Please select a non-empty file")
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
+    }
+
+    "show QuestionView with validation errors when file upload fails with a different error code" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
+      SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)
+
+      val attachmentRequest: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest(
+          "GET",
+          s"${postTarget(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}?key=$fileReference&errorCode=SomethingElse&errorMessage=message"
+        )
+          .withUser(controller)(sessionId)
+          .withSession(sessionParams*)
+          .withCSRFToken
+
+      val result: Future[Result] = controller.upscanResultRedirect(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(attachmentRequest)
+
+      status(result) shouldBe OK
+      contentAsString(result).contains(
+        "File upload failed. Please select a different file"
+      ) shouldBe true withClue ("HTML content did not contain the error message: File upload failed. Please select a different file")
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id)
+    }
+
     "succeed and redirect to next question when no errorCode params present" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturns(partiallyAnsweredExtendedSubmission)

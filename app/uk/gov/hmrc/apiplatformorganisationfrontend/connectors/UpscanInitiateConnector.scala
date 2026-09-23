@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json.{Format, JsString, Json, Reads, Writes}
+import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HttpReads.Implicits.*

@@ -82,7 +82,7 @@ class UploadController @Inject() (
     val maybeQuestionnaire = submission.findQuestionnaireContaining(questionId)
     val message            = (errorCode, errorMessage) match {
       case ("EntityTooLarge", _)                         => "File upload failed: The selected file must be smaller than 10MB"
-      case ("EntityTooSmall", _)                         => "File upload failed: The selected file is empty"
+      case ("EntityTooSmall", _)                         => "File upload failed: The selected file must not be empty"
       case ("InvalidArgument", "'file' field not found") => "Please select a non-empty file"
       case _                                             => "File upload failed. Please select a different file"
     }
