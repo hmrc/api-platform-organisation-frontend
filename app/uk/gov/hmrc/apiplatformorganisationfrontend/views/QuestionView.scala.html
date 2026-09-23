@@ -44,15 +44,20 @@
 
 @(question: Question, questionnaire: Questionnaire, submitAction: Call, currentAnswers: Option[ActualAnswer], submission: Submission, errorInfo: Option[ValidationErrors], returnTo: Option[String] = None, uploadViewModel: Option[UploadViewModel] = None)(implicit request: Request[Any], messages: Messages, loggedIn: UserSession)
 
-@pageHeading = @{ question.wording.value }
+@pageHeading = @{ renderText(question.wording.value) }
 @questionId = @{s"question-${question.id.value}-id"}
 
 @renderStatementText(st: StatementText) = @{Html(renderText(st.text))}
 
 @renderStatementLink(sl: StatementLink) = {<a class="govuk-link" href="@{sl.url}" target="_blank">@{sl.text}</a>}
 
+@replaceToken(text: String, token: String, value: => String): String = @{
+  if(text.contains(token)) text.replace(token, value) else text
+}
+
 @renderText(text: String): String = @{
-  text.replace("{userName}", loggedIn.developer.displayedName)
+  val withUserName = replaceToken(text, "{userName}", loggedIn.developer.displayedName)
+  replaceToken(withUserName, "{companyName}", submission.organisationName.getOrElse("your company"))
 }
 
 @renderCompoundFragment(cs: CompoundFragment) = @{
@@ -375,7 +380,7 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
-@buildNameConditionalHtml(question: Question.NameQuestion) = {
+@renderNameQuestion(question: Question.NameQuestion) = {
   @renderMaybeStatement(question.statement)
   @govukFieldset(Fieldset(
     legend = None,
@@ -407,10 +412,49 @@
             autocomplete = Some("last-name")
         )),
       ))
+    ))
+
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
+}
+
+@buildConfirmNameConditionalHtml(question: Question.ConfirmNameQuestion) = {
+  @renderMaybeStatement(question.statement)
+  @govukFieldset(Fieldset(
+    legend = None,
+    html = HtmlFormat.fill(Seq(
+        govukInput(Input(
+            id = "firstName",
+            name = "firstName",
+            label = Label(
+                content = Text("First name")
+            ),
+            errorMessage = errorInfo.flatMap(_.errors.find(_.key == "firstName")).map(err => ErrorMessage(content = Text(err.message))),
+            value = currentAnswers match {
+                case Some(ActualAnswer.ConfirmNameAnswer(name)) => name.firstName
+                case _ => Some(loggedIn.developer.firstName)
+            },
+            autocomplete = Some("first-name")
+        )),
+        govukInput(Input(
+            id = "lastName",
+            name = "lastName",
+            label = Label(
+                content = Text("Last name")
+            ),
+            errorMessage = errorInfo.flatMap(_.errors.find(_.key == "lastName")).map(err => ErrorMessage(content = Text(err.message))),
+            value = currentAnswers match {
+                case Some(ActualAnswer.ConfirmNameAnswer(name)) => name.lastName
+                case _ => Some(loggedIn.developer.lastName)
+            },
+            autocomplete = Some("last-name")
+        )),
+      ))
   ))
 }
 
-@renderNameQuestion(question: Question.NameQuestion) = {
+@renderConfirmNameQuestion(question: Question.ConfirmNameQuestion) = {
   @renderMaybeStatement(Some(Statement(StatementText("{userName}"))))
   @govukRadios(Radios(name = "isThisYourName",
     errorMessage = errorInfo.flatMap(_.errors.find(_.key == Question.answerKey)).map(err => ErrorMessage(content = Text(err.message))),
@@ -418,7 +462,7 @@
     hint = question.hintText.map(hint => Hint(id = Some(questionId), content = HtmlContent(renderNonBulletStatementFragment(hint)))),
     classes =  "govuk-radios--inline",
     value = currentAnswers match {
-        case Some(ActualAnswer.NameAnswer(name)) => name.isThisYourName
+        case Some(ActualAnswer.ConfirmNameAnswer(name)) => name.isThisYourName
         case _ => None
     },
     items = Seq(
@@ -431,7 +475,7 @@
             content = Text("No"),
             value = Some("No"),
             id = Some("no"),
-            conditionalHtml = Some(buildNameConditionalHtml(question))
+            conditionalHtml = Some(buildConfirmNameConditionalHtml(question))
         )
     )
   ))
@@ -521,6 +565,7 @@
     case q: Question.AddressQuestion               => renderAddressQuestion(q)
     case q: Question.InternationalAddressQuestion  => renderInternationalAddressQuestion(q)
     case q: Question.NameQuestion                  => renderNameQuestion(q)
+    case q: Question.ConfirmNameQuestion           => renderConfirmNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
     case _: Question.AttachmentQuestion            => renderAttachmentQuestion()
   }
@@ -585,7 +630,7 @@
 
     @{
         question match {
-            case _: Question.NameQuestion => ()
+            case _: Question.ConfirmNameQuestion => ()
             case q => renderMaybeStatement(q.statement)
         }
     }
