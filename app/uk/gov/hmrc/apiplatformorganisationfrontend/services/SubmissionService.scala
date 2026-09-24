@@ -29,13 +29,15 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{Attachment, CreateTicketRequest}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector, UpscanInitiateConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 
 @Singleton
 class SubmissionService @Inject() (
     organisationConnector: OrganisationConnector,
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    apiPlatformDeskproConnector: ApiPlatformDeskproConnector
+    apiPlatformDeskproConnector: ApiPlatformDeskproConnector,
+    upscanInitiateConnector: UpscanInitiateConnector
   )(implicit val ec: ExecutionContext
   ) extends EitherTHelper[String] with Logging {
 
@@ -115,5 +117,23 @@ class SubmissionService @Inject() (
 
   def fetchAllowList(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[OrganisationAllowList]] = {
     organisationConnector.fetchOrganisationAllowList(userId)
+  }
+
+  def initiateUpscan(question: Question, submissionId: SubmissionId, returnTo: Option[String] = None)(implicit hc: HeaderCarrier): Future[Option[UploadViewModel]] = {
+    question match {
+      case _: Question.AttachmentQuestion =>
+        upscanInitiateConnector
+          .initiate(question.id, submissionId, returnTo)
+          .map { upscanResponse =>
+            val model = Some(
+              UploadViewModel(
+                upscan = upscanResponse,
+                error = None
+              )
+            )
+            model
+          }
+      case _                              => Future.successful(None)
+    }
   }
 }

@@ -31,12 +31,15 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.data.UserTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.UpscanInitiateConnectorMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 
 class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with UserTestData {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  trait Setup extends FixedClock with SubmissionsTestData {
+  trait Setup extends FixedClock with SubmissionsTestData with UpscanInitiateConnectorMockModule {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val mockOrganisationConnector        = mock[OrganisationConnector]
@@ -46,7 +49,8 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
     val underTest = new SubmissionService(
       mockOrganisationConnector,
       mockThirdPartyDeveloperConnector,
-      mockApiPlatformDeskproConnector
+      mockApiPlatformDeskproConnector,
+      UpscanInitiateConnectorMock.aMock
     )
 
     val allowList = OrganisationAllowList(userId, OrganisationName("My Org 1"), "requestedBy", instant)
@@ -174,6 +178,28 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
 
       result.isDefined shouldBe true
       result shouldBe Some(allowList)
+    }
+  }
+
+  "initiateUpscan" should {
+    "return upload view model when question is AttachmentQuestion" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
+      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
+      val result: Option[UploadViewModel]        = await(underTest.initiateUpscan(OrganisationDetails.questionNonUkWithoutAttachment, aSubmission.id, returnTo = None))
+
+      result.isDefined shouldBe true
+      result match {
+        case None                                   => fail()
+        case Some(uploadViewModel: UploadViewModel) =>
+          uploadViewModel.upscan shouldBe upscanResponse
+          uploadViewModel.error shouldBe None
+      }
+    }
+    "return None when question is not AttachmentQuestion" in new Setup {
+      val result: Option[UploadViewModel] = await(underTest.initiateUpscan(OrganisationDetails.questionCompanyNumber, aSubmission.id, returnTo = None))
+
+      result shouldBe None
+      verify(UpscanInitiateConnectorMock.aMock, never).initiate(*[Question.Id], *[SubmissionId], *)(*[HeaderCarrier])
     }
   }
 }

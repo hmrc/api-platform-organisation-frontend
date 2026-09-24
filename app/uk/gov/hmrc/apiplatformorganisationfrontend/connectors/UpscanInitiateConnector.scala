@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json.{Format, JsString, Json, Reads, Writes}
+import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -79,20 +77,11 @@ class UpscanInitiateConnector @Inject() (
   )
 
   def initiate(questionId: Question.Id, submissionId: SubmissionId, returnTo: Option[String] = None)(implicit hc: HeaderCarrier): Future[UpscanInitiateResponse] = {
-    def queryParams = {
-      val qp     = Seq(
-        "questionId"   -> questionId.value,
-        "submissionId" -> submissionId.value.toString
-      )
-      val params = returnTo.fold(qp)(rt => qp ++ Seq("returnTo" -> rt))
+    val params = returnTo.fold("")(rt => s"?returnTo=$rt")
 
-      params.collect {
-        case (key, value) =>
-          s"$key=${URLEncoder.encode(value, StandardCharsets.UTF_8.toString)}"
-      }.mkString("&")
-    }
-
-    val redirectUrl = s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result?$queryParams"
+    val redirectUrl =
+      s"${appConfig.organisationFrontendUrl}/api-platform-organisation/upscan/result" +
+        s"/submission/${submissionId.value.toString}/question/${questionId.value}$params"
 
     val request = UpscanInitiateRequest(
       callbackUrl = appConfig.callbackEndpointTarget,

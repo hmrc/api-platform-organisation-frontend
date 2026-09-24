@@ -34,7 +34,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDeveloperConnector, UpscanInitiateConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
@@ -51,7 +51,6 @@ class QuestionsController @Inject() (
     val errorHandler: ErrorHandler,
     override val submissionService: SubmissionService,
     val organisationActionService: OrganisationActionService,
-    val upscanInitiateConnector: UpscanInitiateConnector,
     val cookieSigner: CookieSigner,
     questionView: QuestionView,
     mcc: MessagesControllerComponents,
@@ -84,33 +83,15 @@ class QuestionsController @Inject() (
         _                  <- fromOption(oQuestion, "Question not found in questionnaire")
         question            = oQuestion.get
         questionnaire      <- fromOption(oQuestionnaire, "Questionnaire not found in questionnaire")
-        uploadViewModel    <- liftF(initiateUpscan(question, submission, returnTo))
+        uploadViewModel    <- liftF(submissionService.initiateUpscan(question, submission.id, returnTo))
         updatedSubmitAction = getSubmitAction(uploadViewModel, submitAction)
       } yield {
         errorInfo.fold[Result] {
           Ok(questionView(question, questionnaire, updatedSubmitAction, persistedAnswer, submission, None, returnTo, uploadViewModel))
-        }(ei => BadRequest(questionView(question, questionnaire, submitAction, onFormAnswer, submission, Some(ei), returnTo)))
+        }(ei => BadRequest(questionView(question, questionnaire, updatedSubmitAction, onFormAnswer, submission, Some(ei), returnTo)))
       }
     )
       .fold[Result](BadRequest(_), identity(_))
-  }
-
-  private def initiateUpscan(question: Question, submission: Submission, returnTo: Option[String])(implicit request: SubmissionRequest[AnyContent]) = {
-    question match {
-      case _: Question.AttachmentQuestion =>
-        upscanInitiateConnector
-          .initiate(question.id, submission.id, returnTo)
-          .map { upscanResponse =>
-            val model = Some(
-              UploadViewModel(
-                upscan = upscanResponse,
-                error = None
-              )
-            )
-            model
-          }
-      case _                              => Future.successful(None)
-    }
   }
 
   private def getSubmitAction(uploadViewModel: Option[UploadViewModel], submitAction: Call) = {

@@ -16,22 +16,25 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
+import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.libs.crypto.CookieSigner
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.*
 import play.filters.headers.SecurityHeadersFilter
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.Question.ForwardToQuestion
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{ExtendedSubmission, Question, Questionnaire, SubmissionId}
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ValidationErrors
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.{ValidationError, ValidationErrors}
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ThirdPartyDeveloperConnector, UpscanInitiateConnector}
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
 import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.QuestionView
 
 @Singleton
 class UploadController @Inject() (
@@ -40,43 +43,80 @@ class UploadController @Inject() (
     val errorHandler: ErrorHandler,
     val organisationActionService: OrganisationActionService,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    val upscanInitiateConnector: UpscanInitiateConnector,
-    val submissionService: SubmissionService
+    val submissionService: SubmissionService,
+    questionView: QuestionView
   )(implicit val ec: ExecutionContext,
     val appConfig: AppConfig
-  ) extends BaseController(mcc) with Logging {
+  ) extends LoggedInController(mcc)
+    with Logging
+    with SubmissionActionBuilders {
 
-  def upscanResultRedirect(): Action[AnyContent] = Action.async { request =>
+  def upscanResultRedirect(sid: SubmissionId, qid: Question.Id): Action[AnyContent] = withSubmission(sid) { implicit request: SubmissionRequest[AnyContent] =>
 
-    val hc            = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    val questionId    = request.getQueryString("questionId")
-    val submissionId  = request.getQueryString("submissionId")
-    val fileReference = request.getQueryString("key")
+    val hc                 = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+    val maybeFileReference = request.getQueryString("key")
+    val maybeErrorCode     = request.getQueryString("errorCode")
+    val maybeErrorMessage  = request.getQueryString("errorMessage")
 
-    logger.info(s"In upscanResultRedirect questionId: " + questionId)
-    logger.info(s"In upscanResultRedirect submissionId: " + submissionId)
-    logger.info(s"In upscanResultRedirect fileReference: " + fileReference)
+    logger.info(s"In upscanResultRedirect request:$request, questionId:$qid, submissionId:$sid, " +
+      s"fileReference:$maybeFileReference, errorCode:$maybeErrorCode, errorMessage:$maybeErrorMessage")
 
-    (questionId, submissionId, fileReference) match {
-      case (Some(qId), Some(sId), Some(fr)) =>
-        val answer       = Map("fileRef" -> Seq(fr))
-        val questionId   = Question.Id(qId)
-        val submissionId = SubmissionId(UUID.fromString(sId))
-        logger.info(s"In upscanResultRedirect match submissionId:$submissionId, questionId:$questionId and fileReference:$fileReference")
-        submissionService.recordAnswer(submissionId, questionId, answer)(hc)
-          .map(_.fold(failed, success(_, questionId, submissionId)))
-      case _                                =>
-        Future.successful(overrideIframeHeaders(BadRequest("submissionId, questionId or fileReference missing")))
+    (maybeFileReference, maybeErrorCode, maybeErrorMessage) match {
+      case (Some(fr), Some(ec), Some(em)) =>
+        logger.warn(s"upscanResultRedirect failure submissionId:$sid, fileReference:$fr, error:$em")
+        showQuestionViewWithErrors(qid, ec, em)(hc, request)
+      case (Some(fr), None, None)         =>
+        val answer = Map("fileRef" -> Seq(fr))
+        logger.info(s"upscanResultRedirect success submissionId:$sid, fileReference:$fr")
+        submissionService.recordAnswer(sid, qid, answer)(hc)
+          .map(_.fold(failed, success(_, qid, sid)))
+      case _                              =>
+        Future.successful(overrideIframeHeaders(BadRequest("File reference missing")))
     }
   }
 
-  private def success(extSubmission: ExtendedSubmission, questionId: Question.Id, submissionId: SubmissionId) = {
+  private def showQuestionViewWithErrors(questionId: Question.Id, errorCode: String, errorMessage: String)(implicit hc: HeaderCarrier, request: SubmissionRequest[AnyContent])
+      : Future[Result] = {
+    val submission         = request.submission
+    val maybeQuestion      = submission.findQuestion(questionId)
+    val maybeQuestionnaire = submission.findQuestionnaireContaining(questionId)
+    val message            = (errorCode, errorMessage) match {
+      case ("EntityTooLarge", _)                         => "File upload failed: The selected file must be smaller than 10MB"
+      case ("EntityTooSmall", _)                         => "File upload failed: The selected file must not be empty"
+      case ("InvalidArgument", "'file' field not found") => "Please select a non-empty file"
+      case _                                             => "File upload failed. Please select a different file"
+    }
+
+    val validationErrors = ValidationErrors(ValidationError(Question.answerKey, message))
+
+    (maybeQuestion, maybeQuestionnaire) match {
+      case (Some(question), Some(questionnaire)) =>
+        submissionService.initiateUpscan(question, submission.id, None)(hc) map {
+          case None                                   => InternalServerError("Error initiating Upscan")
+          case Some(uploadViewModel: UploadViewModel) =>
+            val call = Call(method = "POST", url = uploadViewModel.upscan.postTarget)
+            Ok(questionView(
+              question = question,
+              questionnaire = questionnaire,
+              submitAction = call,
+              currentAnswers = None,
+              submission = submission,
+              errorInfo = Some(validationErrors),
+              returnTo = None,
+              uploadViewModel = Some(uploadViewModel)
+            ))
+        }
+      case (_, _)                                => Future.successful(BadRequest("Submission not found"))
+    }
+  }
+
+  private def success(extSubmission: ExtendedSubmission, questionId: Question.Id, submissionId: SubmissionId): Result = {
     val questionnaire = extSubmission.submission.findQuestionnaireContaining(questionId).get
     val nextQuestion  = findNextQuestion(extSubmission, questionId, questionnaire.id)
 
     lazy val toSectionSummary =
       routes.CheckAnswersController.showSectionSummary(extSubmission.submission.id, questionnaire.id)
-    lazy val toNextQuestion   = (nextQuestionId) => routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
+    lazy val toNextQuestion   = (nextQuestionId: Question.Id) => routes.QuestionsController.showQuestion(submissionId, nextQuestionId)
 
     logger.info(s"In UploadController success() nextQuestion:$nextQuestion")
 

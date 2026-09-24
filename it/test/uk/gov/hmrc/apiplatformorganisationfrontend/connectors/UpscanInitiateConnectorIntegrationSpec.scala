@@ -45,7 +45,7 @@ class UpscanInitiateConnectorIntegrationSpec extends BaseConnectorIntegrationSpe
     val underTest: UpscanInitiateConnector = app.injector.instanceOf[UpscanInitiateConnector]
 
     val redirectUrl =
-      s"http://localhost:15503/api-platform-organisation/upscan/result?${queryParamsAsString(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)}"
+      s"http://localhost:15503/api-platform-organisation/upscan/result/submission/${aSubmission.id.value.toString}/question/${OrganisationDetails.questionNonUkWithoutAttachment.id.value}"
 
     val request = UpscanInitiateRequest(
       callbackUrl = "http://localhost:9614/upscan-callback",
