@@ -266,17 +266,29 @@ class QuestionControllerSpec
       contentAsString(result).contains("<title>") shouldBe true
     }
 
-    "succeed and check for label, hintText, attachment question" in new Setup {
-      val upscanResponse     = upscanInitiateResponse(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)
-      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      UpscanInitiateConnectorMock.Initiate.succeedsWith(OrganisationDetails.questionNonUkWithoutAttachment.id, aSubmission.id)(upscanResponse)
+    "succeed and check for label with company name substitution, hintText, attachment question" in new Setup {
+      val attachmentQuestion = OrganisationDetails.questionNonUkWithoutAttachment.copy(wording = Wording("Attach the tax registration document for {companyName}"))
+      val companyDetails     = Submission.CompanyDetails("12345678", "Acme Ltd")
+      val submission         = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.copy(groups =
+          NonEmptyList.of(GroupOfQuestionnaires(
+            "Group 1",
+            NonEmptyList.of(Questionnaire(OrganisationDetails.questionnaire.id, OrganisationDetails.questionnaire.label, NonEmptyList.of(QuestionItem(attachmentQuestion))))
+          ))
+        )
+      )
+      val upscanResponse     = upscanInitiateResponse(attachmentQuestion.id, submission.id)
+      SubmissionServiceMock.Fetch.thenReturns(submission.withIncompleteProgress())
+      UpscanInitiateConnectorMock.Initiate.succeedsWith(attachmentQuestion.id, submission.id)(upscanResponse)
       val expectedHtmlAction = upscanResponse.postTarget.replace("&", "&amp;")
-      val result             = controller.showQuestion(aSubmission.id, OrganisationDetails.questionNonUkWithoutAttachment.id)(loggedInRequest.withCSRFToken)
+      val result             = controller.showQuestion(submission.id, attachmentQuestion.id)(loggedInRequest.withCSRFToken)
 
       status(result) shouldBe OK
 
       contentAsString(result).contains(expectedHtmlAction) shouldBe true withClue (s"(HTML content did not contain $expectedHtmlAction)")
-      contentAsString(result).contains("Attach the tax document") shouldBe true withClue ("HTML content did not contain label")
+      contentAsString(result).contains(
+        "Attach the tax registration document for Acme Ltd"
+      ) shouldBe true withClue ("HTML content did not contain label with substituted company name")
       contentAsString(result).contains(
         "You can upload your registration document as a scanned copy or photo of the original. The selected file must be smaller than 10MB."
       ) shouldBe true withClue ("HTML content did not contain hintText")
