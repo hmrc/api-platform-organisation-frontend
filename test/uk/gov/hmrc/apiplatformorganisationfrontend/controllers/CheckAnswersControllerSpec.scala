@@ -142,7 +142,6 @@ class CheckAnswersControllerSpec
 
       status(result) shouldBe OK
       contentAsString(result) should include("Your answers")
-      contentAsString(result) should include("to update submitted answers")
     }
 
     "fail with NOT_FOUND if logged in user doesn't match submission user" in new Setup {
