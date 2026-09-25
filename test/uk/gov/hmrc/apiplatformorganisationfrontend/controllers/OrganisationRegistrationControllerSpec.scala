@@ -66,6 +66,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
     val notAllowListedPage             = app.injector.instanceOf[NotAllowListedPage]
     val companyNumberNotFoundPage      = app.injector.instanceOf[CompanyNumberNotFoundPage]
+    val companyNotActivePage           = app.injector.instanceOf[CompanyNotActivePage]
     val cookieSigner                   = app.injector.instanceOf[CookieSigner]
     val errorHandler                   = app.injector.instanceOf[ErrorHandler]
     implicit val appConfig: AppConfig  = app.injector.instanceOf[AppConfig]
@@ -78,6 +79,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
         notResponsibleIndividualPage,
         notAllowListedPage,
         companyNumberNotFoundPage,
+        companyNotActivePage,
         SubmissionServiceMock.aMock,
         OrganisationActionServiceMock.aMock,
         cookieSigner,

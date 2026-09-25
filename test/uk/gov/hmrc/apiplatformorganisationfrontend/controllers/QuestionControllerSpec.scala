@@ -505,6 +505,23 @@ class QuestionControllerSpec
       )
     }
 
+    "fail and redirect to the company not active page when the company not active" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey(
+        ValidationError.companyNotActiveKey,
+        "The company is not active, only companies that are trading can be set up on the Developer Hub"
+      )
+      private val invalidCompanyNumber = "12345678"
+      private val request              = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidCompanyNumber, "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionCompanyNumber.id)(request.withCSRFToken)
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(
+        s"/api-platform-organisation/registration/company-not-active/${aSubmission.id.value}/${OrganisationDetails.questionCompanyNumber.id.value}"
+      )
+    }
+
     "completing last question in section" should {
       "redirect to section summary instead of checklist" in new Setup {
         val submissionWithOneQuestionLeft = aSubmission.withIncompleteProgress()
