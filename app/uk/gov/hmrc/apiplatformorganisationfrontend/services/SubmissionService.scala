@@ -16,12 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-
 import play.api.Logging
-import uk.gov.hmrc.http.HeaderCarrier
-
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
@@ -31,6 +26,10 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{Attachment, CreateTicketRequest}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector, UpscanInitiateConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
+import uk.gov.hmrc.http.HeaderCarrier
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionService @Inject() (
@@ -48,10 +47,11 @@ class SubmissionService @Inject() (
       : Future[Either[String, Submission]] = {
     (
       for {
-        submission <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
-        _          <- liftF(updateUserProfileIfRequired(userId, submission, developer))
-        _          <- liftF(createDeskproTicketIfRequired(userId, submission, developer))
-      } yield submission
+        submission        <- fromEitherF(organisationConnector.submitSubmission(submissionId, requestedBy))
+        _                 <- liftF(updateUserProfileIfRequired(userId, submission, developer))
+        updatedSubmission <- liftF(createDeskproTicketIfRequired(submission, developer))
+
+      } yield updatedSubmission
     ).value
   }
 
@@ -73,15 +73,18 @@ class SubmissionService @Inject() (
     thirdPartyDeveloperConnector.updateProfile(userId, UpdateRequest(firstName, lastName)).map(u => Some(u))
   }
 
-  private def createDeskproTicketIfRequired(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+  private def createDeskproTicketIfRequired(submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Submission] = {
     val organisationTypeAnswer = submission.getAnswerToQuestionOfInterest("organisationTypeId")
-    organisationTypeAnswer match {
-      case ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK") => createDeskproTicket(userId, submission, developer)
-      case _                                                                                                 => Future.successful(None)
+    val additionalSubmissionData: Option[AdditionalSubmissionData] = submission.additionalSubmissionData
+
+    (organisationTypeAnswer, additionalSubmissionData) match {
+      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), Some(Some(ticketId), _)) => updateDeskproTicket(submission, developer, ticketId)
+      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), None) => createDeskproTicket(submission, developer)
+      case _                                                                                                 => Future.successful(submission)
     }
   }
 
-  private def createDeskproTicket(userId: UserId, submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+  private def createDeskproTicket(submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Submission] = {
     val organisationName = submission.organisationName
     val attachment       = submission.attachment
 
@@ -98,8 +101,28 @@ class SubmissionService @Inject() (
       organisationSubmissionId = Some(submission.id.value.toString),
       attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
     )
-    logger.info(s"Organisation registration creating Deskpro ticket for userId: $userId, attachments: ${createTicketRequest.attachments}")
-    apiPlatformDeskproConnector.createTicket(createTicketRequest, hc)
+    logger.info(s"Organisation registration creating Deskpro ticket for userId: ${developer.userId}, attachments: ${createTicketRequest.attachments}")
+    apiPlatformDeskproConnector.createTicket(createTicketRequest, hc).map(response =>
+      val updatedSubmission = submission.copy(additionalSubmissionData = Some(AdditionalSubmissionData(supportTicketId = response.id, supportTicketRef = response.ref)))
+      organisationConnector.recordTicket(submission.id, response.id, response.ref)
+      updatedSubmission
+    )
+  }
+
+  private def updateDeskproTicket(submission: Submission, developer: User, supportTicketId: Int)(implicit hc: HeaderCarrier): Future[Submission] = {
+    val organisationName = submission.organisationName
+    val attachment       = submission.attachment
+
+    apiPlatformDeskproConnector.createMessage(
+      ticketId = supportTicketId,
+      userEmail = developer.email,
+      message = s"""${developer.displayedName} has re-submitted their organisation ${organisationName.getOrElse("")} for
+                   | use on the Developer Hub.""".stripMargin,
+      status = "awaiting_agent",
+      attachments = attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse("")))),
+      hc
+    )
+    Future.successful(submission)
   }
 
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = organisationConnector.fetchLatestSubmissionByUserId(userId)
