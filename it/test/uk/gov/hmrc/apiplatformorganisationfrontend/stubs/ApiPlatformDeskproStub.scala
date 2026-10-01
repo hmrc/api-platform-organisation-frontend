@@ -29,19 +29,20 @@ object ApiPlatformDeskproStub {
 
   object CreateTicket {
 
-    def succeeds(ticketReference: String): StubMapping = {
+    def succeeds(ticketReference: String, ticketId: Int): StubMapping = {
       stubFor(
         post(urlEqualTo("/ticket"))
           .willReturn(
             aResponse()
               .withStatus(OK)
-              .withBody(Json.parse(s"""{"ref":"$ticketReference"}""").toString)
+              .withBody(Json.parse(s"""{"ref":"$ticketReference", "id":$ticketId}""").toString)
               .withHeader("content-type", "application/json")
           )
       )
     }
 
-    def succeedsWithAttachments(ticketReference: String, fullName: String, email: String, subject: String, message: String, attachments: List[Attachment]): StubMapping = {
+    def succeedsWithAttachments(ticketReference: String, ticketId: Int, fullName: String, email: String, subject: String, message: String, attachments: List[Attachment])
+        : StubMapping = {
       val attachmentsJson = attachments.map(att => s"""{"fileReference": "${att.fileReference}", "fileName": "${att.fileName}"}""").mkString("[", ",", "]")
       stubFor(
         post(urlEqualTo("/ticket"))
@@ -55,7 +56,7 @@ object ApiPlatformDeskproStub {
           .willReturn(
             aResponse()
               .withStatus(OK)
-              .withBody(Json.parse(s"""{"ref":"$ticketReference"}""").toString)
+              .withBody(Json.parse(s"""{"ref":"$ticketReference", "id":$ticketId}""").toString)
               .withHeader("content-type", "application/json")
           )
       )
@@ -160,7 +161,7 @@ object ApiPlatformDeskproStub {
     }
   }
 
-  object CreateResponse {
+  object CreateMessage {
 
     def succeeds(ticketId: Int, userEmail: LaxEmailAddress, message: String): StubMapping = {
       stubFor(

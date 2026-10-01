@@ -16,7 +16,12 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.services
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
@@ -26,10 +31,6 @@ import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{Attachment, CreateTicketRequest}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector, UpscanInitiateConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
-import uk.gov.hmrc.http.HeaderCarrier
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionService @Inject() (
@@ -74,13 +75,14 @@ class SubmissionService @Inject() (
   }
 
   private def createDeskproTicketIfRequired(submission: Submission, developer: User)(implicit hc: HeaderCarrier): Future[Submission] = {
-    val organisationTypeAnswer = submission.getAnswerToQuestionOfInterest("organisationTypeId")
+    val organisationTypeAnswer                                     = submission.getAnswerToQuestionOfInterest("organisationTypeId")
     val additionalSubmissionData: Option[AdditionalSubmissionData] = submission.additionalSubmissionData
 
     (organisationTypeAnswer, additionalSubmissionData) match {
-      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), Some(Some(ticketId), _)) => updateDeskproTicket(submission, developer, ticketId)
-      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), None) => createDeskproTicket(submission, developer)
-      case _                                                                                                 => Future.successful(submission)
+      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), Some(Some(ticketId), _)) =>
+        updateDeskproTicket(submission, developer, ticketId)
+      case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), None)                    => createDeskproTicket(submission, developer)
+      case _                                                                                                                            => Future.successful(submission)
     }
   }
 

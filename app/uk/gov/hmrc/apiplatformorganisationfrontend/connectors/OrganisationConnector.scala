@@ -65,7 +65,7 @@ class OrganisationConnector @Inject() (
   }
 
   def recordTicket(submissionId: SubmissionId, supportTicketId: Option[Int], supportTicketRef: Option[String])(implicit hc: HeaderCarrier)
-  : Future[Either[ValidationErrors, ExtendedSubmission]] = {
+      : Future[Either[ValidationErrors, ExtendedSubmission]] = {
     import cats.implicits._
 
     metrics.record(api) {
@@ -77,7 +77,7 @@ class OrganisationConnector @Inject() (
           resp.status match {
             case 200 => resp.json.as[ExtendedSubmission].asRight
             case 400 => resp.json.as[ValidationErrors].asLeft
-            case _ => ValidationErrors(ValidationError(message = s"Failed to record ticket for submission $submissionId and ticket ${supportTicketId.getOrElse("")}")).asLeft
+            case _   => ValidationErrors(ValidationError(message = s"Failed to record ticket for submission $submissionId and ticket ${supportTicketId.getOrElse("")}")).asLeft
           }
         )
     }

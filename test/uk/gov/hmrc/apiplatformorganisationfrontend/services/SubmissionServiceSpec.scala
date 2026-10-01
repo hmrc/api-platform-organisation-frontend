@@ -24,12 +24,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.apiplatform.modules.organisations.domain.models.OrganisationName
-import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{OrganisationAllowList, Question, Submission, SubmissionId}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.dto.UpdateRequest
 import uk.gov.hmrc.apiplatform.modules.tpd.test.data.UserTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.AsyncHmrcSpec
+import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.{CreateMessageSuccess, CreateTicketResponse}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.{ApiPlatformDeskproConnector, OrganisationConnector, ThirdPartyDeveloperConnector}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.UpscanInitiateConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
@@ -138,15 +139,42 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
     }
 
+    "re-submit submission and update support ticket when company type is " +
+      "Non-UK without a branch or place of business in the UK " +
+      "and ticketId present on Submission" in new Setup {
+        val ticketRef                               = Some("12345")
+        val ticketId                                = Some(12345)
+        val additionalSubmissionData                = AdditionalSubmissionData(supportTicketId = ticketId, supportTicketRef = ticketRef)
+        val nonUkSubmissionWithTicketId: Submission = aSubmission
+          .hasCompletelyAnsweredWith(sampleAnswersToQuestions2)
+          .withCompletedProgress()
+          .submission.copy(additionalSubmissionData = Some(additionalSubmissionData))
+        val extendedSubmission: ExtendedSubmission  = completelyAnswerExtendedSubmission.copy(submission = nonUkSubmissionWithTicketId)
+
+        when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(nonUkSubmissionWithTicketId)))
+        when(mockApiPlatformDeskproConnector.createMessage(*, *[LaxEmailAddress], *, *, *, *)).thenReturn(successful(CreateMessageSuccess))
+
+        val result: Either[String, Submission] = await(underTest.submitSubmission(extendedSubmission.submission.id, userId, email, adminDeveloper))
+
+        result.isRight shouldBe true
+        verify(mockOrganisationConnector).submitSubmission(eqTo(extendedSubmission.submission.id), eqTo(email))(*)
+        verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
+        verify(mockApiPlatformDeskproConnector, times(1)).createMessage(*, *[LaxEmailAddress], *, *, *, *)
+        verify(mockOrganisationConnector, never).recordTicket(*[SubmissionId], *, *)(*)
+      }
+
     "submit submission and create support ticket when company type is Non-UK without a branch or place of business in the UK" in new Setup {
-      val nonUkSubmission = aSubmission
+      val nonUkSubmission                        = aSubmission
         .hasCompletelyAnsweredWith(sampleAnswersToQuestions2)
         .withCompletedProgress()
         .submission
-      val ticketRef       = Some("12345")
+      val ticketRef                              = Some("12345")
+      val ticketId                               = Some(12345)
+      val extendedSubmission: ExtendedSubmission = completelyAnswerExtendedSubmission.copy(submission = nonUkSubmission)
 
       when(mockOrganisationConnector.submitSubmission(*[SubmissionId], *[LaxEmailAddress])(*)).thenReturn(successful(Right(nonUkSubmission)))
-      when(mockApiPlatformDeskproConnector.createTicket(*, *)).thenReturn(successful(ticketRef))
+      when(mockApiPlatformDeskproConnector.createTicket(*, *)).thenReturn(successful(CreateTicketResponse(ticketRef, ticketId)))
+      when(mockOrganisationConnector.recordTicket(*[SubmissionId], *, *)(*)).thenReturn(successful(Right(extendedSubmission)))
 
       val result = await(underTest.submitSubmission(nonUkSubmission.id, userId, email, adminDeveloper))
 
@@ -154,6 +182,7 @@ class SubmissionServiceSpec extends AsyncHmrcSpec with LocalUserIdTracker with U
       verify(mockOrganisationConnector).submitSubmission(eqTo(nonUkSubmission.id), eqTo(email))(*)
       verify(mockThirdPartyDeveloperConnector, never).updateProfile(*[UserId], *)(*)
       verify(mockApiPlatformDeskproConnector, times(1)).createTicket(*, *)
+      verify(mockOrganisationConnector).recordTicket(*[SubmissionId], *, *)(*)
     }
 
     "submit submission and not create support ticket when company type is UK Ltd" in new Setup {

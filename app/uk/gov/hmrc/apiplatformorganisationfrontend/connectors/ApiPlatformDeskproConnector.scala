@@ -18,12 +18,14 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.connectors
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse, StringContextOps}
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.apiplatformorganisationfrontend.models.DeskproTicket
 
@@ -71,15 +73,15 @@ object ApiPlatformDeskproConnector {
 
   case class GetTicketsByEmailRequest(email: LaxEmailAddress, status: Option[String] = None)
 
-  implicit val attachmentFormat: Format[Attachment]                              = Json.format[Attachment]
-  implicit val createTicketRequestFormat: Format[CreateTicketRequest]            = Json.format[CreateTicketRequest]
-  implicit val createTicketResponseFormat: Format[CreateTicketResponse]          = Json.format[CreateTicketResponse]
-  implicit val getTicketsByEmailRequest: Format[GetTicketsByEmailRequest]        = Json.format[GetTicketsByEmailRequest]
-  implicit val createMessageRequest: OFormat[CreateMessageRequest] = Json.format[CreateMessageRequest]
+  implicit val attachmentFormat: Format[Attachment]                       = Json.format[Attachment]
+  implicit val createTicketRequestFormat: Format[CreateTicketRequest]     = Json.format[CreateTicketRequest]
+  implicit val createTicketResponseFormat: Format[CreateTicketResponse]   = Json.format[CreateTicketResponse]
+  implicit val getTicketsByEmailRequest: Format[GetTicketsByEmailRequest] = Json.format[GetTicketsByEmailRequest]
+  implicit val createMessageRequest: OFormat[CreateMessageRequest]        = Json.format[CreateMessageRequest]
 }
 
 @Singleton
-class ApiPlatformDeskproConnector @Inject()(http: HttpClientV2, config: ApiPlatformDeskproConnector.Config, metrics: ConnectorMetrics)(implicit val ec: ExecutionContext)
+class ApiPlatformDeskproConnector @Inject() (http: HttpClientV2, config: ApiPlatformDeskproConnector.Config, metrics: ConnectorMetrics)(implicit val ec: ExecutionContext)
     extends Logging {
 
   import ApiPlatformDeskproConnector.*
@@ -95,27 +97,27 @@ class ApiPlatformDeskproConnector @Inject()(http: HttpClientV2, config: ApiPlatf
       .execute[CreateTicketResponse]
   }
 
-  def createMessage(ticketId: Int, userEmail: LaxEmailAddress, message: String, status: String, attachments: List[Attachment], hc: HeaderCarrier)
-  : Future[CreateMessageResult] = metrics.record(api) {
-    implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
-    val createMessageRequestJson = Json.toJson(CreateMessageRequest(userEmail, message, status, attachments))
-    http.post(url"${config.serviceBaseUrl}/ticket/$ticketId/response")
-      .withBody(createMessageRequestJson)
-      .execute[HttpResponse]
-      .map(response =>
-        response.status match {
-          case OK =>
-            logger.info(s"Create message for ticket '$ticketId' success")
-            CreateMessageSuccess
-          case NOT_FOUND =>
-            logger.warn(s"Create message for ticket '$ticketId' failed Not found")
-            CreateMessageNotFound
-          case _ =>
-            logger.error(s"Create message for ticket '$ticketId' failed status: ${response.status}. Response body: ${response.body}")
-            CreateMessageFailure
-        }
-      )
-  }
+  def createMessage(ticketId: Int, userEmail: LaxEmailAddress, message: String, status: String, attachments: List[Attachment], hc: HeaderCarrier): Future[CreateMessageResult] =
+    metrics.record(api) {
+      implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
+      val createMessageRequestJson              = Json.toJson(CreateMessageRequest(userEmail, message, status, attachments))
+      http.post(url"${config.serviceBaseUrl}/ticket/$ticketId/response")
+        .withBody(createMessageRequestJson)
+        .execute[HttpResponse]
+        .map(response =>
+          response.status match {
+            case OK        =>
+              logger.info(s"Create message for ticket '$ticketId' success")
+              CreateMessageSuccess
+            case NOT_FOUND =>
+              logger.warn(s"Create message for ticket '$ticketId' failed Not found")
+              CreateMessageNotFound
+            case _         =>
+              logger.error(s"Create message for ticket '$ticketId' failed status: ${response.status}. Response body: ${response.body}")
+              CreateMessageFailure
+          }
+        )
+    }
 
   def fetchTicket(ticketId: Int, hc: HeaderCarrier): Future[Option[DeskproTicket]] = metrics.record(api) {
     implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))

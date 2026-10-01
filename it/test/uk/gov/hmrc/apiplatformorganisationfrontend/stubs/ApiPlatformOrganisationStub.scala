@@ -181,6 +181,40 @@ object ApiPlatformOrganisationStub {
     }
   }
 
+  object RecordTicket {
+
+    def succeeds(submissionId: SubmissionId, supportTicketId: Int, supportTicketRef: String, extendedSubmission: ExtendedSubmission): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/$submissionId/ticket"))
+          .withRequestBody(equalToJson(s"""{
+                                          |  "supportTicketId": $supportTicketId,
+                                          |  "supportTicketRef": "$supportTicketRef"
+                                          |}""".stripMargin))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withHeader("Content-Type", "application/json")
+              .withBody(Json.toJson(extendedSubmission).toString())
+          )
+      )
+    }
+
+    def fails(submissionId: SubmissionId, supportTicketId: Int, supportTicketRef: String, status: Int, body: JsValue = Json.obj()): StubMapping = {
+      stubFor(
+        post(urlEqualTo(s"/submission/$submissionId/ticket"))
+          .withRequestBody(equalToJson(s"""{
+                                          |  "supportTicketId": $supportTicketId,
+                                          |  "supportTicketRef": "$supportTicketRef"
+                                          |}""".stripMargin))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+              .withBody(body.toString())
+          )
+      )
+    }
+  }
+
   object CreateOrganisation {
 
     def succeeds(organisation: Organisation): StubMapping = {
