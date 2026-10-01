@@ -20,12 +20,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse, StringContextOps}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.DeskproTicket
 
 object ApiPlatformDeskproConnector {
 
@@ -53,29 +55,29 @@ object ApiPlatformDeskproConnector {
       attachments: List[Attachment] = List.empty
     )
 
-  case class CreateTicketResponse(ref: Option[String])
+  case class CreateTicketResponse(ref: Option[String], id: Option[Int])
 
   case class Attachment(fileReference: String, fileName: String)
 
-  case class CreateTicketResponseRequest(userEmail: LaxEmailAddress, message: String, status: String, attachments: List[Attachment] = List.empty)
+  case class CreateMessageRequest(userEmail: LaxEmailAddress, message: String, status: String, attachments: List[Attachment] = List.empty)
 
   sealed trait DeskproTicketCloseResult
   object DeskproTicketCloseSuccess  extends DeskproTicketCloseResult
   object DeskproTicketCloseNotFound extends DeskproTicketCloseResult
   object DeskproTicketCloseFailure  extends DeskproTicketCloseResult
 
-  sealed trait DeskproTicketResponseResult
-  object DeskproTicketResponseSuccess  extends DeskproTicketResponseResult
-  object DeskproTicketResponseNotFound extends DeskproTicketResponseResult
-  object DeskproTicketResponseFailure  extends DeskproTicketResponseResult
+  sealed trait CreateMessageResult
+  object CreateMessageSuccess  extends CreateMessageResult
+  object CreateMessageNotFound extends CreateMessageResult
+  object CreateMessageFailure  extends CreateMessageResult
 
   case class GetTicketsByEmailRequest(email: LaxEmailAddress, status: Option[String] = None)
 
-  implicit val attachmentFormat: Format[Attachment]                              = Json.format[Attachment]
-  implicit val createTicketRequestFormat: Format[CreateTicketRequest]            = Json.format[CreateTicketRequest]
-  implicit val createTicketResponseFormat: Format[CreateTicketResponse]          = Json.format[CreateTicketResponse]
-  implicit val getTicketsByEmailRequest: Format[GetTicketsByEmailRequest]        = Json.format[GetTicketsByEmailRequest]
-  implicit val createTicketResponseRequest: OFormat[CreateTicketResponseRequest] = Json.format[CreateTicketResponseRequest]
+  implicit val attachmentFormat: Format[Attachment]                       = Json.format[Attachment]
+  implicit val createTicketRequestFormat: Format[CreateTicketRequest]     = Json.format[CreateTicketRequest]
+  implicit val createTicketResponseFormat: Format[CreateTicketResponse]   = Json.format[CreateTicketResponse]
+  implicit val getTicketsByEmailRequest: Format[GetTicketsByEmailRequest] = Json.format[GetTicketsByEmailRequest]
+  implicit val createMessageRequest: OFormat[CreateMessageRequest]        = Json.format[CreateMessageRequest]
 }
 
 @Singleton
@@ -87,12 +89,39 @@ class ApiPlatformDeskproConnector @Inject() (http: HttpClientV2, config: ApiPlat
 
   val api = API("api-platform-deskpro")
 
-  def createTicket(createRequest: CreateTicketRequest, hc: HeaderCarrier): Future[Option[String]] = metrics.record(api) {
+  def createTicket(createRequest: CreateTicketRequest, hc: HeaderCarrier): Future[CreateTicketResponse] = metrics.record(api) {
     implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
     val createRequestJson                     = Json.toJson(createRequest)
     http.post(url"${config.serviceBaseUrl}/ticket")
       .withBody(createRequestJson)
       .execute[CreateTicketResponse]
-      .map(_.ref)
+  }
+
+  def createMessage(ticketId: Int, userEmail: LaxEmailAddress, message: String, status: String, attachments: List[Attachment], hc: HeaderCarrier): Future[CreateMessageResult] =
+    metrics.record(api) {
+      implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
+      val createMessageRequestJson              = Json.toJson(CreateMessageRequest(userEmail, message, status, attachments))
+      http.post(url"${config.serviceBaseUrl}/ticket/$ticketId/response")
+        .withBody(createMessageRequestJson)
+        .execute[HttpResponse]
+        .map(response =>
+          response.status match {
+            case OK        =>
+              logger.info(s"Create message for ticket '$ticketId' success")
+              CreateMessageSuccess
+            case NOT_FOUND =>
+              logger.warn(s"Create message for ticket '$ticketId' failed Not found")
+              CreateMessageNotFound
+            case _         =>
+              logger.error(s"Create message for ticket '$ticketId' failed status: ${response.status}. Response body: ${response.body}")
+              CreateMessageFailure
+          }
+        )
+    }
+
+  def fetchTicket(ticketId: Int, hc: HeaderCarrier): Future[Option[DeskproTicket]] = metrics.record(api) {
+    implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
+    http.get(url"${config.serviceBaseUrl}/ticket/$ticketId")
+      .execute[Option[DeskproTicket]]
   }
 }
