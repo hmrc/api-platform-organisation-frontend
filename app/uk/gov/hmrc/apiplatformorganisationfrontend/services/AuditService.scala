@@ -31,7 +31,7 @@ class AuditService @Inject() (auditConnector: AuditConnector)(using val ec: Exec
 
   def audit(action: AuditAction, data: Map[String, String] = Map.empty)(using hc: HeaderCarrier): Future[AuditResult] =
     auditConnector.sendEvent(DataEvent(
-      auditSource = "third-party-developer-frontend",
+      auditSource = "api-platform-orgnaisation-frontend",
       auditType = action.auditType,
       tags = hc.toAuditTags(action.name, "-") ++ userContext(hc) ++ action.tags.toSeq ++ data,
       detail = hc.toAuditDetails(action.details.toSeq*)
