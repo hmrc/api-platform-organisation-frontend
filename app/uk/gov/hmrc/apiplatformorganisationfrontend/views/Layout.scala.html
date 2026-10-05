@@ -35,6 +35,8 @@
         hmrcStandardHeader: HmrcStandardHeader,
   hmrcFooter: HmrcFooter,
   hmrcScripts: HmrcScripts,
+  autocompleteCss: HmrcAccessibleAutocompleteCss,
+  autocompleteJavascript: HmrcAccessibleAutocompleteJavascript,
   govukBackLink: GovukBackLink,
   fixedWidthPageLayout: FixedWidthPageLayout,
   hmrcTimeoutDialog: HmrcTimeoutDialog,
@@ -67,6 +69,7 @@
 @headBlock = {
   <link href='@routes.Assets.versioned("stylesheets/main.css")' media="screen" rel="stylesheet" type="text/css" />
   @hmrcTrackingConsentSnippet()
+  @autocompleteCss()
   @timeoutBlock
 }
 
@@ -165,7 +168,7 @@
     pageTitle = Some(s"$pageTitle - HMRC Developer Hub - GOV.UK"),
     headBlock = Some(headBlock),
     headerBlock = Some(headerBlock),
-    scriptsBlock = Some(hmrcScripts()),
+    scriptsBlock = Some(hmrcScripts(Some(autocompleteJavascript()))),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(footerBlock),
     mainContentLayout = None,

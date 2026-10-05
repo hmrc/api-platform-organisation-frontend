@@ -219,6 +219,20 @@ class QuestionControllerSpec
       contentAsString(result).contains("Postcode") shouldBe true withClue ("HTML content did not contain 6th input")
       contentAsString(result).contains("Country") shouldBe true withClue ("HTML content did not contain 7th input")
       contentAsString(result).contains("<title>") shouldBe true
+
+      contentAsString(result).contains("hmrc-accessible-autocomplete") shouldBe true withClue ("HTML content did not contain country autocomplete")
+      contentAsString(result).contains("Start typing the name of the country") shouldBe true withClue ("HTML content did not contain country prompt")
+    }
+
+    "succeed and select the saved international address country" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(sampleAnswersToQuestions2)
+      SubmissionServiceMock.Fetch.thenReturns(submission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val result = controller.showQuestion(submission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      contentAsString(result) should include regex """value="France"\s+selected"""
     }
 
     "succeed and check for label, hintText, multichoice question" in new Setup {
@@ -473,6 +487,25 @@ class QuestionControllerSpec
       val body = contentAsString(result)
 
       body should include("Town or City required")
+    }
+
+    "fail if international address country is not in the list" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey("country", "Select a country from the list")
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+      val answers = Seq(
+        "country"          -> "Not a country",
+        "submit-action"    -> "save"
+      )
+      val request = loggedInRequest.withFormUrlEncodedBody(answers*)
+
+      val result = controller.recordAnswer(aSubmission.id, OrganisationDetails.questionNonUkWithoutAddress.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+
+      val body = contentAsString(result)
+
+      body should include("Select a country from the list")
     }
 
     "fail if invalid company number provided and returns downstream error" in new Setup {
