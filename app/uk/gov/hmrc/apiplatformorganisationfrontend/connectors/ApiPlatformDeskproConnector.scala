@@ -27,7 +27,6 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpResponse, StringContextOps}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-import uk.gov.hmrc.apiplatformorganisationfrontend.models.DeskproTicket
 
 object ApiPlatformDeskproConnector {
 
@@ -118,10 +117,4 @@ class ApiPlatformDeskproConnector @Inject() (http: HttpClientV2, config: ApiPlat
           }
         )
     }
-
-  def fetchTicket(ticketId: Int, hc: HeaderCarrier): Future[Option[DeskproTicket]] = metrics.record(api) {
-    implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = Some(Authorization(config.authToken)))
-    http.get(url"${config.serviceBaseUrl}/ticket/$ticketId")
-      .execute[Option[DeskproTicket]]
-  }
 }

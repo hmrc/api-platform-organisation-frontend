@@ -64,7 +64,7 @@ class OrganisationConnector @Inject() (
     }
   }
 
-  def recordTicket(submissionId: SubmissionId, supportTicketId: Option[Int], supportTicketRef: Option[String])(implicit hc: HeaderCarrier)
+  def recordTicketOnSubmission(submissionId: SubmissionId, supportTicketId: Option[Int], supportTicketRef: Option[String])(implicit hc: HeaderCarrier)
       : Future[Either[ValidationErrors, ExtendedSubmission]] = {
     import cats.implicits._
 

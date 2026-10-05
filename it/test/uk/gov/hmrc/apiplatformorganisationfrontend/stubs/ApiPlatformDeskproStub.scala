@@ -73,61 +73,6 @@ object ApiPlatformDeskproStub {
     }
   }
 
-  object FetchTicket {
-
-    def succeeds(ticketId: Int): StubMapping = {
-      stubFor(
-        get(urlEqualTo(s"/ticket/$ticketId"))
-          .willReturn(
-            aResponse()
-              .withStatus(OK)
-              .withHeader("content-type", "application/json")
-              .withBody(s"""{
-                           |  "id": $ticketId,
-                           |  "ref": "SDST-2025XON927",
-                           |  "person": 61,
-                           |  "personEmail": "bob@example.com",
-                           |  "status": "awaiting_user",
-                           |  "dateCreated": "2025-05-01T08:02:02Z",
-                           |  "dateLastUpdated": "2025-05-20T07:24:41Z",
-                           |  "dateResolved": "2025-05-23T09:27:46Z",
-                           |  "subject": "HMRC Developer Hub: Support Enquiry",
-                           |  "messages": [
-                           |    {
-                           |      "id": 3467,
-                           |      "ticketId": $ticketId,
-                           |      "person": 33,
-                           |      "dateCreated": "2025-05-01T08:02:02Z",
-                           |      "isAgentNote": false,
-                           |      "message": "Hi. What API do I need to get next weeks lottery numbers?",
-                           |      "attachments": [{"filename":"file.name","url":"https://example.com"}]
-                           |    },
-                           |    {
-                           |      "id": 3698,
-                           |      "ticketId": $ticketId,
-                           |      "person": 61,
-                           |      "dateCreated": "2025-05-19T11:54:53Z",
-                           |      "isAgentNote": false,
-                           |      "message": "Reply message from agent. What else gets filled in?",
-                           |      "attachments": []
-                           |    }
-                           |  ]
-                           |}""".stripMargin)
-          )
-      )
-    }
-
-    def fails(ticketId: Int, status: Int): StubMapping = {
-      stubFor(
-        get(urlEqualTo(s"/ticket/$ticketId"))
-          .willReturn(
-            aResponse()
-              .withStatus(status)
-          )
-      )
-    }
-  }
-
   object CloseTicket {
 
     def succeeds(ticketId: Int): StubMapping = {
