@@ -24,6 +24,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application as PlayApplication, Configuration, Mode}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.apiplatformorganisationfrontend.WireMockExtensions
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ApiPlatformDeskproConnector.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.stubs.ApiPlatformDeskproStub
@@ -48,37 +49,39 @@ class ApiPlatformDeskproConnectorIntegrationSpec
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val underTest                  = app.injector.instanceOf[ApiPlatformDeskproConnector]
 
-    val fullName      = "Bob"
-    val email         = "bob@example.com"
-    val subject       = "Test"
-    val message       = "Message"
-    val fileReference = "fileRef"
-    val fileName      = "test-file.pdf"
-    val deskproTicket = ApiPlatformDeskproConnector.CreateTicketRequest(fullName, email, subject, message)
-    val status        = "awaiting_agent"
+    val fullName             = "Bob"
+    val email                = LaxEmailAddress("bob@example.com")
+    val subject              = "Test"
+    val message              = "Message"
+    val status               = "awaiting_agent"
+    val ticketId             = 12345
+    val ticketReference      = "DP12345"
+    val fileReference        = "fileRef"
+    val fileName             = "test-file.pdf"
+    val attachment           = Attachment(fileReference, fileName)
+    val attachments          = List(attachment)
+    val createTicketRequest  = ApiPlatformDeskproConnector.CreateTicketRequest(fullName, email.text, subject, message)
+    val createMessageRequest = ApiPlatformDeskproConnector.CreateMessageRequest(email, message, status, attachments)
+
   }
 
   "createTicket" should {
     "return a ticket reference" in new Setup {
-      val ticketReference = "DP12345"
+      ApiPlatformDeskproStub.CreateTicket.succeeds(ticketReference, ticketId)
 
-      ApiPlatformDeskproStub.CreateTicket.succeeds(ticketReference)
+      val result = await(underTest.createTicket(createTicketRequest, hc))
 
-      val result = await(underTest.createTicket(deskproTicket, hc))
-
-      result shouldBe Some(ticketReference)
+      result shouldBe CreateTicketResponse(Some(ticketReference), Some(ticketId))
     }
 
     "return a ticket reference when creating ticket with attachments" in new Setup {
-      val ticketReference       = "DP12346"
-      val attachments           = List(Attachment(fileReference, fileName))
-      val ticketWithAttachments = deskproTicket.copy(attachments = attachments)
+      val ticketWithAttachments = createTicketRequest.copy(attachments = attachments)
 
-      ApiPlatformDeskproStub.CreateTicket.succeedsWithAttachments(ticketReference, fullName, email, subject, message, attachments)
+      ApiPlatformDeskproStub.CreateTicket.succeedsWithAttachments(ticketReference, ticketId, fullName, email.text, subject, message, attachments)
 
       val result = await(underTest.createTicket(ticketWithAttachments, hc))
 
-      result shouldBe Some(ticketReference)
+      result shouldBe CreateTicketResponse(Some(ticketReference), Some(ticketId))
     }
 
     "fail when the ticket creation call returns an error" in new Setup {
@@ -86,8 +89,42 @@ class ApiPlatformDeskproConnectorIntegrationSpec
       ApiPlatformDeskproStub.CreateTicket.fails(failureStatus)
 
       intercept[UpstreamErrorResponse] {
-        await(underTest.createTicket(deskproTicket, hc))
+        await(underTest.createTicket(createTicketRequest, hc))
       }.statusCode shouldBe failureStatus
+    }
+  }
+
+  "createMessage" should {
+    "return CreateMessageSuccess when creating message without attachments" in new Setup {
+      ApiPlatformDeskproStub.CreateMessage.succeeds(ticketId, userEmail = email, message = message)
+
+      val result = await(underTest.createMessage(ticketId, email, message, status, List.empty, hc))
+
+      result shouldBe CreateMessageSuccess
+    }
+
+    "return CreateMessageSuccess when creating message with attachments" in new Setup {
+      ApiPlatformDeskproStub.CreateMessage.succeedsWithFileAttachment(ticketId, userEmail = email, message = message, attachment)
+
+      val result = await(underTest.createMessage(ticketId, email, message, status, attachments, hc))
+
+      result shouldBe CreateMessageSuccess
+    }
+
+    "fail with CreateMessageNotFound when the message creation call returns NOT_FOUND" in new Setup {
+      ApiPlatformDeskproStub.CreateMessage.notFound(ticketId)
+
+      val result = await(underTest.createMessage(ticketId, email, message, status, attachments, hc))
+
+      result shouldBe CreateMessageNotFound
+    }
+
+    "fail with CreateMessageFailure when the message creation call returns INTERNAL_SERVER_ERROR" in new Setup {
+      ApiPlatformDeskproStub.CreateMessage.fails(ticketId)
+
+      val result = await(underTest.createMessage(ticketId, email, message, status, attachments, hc))
+
+      result shouldBe CreateMessageFailure
     }
   }
 }

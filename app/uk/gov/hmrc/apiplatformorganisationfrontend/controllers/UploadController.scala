@@ -127,8 +127,8 @@ class UploadController @Inject() (
 
   private def findNextQuestion(extSubmission: ExtendedSubmission, questionId: Question.Id, questionnaireId: Questionnaire.Id) = {
     extSubmission.submission.findQuestion(questionId) match {
-      case Some(ForwardToQuestion(id, forwardToQuestionId, _, _, _)) => Some(forwardToQuestionId)
-      case _                                                         => extSubmission.questionnaireProgress.get(questionnaireId)
+      case Some(ForwardToQuestion(id, forwardToQuestionId, _, _, _, _)) => Some(forwardToQuestionId)
+      case _                                                            => extSubmission.questionnaireProgress.get(questionnaireId)
           .flatMap(_.questionsToAsk.dropWhile(_ != questionId).drop(1).headOption)
     }
   }

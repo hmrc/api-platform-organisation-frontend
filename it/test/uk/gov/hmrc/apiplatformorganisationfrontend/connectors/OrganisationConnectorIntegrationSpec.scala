@@ -202,6 +202,37 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
     }
   }
 
+  "recordTicketOnSubmission" should {
+    val ticketId        = 12345
+    val ticketReference = "DP12345"
+
+    "successfully record ticket ID and ticket reference" in new Setup {
+      ApiPlatformOrganisationStub.RecordTicket.succeeds(submissionId, supportTicketId = ticketId, supportTicketRef = ticketReference, completelyAnswerExtendedSubmission)
+
+      val result = await(underTest.recordTicketOnSubmission(submissionId, supportTicketId = Some(ticketId), supportTicketRef = Some(ticketReference)))
+
+      result shouldBe Right(completelyAnswerExtendedSubmission)
+    }
+
+    "fail when call to api platform organisation returns an error" in new Setup {
+      ApiPlatformOrganisationStub.RecordTicket.fails(submissionId, supportTicketId = ticketId, supportTicketRef = ticketReference, INTERNAL_SERVER_ERROR)
+
+      val result = await(underTest.recordTicketOnSubmission(submissionId, supportTicketId = Some(ticketId), supportTicketRef = Some(ticketReference)))
+
+      result.isLeft shouldBe true
+    }
+
+    "fail when the creation call returns a validation error" in new Setup {
+      private val errors: ValidationErrors = ValidationErrors(ValidationError(message = "Your answer is wrong"))
+      ApiPlatformOrganisationStub.RecordTicket.fails(submissionId, supportTicketId = ticketId, supportTicketRef = ticketReference, BAD_REQUEST, Json.toJson(errors))
+
+      val result = await(underTest.recordTicketOnSubmission(submissionId, supportTicketId = Some(ticketId), supportTicketRef = Some(ticketReference)))
+
+      result.isLeft shouldBe true
+      result shouldBe Left(errors)
+    }
+  }
+
   "createOrganisation" should {
     "successfully create one" in new Setup {
       ApiPlatformOrganisationStub.CreateOrganisation.succeeds(organisation)
