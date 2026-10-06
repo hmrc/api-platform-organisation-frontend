@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 @Singleton
 class AuditService @Inject() (auditConnector: AuditConnector)(using val ec: ExecutionContext) {
 
-  def audit(action: AuditAction, data: Map[String, String] = Map.empty)(using hc: HeaderCarrier): Future[AuditResult] =
+  def audit(action: AuditAction, data: Map[String, String] = Map.empty)(implicit hc: HeaderCarrier): Future[AuditResult] =
     auditConnector.sendEvent(DataEvent(
       auditSource = "api-platform-organisation-frontend",
       auditType = action.auditType,
@@ -59,8 +59,8 @@ sealed trait AuditAction {
 
 object AuditAction {
 
-  case object OrganisationDeletionRequested extends AuditAction {
-    override val name: String      = "Developer has requested organisation deletion"
-    override val auditType: String = "OrganisationDeletionRequest"
+  case object OrganisationRegistrationStarted extends AuditAction {
+    override val name: String      = "Developer has started organisation registration"
+    override val auditType: String = "OrganisationRegistrationStarted"
   }
 }
