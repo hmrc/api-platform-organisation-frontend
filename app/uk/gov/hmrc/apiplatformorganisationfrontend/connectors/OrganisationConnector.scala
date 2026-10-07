@@ -64,6 +64,25 @@ class OrganisationConnector @Inject() (
     }
   }
 
+  def recordTicketOnSubmission(submissionId: SubmissionId, supportTicketId: Option[Int], supportTicketRef: Option[String])(implicit hc: HeaderCarrier)
+      : Future[Either[ValidationErrors, ExtendedSubmission]] = {
+    import cats.implicits._
+
+    metrics.record(api) {
+      http
+        .post(url"${config.serviceBaseUrl}/submission/$submissionId/ticket")
+        .withBody(Json.toJson(RecordTicketRequest(supportTicketId, supportTicketRef)))
+        .execute[HttpResponse]
+        .map(resp =>
+          resp.status match {
+            case 200 => resp.json.as[ExtendedSubmission].asRight
+            case 400 => resp.json.as[ValidationErrors].asLeft
+            case _   => ValidationErrors(ValidationError(message = s"Failed to record ticket for submission $submissionId and ticket ${supportTicketId.getOrElse("")}")).asLeft
+          }
+        )
+    }
+  }
+
   def fetchLatestSubmissionByUserId(userId: UserId)(implicit hc: HeaderCarrier): Future[Option[Submission]] = {
     metrics.record(api) {
       http
@@ -168,6 +187,9 @@ object OrganisationConnector {
 
   case class OutboundRecordAnswersRequest(responses: Map[String, Seq[String]])
   given Writes[OutboundRecordAnswersRequest] = Json.writes[OutboundRecordAnswersRequest]
+
+  case class RecordTicketRequest(supportTicketId: Option[Int], supportTicketRef: Option[String])
+  given Writes[RecordTicketRequest] = Json.writes[RecordTicketRequest]
 
   case class CreateSubmissionRequest(requestedBy: LaxEmailAddress)
   given Writes[CreateSubmissionRequest] = Json.writes[CreateSubmissionRequest]

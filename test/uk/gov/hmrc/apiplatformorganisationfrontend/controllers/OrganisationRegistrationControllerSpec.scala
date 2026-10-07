@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -27,6 +27,8 @@ import play.api.libs.crypto.CookieSigner
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.Helpers.*
 import play.api.test.{CSRFTokenHelper, FakeRequest}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.audit.http.connector.AuditResult
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.OrganisationId
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
@@ -40,6 +42,7 @@ import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, OrganisationServiceMockModule, SubmissionServiceMockModule}
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.AuditService
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPerSuite
@@ -69,7 +72,9 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val companyNotActivePage           = app.injector.instanceOf[CompanyNotActivePage]
     val cookieSigner                   = app.injector.instanceOf[CookieSigner]
     val errorHandler                   = app.injector.instanceOf[ErrorHandler]
+    val mockAuditService               = mock[AuditService]
     implicit val appConfig: AppConfig  = app.injector.instanceOf[AppConfig]
+    implicit val hc: HeaderCarrier     = HeaderCarrier()
 
     val underTest =
       new OrganisationRegistrationController(
@@ -82,6 +87,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
         companyNotActivePage,
         SubmissionServiceMock.aMock,
         OrganisationActionServiceMock.aMock,
+        mockAuditService,
         cookieSigner,
         errorHandler,
         ThirdPartyDeveloperConnectorMock.aMock
@@ -99,6 +105,8 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchAllowList.thenReturns(allowList)
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturnsNone()
+      when(mockAuditService.audit(*, *)(*)).thenReturn(Future.successful(AuditResult.Success))
+
       val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
       val result = underTest.registrationStartView()(fakeRequest)
@@ -111,6 +119,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchAllowList.thenReturns(allowList)
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(aSubmission)
+      when(mockAuditService.audit(*, *)(*)).thenReturn(Future.successful(AuditResult.Success))
       val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
       val result = underTest.registrationStartView()(loggedOutRequest)
@@ -122,6 +131,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
       SubmissionServiceMock.FetchAllowList.thenReturns(allowList)
       SubmissionServiceMock.FetchLatestSubmissionByUserId.thenReturns(submittedSubmission)
+      when(mockAuditService.audit(*, *)(*)).thenReturn(Future.successful(AuditResult.Success))
       val loggedOutRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration").withUser(underTest)(sessionId))
 
       val result = underTest.registrationStartView()(loggedOutRequest)

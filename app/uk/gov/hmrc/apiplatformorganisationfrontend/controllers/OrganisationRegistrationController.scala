@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.{
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.FormUtils.oneOf
-import uk.gov.hmrc.apiplatformorganisationfrontend.services.{OrganisationActionService, SubmissionService}
+import uk.gov.hmrc.apiplatformorganisationfrontend.services.{AuditAction, AuditService, OrganisationActionService, SubmissionService}
 import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 
 object OrganisationRegistrationController {
@@ -55,6 +55,7 @@ class OrganisationRegistrationController @Inject() (
     companyNotActivePage: CompanyNotActivePage,
     val submissionService: SubmissionService,
     val organisationActionService: OrganisationActionService,
+    val auditService: AuditService,
     val cookieSigner: CookieSigner,
     val errorHandler: ErrorHandler,
     val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -76,9 +77,12 @@ class OrganisationRegistrationController @Inject() (
       }
     }
 
-    submissionService.fetchLatestSubmissionByUserId(request.userId).flatMap {
-      case Some(submission) => Future.successful(pageToShow(submission))
-      case _                => Future.successful(Ok(registrationStartPage(Some(request.userSession))))
+    for {
+      _               <- auditService.audit(AuditAction.OrganisationRegistrationStarted)
+      maybeSubmission <- submissionService.fetchLatestSubmissionByUserId(request.userId)
+    } yield maybeSubmission match {
+      case Some(submission) => pageToShow(submission)
+      case _                => Ok(registrationStartPage(Some(request.userSession)))
     }
   }
 
