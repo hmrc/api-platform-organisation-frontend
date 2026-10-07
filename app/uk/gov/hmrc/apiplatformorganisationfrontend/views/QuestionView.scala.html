@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.models.CompanyDetailsFormatter
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import uk.gov.hmrc.govukfrontend.views.Implicits.RichSelect
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.Radios
 @import play.twirl.api.HtmlFormat
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fieldset.Fieldset
@@ -34,6 +35,7 @@
 @this(layout: Layout,
         govukRadios: GovukRadios,
         govukInput: GovukInput,
+        govukSelect: GovukSelect,
         govukCheckboxes: GovukCheckboxes,
         govukFieldset: GovukFieldset,
         govukDateInput: GovukDateInput,
@@ -358,20 +360,23 @@
                 classes = "govuk-input--width-10",
                 autocomplete = Some("postal-code")
             )),
-            govukInput(Input(
+            Html("""<p class="govuk-body">Start typing the name of the country</p>"""),
+            govukSelect(Select(
                 id = "country",
                 name = "country",
                 label = Label(
-                    content = Text("Country")
+                    content = Text("Country"),
+                    classes = "govuk-visually-hidden"
                 ),
                 errorMessage = errorInfo.flatMap(_.errors.find(_.key == "country")).map(err => ErrorMessage(content = Text(err.message))),
                 value = currentAnswers match {
                     case Some(ActualAnswer.InternationalAddressAnswer(add)) => add.country
                     case _ => None
                 },
-                classes = "govuk-!-width-two-thirds",
-                autocomplete = Some("country")
-            ))
+                items = Seq(SelectItem(value = Some(""), text = "")) ++ Country.countries.map(country =>
+                    SelectItem(value = Some(country.name), text = country.name)
+                )
+            ).asAccessibleAutocomplete())
         ))
     ))
   
