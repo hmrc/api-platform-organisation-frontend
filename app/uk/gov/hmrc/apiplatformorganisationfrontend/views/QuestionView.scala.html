@@ -526,10 +526,6 @@
   @renderSingleChoiceQuestion(question, inline)
 }
 
-@renderAttachmentQuestion() = {
-    @uploadViewModel.map(viewModel => uploadFileView(viewModel, govukButton, govukFileUpload, govukErrorSummary))
-}
-
 @renderTextInputQuestion(question: Question.TextQuestion) = {
     @govukInput(Input(id = Question.answerKey,
         label = question.label.fold(Label(content = Text(pageHeading), isPageHeading = true, classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
@@ -572,7 +568,6 @@
     case q: Question.NameQuestion                  => renderNameQuestion(q)
     case q: Question.ConfirmNameQuestion           => renderConfirmNameQuestion(q)
     case q: Question.CompanyNumberQuestion         => renderCompanyNumberQuestion(q)
-    case _: Question.AttachmentQuestion            => renderAttachmentQuestion()
   }
 }
 
