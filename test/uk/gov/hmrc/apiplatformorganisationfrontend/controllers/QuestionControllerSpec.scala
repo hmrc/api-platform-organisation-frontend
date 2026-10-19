@@ -494,8 +494,8 @@ class QuestionControllerSpec
       SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey("country", "Select a country from the list")
       SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
       val answers = Seq(
-        "country"          -> "Not a country",
-        "submit-action"    -> "save"
+        "country"       -> "Not a country",
+        "submit-action" -> "save"
       )
       val request = loggedInRequest.withFormUrlEncodedBody(answers*)
 

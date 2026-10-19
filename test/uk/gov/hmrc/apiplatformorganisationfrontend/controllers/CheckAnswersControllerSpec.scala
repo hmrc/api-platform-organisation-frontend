@@ -41,9 +41,11 @@ import uk.gov.hmrc.apiplatform.modules.tpd.test.utils.LocalUserIdTracker
 import uk.gov.hmrc.apiplatformorganisationfrontend.WithLoggedInSession.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.*
-import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.ThirdPartyDeveloperConnectorMockModule
+import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.connectors.{ThirdPartyDeveloperConnectorMockModule, UpscanInitiateConnectorMockModule}
 import uk.gov.hmrc.apiplatformorganisationfrontend.mocks.services.{OrganisationActionServiceMockModule, SubmissionServiceMockModule}
-import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.{CheckAnswersView, SectionSummaryView, SubmitSubmissionSuccessPage, SubmittedAnswersView}
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.upscan.services.UpscanInitiateResponse
+import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.UploadViewModel
+import uk.gov.hmrc.apiplatformorganisationfrontend.views.html.*
 import uk.gov.hmrc.apiplatformorganisationfrontend.{AsIdsHelpers, WithCSRFAddToken}
 
 class CheckAnswersControllerSpec
@@ -65,6 +67,7 @@ class CheckAnswersControllerSpec
       with HasSessionDeveloperFlow
       with ThirdPartyDeveloperConnectorMockModule
       with OrganisationActionServiceMockModule
+      with UpscanInitiateConnectorMockModule
       with SubmissionsTestData
       with FixedClock
       with AsIdsHelpers
@@ -84,6 +87,7 @@ class CheckAnswersControllerSpec
     val submittedAnswersView          = app.injector.instanceOf[SubmittedAnswersView]
     val submitSubmissionSuccessPage   = app.injector.instanceOf[SubmitSubmissionSuccessPage]
     val sectionSummaryView            = app.injector.instanceOf[SectionSummaryView]
+    val quesitionView                 = app.injector.instanceOf[QuestionView]
     val mcc                           = app.injector.instanceOf[MessagesControllerComponents]
     val cookieSigner                  = app.injector.instanceOf[CookieSigner]
     val errorHandler                  = app.injector.instanceOf[ErrorHandler]
@@ -99,6 +103,7 @@ class CheckAnswersControllerSpec
       submittedAnswersView,
       submitSubmissionSuccessPage,
       sectionSummaryView,
+      quesitionView,
       ThirdPartyDeveloperConnectorMock.aMock
     )
 
@@ -287,6 +292,59 @@ class CheckAnswersControllerSpec
       val result = controller.checkAnswersAction(submissionId)(loggedInRequest.withCSRFToken)
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/$submissionId/check-answers")
+    }
+
+    "redirect to success page when re-submitting even if attachment is over 3 days old but is linked to a ticket" in new Setup {
+      val addSubData                          = Some(AdditionalSubmissionData(supportTicketId = Some(123), supportTicketRef = Some("abc")))
+      val submissionWithTicketRef: Submission = answeredSubmissionWithAttachment.copy(additionalSubmissionData = addSubData)
+      SubmissionServiceMock.Fetch.thenReturns(submissionWithTicketRef.withCompletedProgress())
+      SubmissionServiceMock.SubmitSubmission.thenReturns(submittedSubmissionWithAttachment.copy(additionalSubmissionData = addSubData))
+
+      val result = controller.checkAnswersAction(submissionWithTicketRef.id)(loggedInRequest.withCSRFToken)
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some(s"/api-platform-organisation/submission/${submissionWithTicketRef.id}/submit-success")
+    }
+
+    "show question view with errors if attachment is over 3 days old" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(
+        OrganisationDetails.questionNonUkWithoutAttachment.id,
+        answeredSubmissionWithAttachment.id
+      )
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmissionWithAttachment.withCompletedProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturns(uploadViewModel)
+
+      val result  = controller.checkAnswersAction(answeredSubmissionWithAttachment.id)(loggedInRequest.withCSRFToken)
+      status(result) shouldBe OK
+      val content = contentAsString(result)
+
+      content.contains("There is a problem") shouldBe true
+      content.contains("Your tax registration document is no longer accessible in our system as we only store uploaded documents for 3 days") shouldBe true
+      content.contains("Click Choose file to upload your tax registration document") shouldBe true
+      content.contains("You can upload your registration document as a scanned copy or photo of the original") shouldBe true
+      content.contains("Note: You have three days to submit your organisation registration after uploading a tax document. " +
+        "After three days, the document will no longer be accessible and you must upload it again") shouldBe true
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, answeredSubmissionWithAttachment.id)
+      SubmissionServiceMock.SubmitSubmission.verifyNotCalled()
+    }
+
+    "return 500 if initiateUpscan returns None and attachment is over 3 days old" in new Setup {
+      val upscanResponse: UpscanInitiateResponse = upscanInitiateResponse(
+        OrganisationDetails.questionNonUkWithoutAttachment.id,
+        answeredSubmissionWithAttachment.id
+      )
+      val uploadViewModel                        = UploadViewModel(upscan = upscanResponse, error = None)
+      SubmissionServiceMock.Fetch.thenReturns(answeredSubmissionWithAttachment.withCompletedProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val result  = controller.checkAnswersAction(answeredSubmissionWithAttachment.id)(loggedInRequest.withCSRFToken)
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      val content = contentAsString(result)
+      content.contains("Error initiating Upscan") shouldBe true
+
+      SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, answeredSubmissionWithAttachment.id)
+      SubmissionServiceMock.SubmitSubmission.verifyNotCalled()
     }
   }
 

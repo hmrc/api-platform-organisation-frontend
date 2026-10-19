@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -66,7 +69,8 @@ class UploadController @Inject() (
         logger.warn(s"upscanResultRedirect failure submissionId:$sid, fileReference:$fr, error:$em")
         showQuestionViewWithErrors(qid, ec, em)(hc, request)
       case (Some(fr), None, None)         =>
-        val answer = Map("fileRef" -> Seq(fr))
+        val now    = DateTimeFormatter.ISO_INSTANT.format(Instant.now.truncatedTo(ChronoUnit.MILLIS))
+        val answer = Map("fileRef" -> Seq(fr), "createdOn" -> Seq(now))
         logger.info(s"upscanResultRedirect success submissionId:$sid, fileReference:$fr")
         submissionService.recordAnswer(sid, qid, answer)(hc)
           .map(_.fold(failed, success(_, qid, sid)))

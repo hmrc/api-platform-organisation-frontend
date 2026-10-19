@@ -80,7 +80,7 @@ class SubmissionService @Inject() (
       val submission                                                 = extendedSubmission.submission
       val organisationTypeAnswer                                     = submission.getAnswerToQuestionOfInterest("organisationTypeId")
       val additionalSubmissionData: Option[AdditionalSubmissionData] = submission.additionalSubmissionData
-      lazy val attachments: List[Attachment]                         = submission.attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), a.fileName.getOrElse(""))))
+      lazy val attachments: List[Attachment]                         = submission.attachment.fold(List.empty)(a => List(Attachment(a.fileRef.getOrElse(""), "")))
 
       (organisationTypeAnswer, additionalSubmissionData) match {
         case (ActualAnswer.SingleChoiceAnswer("Non-UK company without a branch or place of business in the UK"), Some(Some(ticketId), _)) =>
