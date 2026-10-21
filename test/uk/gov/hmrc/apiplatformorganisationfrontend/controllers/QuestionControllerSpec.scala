@@ -317,7 +317,7 @@ class QuestionControllerSpec
         "Attach the tax registration document for Acme Ltd"
       ) shouldBe true withClue ("HTML content did not contain label with substituted company name")
       contentAsString(result).contains(
-        "You can upload your registration document as a scanned copy or photo of the original. The selected file must be smaller than 10MB."
+        "Accepted file types are:"
       ) shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(result).contains("<title>") shouldBe true
       contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")

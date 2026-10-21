@@ -321,9 +321,8 @@ class CheckAnswersControllerSpec
       content.contains("There is a problem") shouldBe true
       content.contains("Your tax registration document is no longer accessible in our system as we only store uploaded documents for 3 days") shouldBe true
       content.contains("Click Choose file to upload your tax registration document") shouldBe true
-      content.contains("You can upload your registration document as a scanned copy or photo of the original") shouldBe true
-      content.contains("Note: You have three days to submit your organisation registration after uploading a tax document. " +
-        "After three days, the document will no longer be accessible and you must upload it again") shouldBe true
+      content.contains("Accepted file types are:") shouldBe true
+      content.contains("Submit your organisation registration within 3 days of uploading a tax document. After that, you must upload the document again.") shouldBe true
 
       SubmissionServiceMock.InitiateUpscan.verifyCalledWith(OrganisationDetails.questionNonUkWithoutAttachment, answeredSubmissionWithAttachment.id)
       SubmissionServiceMock.SubmitSubmission.verifyNotCalled()
