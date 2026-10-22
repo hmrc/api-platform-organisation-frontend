@@ -292,7 +292,10 @@ class QuestionControllerSpec
     }
 
     "succeed and check for label with company name substitution, hintText, attachment question" in new Setup {
-      val attachmentQuestion = OrganisationDetails.questionNonUkWithoutAttachment.copy(wording = Wording("Attach the tax registration document for {companyName}"))
+      val attachmentQuestion = OrganisationDetails.questionNonUkWithoutAttachment.copy(
+        wording = Wording("Attach the tax registration document for {companyName}"),
+        statement = Some(Statement(StatementText("Your tax registration document must:")))
+      )
       val companyDetails     = Submission.CompanyDetails("12345678", "Acme Ltd")
       val submission         = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
         aSubmission.copy(groups =
@@ -316,6 +319,9 @@ class QuestionControllerSpec
       contentAsString(result).contains(
         "Attach the tax registration document for Acme Ltd"
       ) shouldBe true withClue ("HTML content did not contain label with substituted company name")
+      contentAsString(result).contains(
+        "Your tax registration document must:"
+      ) shouldBe true withClue ("HTML content did not contain statement")
       contentAsString(result).contains(
         "Accepted file types are:"
       ) shouldBe true withClue ("HTML content did not contain hintText")
