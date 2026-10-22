@@ -41,7 +41,7 @@
 
     <div id="upload-live-region" class="govuk-visually-hidden" aria-live="polite" role="status"></div>
 
-    <div id="upload-file-content" class="govuk-grid-row">
+    <div id="upload-file-content">
             @model.error.map { messageKey =>
                 @govukErrorSummary(ErrorSummary(
                     title = Text(messages("error.summary.title")),
