@@ -323,7 +323,7 @@ class QuestionControllerSpec
         "Your tax registration document must:"
       ) shouldBe true withClue ("HTML content did not contain statement")
       contentAsString(result).contains(
-        "Accepted file types are:"
+        "The selected file must be smaller than 10MB.  Accepted file types are:"
       ) shouldBe true withClue ("HTML content did not contain hintText")
       contentAsString(result).contains("<title>") shouldBe true
       contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
