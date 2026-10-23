@@ -592,7 +592,7 @@
 @form(question: Question) = {
   @question match {
     case _: Question.AttachmentQuestion => {
-        @uploadViewModel.map(model => uploadFileView(model, govukButton, govukFileUpload, govukErrorSummary))
+        @uploadViewModel.map(model => uploadFileView(model, question, govukButton, govukFileUpload, govukErrorSummary))
     }
     case _ => {
         @createForm(question)
