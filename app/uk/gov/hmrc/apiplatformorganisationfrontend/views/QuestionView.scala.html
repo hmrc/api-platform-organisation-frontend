@@ -577,10 +577,10 @@
   @govukInput(Input(id = "text",
     name = "text",
     label = question.label.fold(Label(content = Text(pageHeading), classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
-    inputType = "url",
     classes = "govuk-!-width-full",
     autocomplete = Some("url"),
     spellcheck = Some(false),
+    inputmode = Some("url"),
     value = currentAnswers match {
         case Some(ActualAnswer.ConditionalTextAnswer(answer)) => answer.text
         case _ => None
