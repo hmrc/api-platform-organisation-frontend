@@ -546,6 +546,7 @@
 
 @renderConditionalTextQuestion(question: Question.ConditionalTextQuestion) = {
   @govukRadios(Radios(name = "isPresent",
+    hint = question.hintText.map(hint => Hint(content = HtmlContent(renderNonBulletStatementFragment(hint)))),
     errorMessage = errorInfo.flatMap(_.errors.find(_.key == "isPresent")).map(err => ErrorMessage(content = Text(err.message))),
     fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
     value = currentAnswers match {
@@ -584,7 +585,6 @@
         case Some(ActualAnswer.ConditionalTextAnswer(answer)) => answer.text
         case _ => None
     },
-    hint = question.hintText.map(hint => Hint(content = HtmlContent(renderNonBulletStatementFragment(hint)))),
     errorMessage = errorInfo.flatMap(_.errors.find(_.key == "text")).map(err => ErrorMessage(content = Text(err.message)))
   ))
 }
