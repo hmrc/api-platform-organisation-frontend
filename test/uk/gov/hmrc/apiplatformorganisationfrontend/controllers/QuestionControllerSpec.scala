@@ -953,6 +953,27 @@ class QuestionControllerSpec
       )
     }
 
+    "fail if invalid conditional text answer provided and redisplay the update with its return page" in new Setup {
+      val submission      = aSubmission.hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey("text", "Enter a URL in the correct format, like https://example.com")
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+      private val request = loggedInRequest.withFormUrlEncodedBody("isPresent" -> "Yes", "text" -> "invalid-website", "submit-action" -> "save", "returnTo" -> "section-summary")
+
+      val result = controller.updateAnswer(submission.id, ResponsibleIndividualDetails.question6.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+      val document = Jsoup.parse(contentAsString(result))
+      document.select("input[name=isPresent][value=Yes]").hasAttr("checked") shouldBe true
+      document.select("input[name=text]").attr("value") shouldBe "invalid-website"
+      document.select("#text-error").text should include("Enter a URL in the correct format, like https://example.com")
+      document.select(".govuk-error-summary a[href='#text']").size shouldBe 1
+      document.select("input[name=returnTo]").attr("value") shouldBe "section-summary"
+      document.select("form").attr(
+        "action"
+      ) shouldBe s"/api-platform-organisation/submission/${submission.id.value}/question/${ResponsibleIndividualDetails.question6.id.value}/update"
+    }
+
     "fail if invalid international address answer provided and returns downstream error" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
       SubmissionServiceMock.RecordAnswer.thenReturnsError("Town or City required")
