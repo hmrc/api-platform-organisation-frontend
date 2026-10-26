@@ -34,6 +34,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.{Completed, InProgress}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ActualAnswersAsText
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -245,6 +246,16 @@ class CheckAnswersControllerSpec
       summaryLinesFor(OrganisationDetails.questionLtdOrgAddress)(contentAsString(result)) shouldBe Seq("n/a")
     }
 
+    "show n/a when the website question has been answered no" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(Map(ResponsibleIndividualDetails.question6.id -> ActualAnswer.ConditionalTextAnswer(ConditionalText(Some("No"), None))))
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(ResponsibleIndividualDetails.question6)(contentAsString(result)) shouldBe Seq("n/a")
+    }
+
     "fall back to n/a without throwing when companyDetails is absent" in new Setup {
       val submission = aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgName.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
       SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
@@ -271,7 +282,7 @@ class CheckAnswersControllerSpec
       summaryLinesFor(ResponsibleIndividualDetails.question3)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question3))
       summaryLinesFor(ResponsibleIndividualDetails.question4)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question4))
       summaryLinesFor(ResponsibleIndividualDetails.question5)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question5))
-      summaryLinesFor(ResponsibleIndividualDetails.question6)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question6))
+      summaryLinesFor(ResponsibleIndividualDetails.question6)(content) shouldBe Seq("https://www.bobsburgers.com")
     }
   }
 
@@ -432,6 +443,7 @@ class CheckAnswersControllerSpec
     samplePassAnswersToQuestions(question.id) match {
       case ActualAnswer.SingleChoiceAnswer(value)                                              => value
       case ActualAnswer.TextAnswer(value)                                                      => value
+      case answer: ActualAnswer.ConditionalTextAnswer                                          => ActualAnswersAsText(answer)
       case ActualAnswer.CompanyNumberAnswer(value)                                             => value
       case ActualAnswer.NameAnswer(FullName(Some(firstName), Some(lastName)))                  => s"$firstName $lastName"
       case ActualAnswer.ConfirmNameAnswer(ConfirmFullName(_, Some(firstName), Some(lastName))) => s"$firstName $lastName"

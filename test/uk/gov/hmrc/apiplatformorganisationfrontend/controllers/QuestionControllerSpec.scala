@@ -20,6 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import cats.data.NonEmptyList
 import data.UpscanInitiateData
+import org.jsoup.Jsoup
 import org.scalatest.AppendedClues
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -149,6 +150,79 @@ class QuestionControllerSpec
       ).contains(s"""aria-describedby="answer-hint"""") shouldBe true withClue ("HTML content did not contain describeBy")
       contentAsString(result).contains("<title>") shouldBe true
       contentAsString(result).contains("Enter organisation details") shouldBe true withClue ("HTML content did not contain questionnaire name")
+    }
+
+    "succeed and check for label, hintText, conditional text question" in new Setup {
+      val conditionalTextQuestion = ResponsibleIndividualDetails.question6.copy(
+        wording = Wording("Does {companyName} have a website?"),
+        statement = Some(Statement(StatementText("We'll use this to check if your organisation is active."))),
+        label = Some(Question.Label("Website address"))
+      )
+      val companyDetails          = Submission.CompanyDetails("12345678", "Acme Ltd")
+      val submission              = Submission.updateLatestAdditionalDataTo(Some(Submission.AdditionalData(Some(companyDetails))))(
+        aSubmission.copy(groups =
+          NonEmptyList.of(GroupOfQuestionnaires(
+            "Group 1",
+            NonEmptyList.of(Questionnaire(
+              ResponsibleIndividualDetails.questionnaire.id,
+              ResponsibleIndividualDetails.questionnaire.label,
+              NonEmptyList.of(QuestionItem(conditionalTextQuestion))
+            ))
+          ))
+        )
+      )
+      SubmissionServiceMock.Fetch.thenReturns(submission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val formSubmissionLink = s"${submission.id.value}/question/${conditionalTextQuestion.id.value}"
+      val result             = controller.showQuestion(submission.id, conditionalTextQuestion.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val body          = contentAsString(result)
+      body.contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
+      body.contains("Does Acme Ltd have a website?") shouldBe true withClue ("HTML content did not contain substituted title")
+      body.contains("Enter responsible individual details") shouldBe true withClue ("HTML content did not contain caption")
+      Jsoup.parse(body).text should include("We'll use this to check if your organisation is active.")
+      body.contains("For example https://example.com") shouldBe true withClue ("HTML content did not contain hintText")
+      val document      = Jsoup.parse(body)
+      document.select("input[name=isPresent][value=Yes]").size shouldBe 1
+      document.select("input[name=isPresent][value=No]").size shouldBe 1
+      document.select(".govuk-radios--inline").isEmpty shouldBe true
+      val conditionalId = document.select("input[name=isPresent][value=Yes]").attr("data-aria-controls")
+      document.getElementById(conditionalId).select("input[name=text]").size shouldBe 1
+      document.select("label[for=text]").text shouldBe "Website address"
+      document.select("input[name=text]").attr("type") shouldBe "url"
+      document.select("input[name=text]").hasClass("govuk-!-width-full") shouldBe true
+      document.select("input[name=text]").attr("autocomplete") shouldBe "url"
+      document.select("input[name=text]").attr("spellcheck") shouldBe "false"
+    }
+
+    "succeed and select the saved conditional text answer if yes selected" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
+      SubmissionServiceMock.Fetch.thenReturns(submission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val result = controller.showQuestion(submission.id, ResponsibleIndividualDetails.question6.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val document = Jsoup.parse(contentAsString(result))
+      document.select("input[name=isPresent][value=Yes]").hasAttr("checked") shouldBe true
+      document.select("input[name=text]").attr("value") shouldBe "https://www.bobsburgers.com"
+      document.select("input[name=text]").parents().hasClass("govuk-radios__conditional--hidden") shouldBe false
+    }
+
+    "succeed and select the saved conditional text answer if no selected" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(Map(ResponsibleIndividualDetails.question6.id -> ActualAnswer.ConditionalTextAnswer(ConditionalText(Some("No"), None))))
+      SubmissionServiceMock.Fetch.thenReturns(submission.withIncompleteProgress())
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+
+      val result = controller.showQuestion(submission.id, ResponsibleIndividualDetails.question6.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val document = Jsoup.parse(contentAsString(result))
+      document.select("input[name=isPresent][value=No]").hasAttr("checked") shouldBe true
+      document.select("input[name=text]").attr("value") shouldBe empty
+      document.select("input[name=text]").parents().hasClass("govuk-radios__conditional--hidden") shouldBe true
     }
 
     "succeed and check for label, hintText, companyNumber question" in new Setup {
@@ -493,6 +567,24 @@ class QuestionControllerSpec
       val body = contentAsString(result)
 
       body should include("Town or City required")
+    }
+
+    "fail if invalid conditional text answer provided and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey("text", "Enter a URL in the correct format, like https://example.com")
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+      private val request = loggedInRequest.withFormUrlEncodedBody("isPresent" -> "Yes", "text" -> "invalid-website", "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, ResponsibleIndividualDetails.question6.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+      val body     = contentAsString(result)
+      body should include("Enter a URL in the correct format, like https://example.com")
+      val document = Jsoup.parse(body)
+      document.select("input[name=isPresent][value=Yes]").hasAttr("checked") shouldBe true
+      document.select("input[name=text]").attr("value") shouldBe "invalid-website"
+      document.select("#text-error").text should include("Enter a URL in the correct format, like https://example.com")
+      document.select(".govuk-error-summary a[href='#text']").size shouldBe 1
     }
 
     "fail if international address country is not in the list" in new Setup {
