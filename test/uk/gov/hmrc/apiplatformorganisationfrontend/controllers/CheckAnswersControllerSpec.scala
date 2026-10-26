@@ -112,7 +112,7 @@ class CheckAnswersControllerSpec
     val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
 
-    val websiteQuestion              = ResponsibleIndividualDetails.question6.copy(summary = Some("Website URL"))
+    val websiteQuestion = ResponsibleIndividualDetails.question6.copy(summary = Some("Website URL"))
 
     val submissionWithWebsiteSummary = aSubmission.copy(groups =
       NonEmptyList.of(GroupOfQuestionnaires(
