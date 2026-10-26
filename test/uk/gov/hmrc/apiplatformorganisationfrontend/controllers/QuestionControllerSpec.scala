@@ -191,7 +191,12 @@ class QuestionControllerSpec
       val conditionalId = document.select("input[name=isPresent][value=Yes]").attr("data-aria-controls")
       document.getElementById(conditionalId).select("input[name=text]").size shouldBe 1
       document.select("label[for=text]").text shouldBe "Website address"
-      document.select("input[name=text]").attr("type") shouldBe "url"
+      document.select("label[for=text]").hasClass("govuk-visually-hidden") shouldBe true
+      document.select("#text-hint").text shouldBe "Enter your website address"
+      document.select(".govuk-hint").text should include("We'll use this to check if your organisation is active.")
+      document.select("#isPresent-hint").text shouldBe "For example https://example.com"
+      document.select("input[name=text]").attr("type") shouldBe "text"
+      document.select("input[name=text]").attr("inputmode") shouldBe "url"
       document.select("input[name=text]").hasClass("govuk-!-width-full") shouldBe true
       document.select("input[name=text]").attr("autocomplete") shouldBe "url"
       document.select("input[name=text]").attr("spellcheck") shouldBe "false"
@@ -585,6 +590,22 @@ class QuestionControllerSpec
       document.select("input[name=text]").attr("value") shouldBe "invalid-website"
       document.select("#text-error").text should include("Enter a URL in the correct format, like https://example.com")
       document.select(".govuk-error-summary a[href='#text']").size shouldBe 1
+    }
+
+    "fail if conditional text choice is missing and returns downstream error" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
+      SubmissionServiceMock.RecordAnswer.thenReturnsErrorWithKey("isPresent", "Select yes if your organisation has a website")
+      SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
+      private val request = loggedInRequest.withFormUrlEncodedBody("text" -> "", "submit-action" -> "save")
+
+      val result = controller.recordAnswer(aSubmission.id, ResponsibleIndividualDetails.question6.id)(request.withCSRFToken)
+
+      status(result) shouldBe BAD_REQUEST
+      val document = Jsoup.parse(contentAsString(result))
+      document.select("input[name=isPresent][checked]").isEmpty shouldBe true
+      document.select("#isPresent-error").text should include("Select yes if your organisation has a website")
+      document.select(".govuk-error-summary a[href='#isPresent']").size shouldBe 1
+      document.select("input#isPresent[name=isPresent][value=Yes]").size shouldBe 1
     }
 
     "fail if international address country is not in the list" in new Setup {

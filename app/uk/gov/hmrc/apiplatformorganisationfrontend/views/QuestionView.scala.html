@@ -576,7 +576,8 @@
 @buildConditionalTextHtml(question: Question.ConditionalTextQuestion) = {
   @govukInput(Input(id = "text",
     name = "text",
-    label = question.label.fold(Label(content = Text(pageHeading), classes = "govuk-visually-hidden"))(label => Label(content = Text(label.value))),
+    label = Label(content = Text(question.label.fold(pageHeading)(_.value)), classes = "govuk-visually-hidden"),
+    hint = Some(Hint(content = Text("Enter your website address"))),
     classes = "govuk-!-width-full",
     autocomplete = Some("url"),
     spellcheck = Some(false),
@@ -677,6 +678,12 @@
     @{
         question match {
             case _: Question.ConfirmNameQuestion => ()
+            case q: Question.ConditionalTextQuestion => q.statement.map { statement =>
+              statement.fragments.map {
+                case fragment: NonBulletStatementFragment => <p class="govuk-hint">{renderNonBulletStatementFragment(fragment)}</p>
+                case bullets: StatementBullets => renderStatementBullets(bullets)
+              }.toList
+            }
             case q => renderMaybeStatement(q.statement)
         }
     }

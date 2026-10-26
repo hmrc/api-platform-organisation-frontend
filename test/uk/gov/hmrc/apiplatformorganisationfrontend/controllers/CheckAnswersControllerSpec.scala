@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters.*
 
+import cats.data.NonEmptyList
 import org.jsoup.Jsoup
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -110,6 +111,15 @@ class CheckAnswersControllerSpec
 
     val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
+
+    val websiteQuestion              = ResponsibleIndividualDetails.question6.copy(summary = Some("Website URL"))
+
+    val submissionWithWebsiteSummary = aSubmission.copy(groups =
+      NonEmptyList.of(GroupOfQuestionnaires(
+        "Group 1",
+        NonEmptyList.of(Questionnaire(ResponsibleIndividualDetails.questionnaire.id, ResponsibleIndividualDetails.questionnaire.label, NonEmptyList.of(QuestionItem(websiteQuestion))))
+      ))
+    ).hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
@@ -298,7 +308,7 @@ class CheckAnswersControllerSpec
       summaryLinesFor(ResponsibleIndividualDetails.question3)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question3))
       summaryLinesFor(ResponsibleIndividualDetails.question4)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question4))
       summaryLinesFor(ResponsibleIndividualDetails.question5)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question5))
-      summaryLinesFor(ResponsibleIndividualDetails.question6)(content) shouldBe Seq("https://www.bobsburgers.com")
+      summaryLinesFor(ResponsibleIndividualDetails.question6)(content) shouldBe Seq(answerInFixtureFor(ResponsibleIndividualDetails.question6))
     }
   }
 
