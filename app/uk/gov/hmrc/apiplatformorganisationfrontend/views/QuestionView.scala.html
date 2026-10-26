@@ -678,12 +678,6 @@
     @{
         question match {
             case _: Question.ConfirmNameQuestion => ()
-            case q: Question.ConditionalTextQuestion => q.statement.map { statement =>
-              statement.fragments.map {
-                case fragment: NonBulletStatementFragment => <p class="govuk-hint">{renderNonBulletStatementFragment(fragment)}</p>
-                case bullets: StatementBullets => renderStatementBullets(bullets)
-              }.toList
-            }
             case q => renderMaybeStatement(q.statement)
         }
     }

@@ -155,7 +155,8 @@ class QuestionControllerSpec
     "succeed and check for label, hintText, conditional text question" in new Setup {
       val conditionalTextQuestion = ResponsibleIndividualDetails.question6.copy(
         wording = Wording("Does {companyName} have a website?"),
-        statement = Some(Statement(StatementText("We'll use this to check if your organisation is active."))),
+        statement = None,
+        hintText = Some(StatementText("We'll use this to check if your organisation is active.")),
         label = Some(Question.Label("Website address"))
       )
       val companyDetails          = Submission.CompanyDetails("12345678", "Acme Ltd")
@@ -182,8 +183,6 @@ class QuestionControllerSpec
       body.contains(formSubmissionLink) shouldBe true withClue (s"(HTML content did not contain $formSubmissionLink)")
       body.contains("Does Acme Ltd have a website?") shouldBe true withClue ("HTML content did not contain substituted title")
       body.contains("Enter responsible individual details") shouldBe true withClue ("HTML content did not contain caption")
-      Jsoup.parse(body).text should include("We'll use this to check if your organisation is active.")
-      body.contains("For example https://example.com") shouldBe true withClue ("HTML content did not contain hintText")
       val document      = Jsoup.parse(body)
       document.select("input[name=isPresent][value=Yes]").size shouldBe 1
       document.select("input[name=isPresent][value=No]").size shouldBe 1
@@ -193,8 +192,7 @@ class QuestionControllerSpec
       document.select("label[for=text]").text shouldBe "Website address"
       document.select("label[for=text]").hasClass("govuk-visually-hidden") shouldBe true
       document.select("#text-hint").text shouldBe "Enter your website address"
-      document.select(".govuk-hint").text should include("We'll use this to check if your organisation is active.")
-      document.select("#isPresent-hint").text shouldBe "For example https://example.com"
+      document.select("#isPresent-hint").text shouldBe "We'll use this to check if your organisation is active."
       document.select("input[name=text]").attr("type") shouldBe "text"
       document.select("input[name=text]").attr("inputmode") shouldBe "url"
       document.select("input[name=text]").hasClass("govuk-!-width-full") shouldBe true
