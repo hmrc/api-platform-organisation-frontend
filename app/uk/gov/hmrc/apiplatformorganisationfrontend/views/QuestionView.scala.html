@@ -544,6 +544,52 @@
     @renderButtonOrButtons(question.absenceText)
 }
 
+@renderConditionalTextQuestion(question: Question.ConditionalTextQuestion) = {
+  @govukRadios(Radios(name = "isPresent",
+    hint = question.hintText.map(hint => Hint(content = HtmlContent(renderNonBulletStatementFragment(hint)))),
+    errorMessage = errorInfo.flatMap(_.errors.find(_.key == "isPresent")).map(err => ErrorMessage(content = Text(err.message))),
+    fieldset = Some(Fieldset(legend = Some(Legend(content = Text(pageHeading), classes="govuk-visually-hidden",isPageHeading = true)))),
+    value = currentAnswers match {
+        case Some(ActualAnswer.ConditionalTextAnswer(answer)) => answer.isPresent
+        case _ => None
+    },
+    items = Seq(
+        RadioItem(
+            content = Text("Yes"),
+            value = Some("Yes"),
+            id = Some("isPresent"),
+            conditionalHtml = Some(buildConditionalTextHtml(question))
+        ),
+        RadioItem(
+            content = Text("No"),
+            value = Some("No"),
+            id = Some("isPresent-no")
+        )
+    )
+  ))
+
+  @renderMaybeStatement(question.afterStatement)
+
+  @renderButtonOrButtons(question.absenceText)
+}
+
+@buildConditionalTextHtml(question: Question.ConditionalTextQuestion) = {
+  @govukInput(Input(id = "text",
+    name = "text",
+    label = Label(content = Text(question.label.fold(pageHeading)(_.value)), classes = "govuk-visually-hidden"),
+    hint = Some(Hint(content = Text("Enter your website address"))),
+    classes = "govuk-!-width-full",
+    autocomplete = Some("url"),
+    spellcheck = Some(false),
+    inputmode = Some("url"),
+    value = currentAnswers match {
+        case Some(ActualAnswer.ConditionalTextAnswer(answer)) => answer.text
+        case _ => None
+    },
+    errorMessage = errorInfo.flatMap(_.errors.find(_.key == "text")).map(err => ErrorMessage(content = Text(err.message)))
+  ))
+}
+
 @renderAcknowledgementOnly() = {
     <button id="submit" class="govuk-button" type="submit" name="submit-action" value="acknowledgement">Continue</button>
 }
@@ -560,6 +606,7 @@
     case q: Question.SingleChoiceQuestion          => renderSingleChoiceQuestion(q, false)
     case q: Question.MultiChoiceQuestion           => renderMultiChoiceQuestion(q)
     case q: Question.TextQuestion                  => renderTextInputQuestion(q)
+    case q: Question.ConditionalTextQuestion       => renderConditionalTextQuestion(q)
     case _: Question.AcknowledgementOnly           => renderAcknowledgementOnly()
     case _: Question.ForwardToQuestion             => renderForwardToQuestion()
     case q: Question.DateQuestion                  => renderDateQuestion(q)

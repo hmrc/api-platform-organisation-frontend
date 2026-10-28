@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformorganisationfrontend.controllers
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters.*
 
+import cats.data.NonEmptyList
 import org.jsoup.Jsoup
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -34,6 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.*
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.models.QuestionnaireState.{Completed, InProgress}
+import uk.gov.hmrc.apiplatform.modules.organisations.submissions.domain.services.ActualAnswersAsText
 import uk.gov.hmrc.apiplatform.modules.organisations.submissions.utils.SubmissionsTestData
 import uk.gov.hmrc.apiplatform.modules.tpd.core.domain.models.User
 import uk.gov.hmrc.apiplatform.modules.tpd.test.builders.UserBuilder
@@ -109,6 +111,15 @@ class CheckAnswersControllerSpec
 
     val loggedInRequest             = FakeRequest().withUser(controller)(sessionId).withSession(sessionParams*)
     implicit val loggedInUser: User = user
+
+    val websiteQuestion = ResponsibleIndividualDetails.question6.copy(summary = Some("Website URL"))
+
+    val submissionWithWebsiteSummary = aSubmission.copy(groups =
+      NonEmptyList.of(GroupOfQuestionnaires(
+        "Group 1",
+        NonEmptyList.of(Questionnaire(ResponsibleIndividualDetails.questionnaire.id, ResponsibleIndividualDetails.questionnaire.label, NonEmptyList.of(QuestionItem(websiteQuestion))))
+      ))
+    ).hasCompletelyAnsweredWith(samplePassAnswersToQuestions)
 
     ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
   }
@@ -245,6 +256,32 @@ class CheckAnswersControllerSpec
       summaryLinesFor(OrganisationDetails.questionLtdOrgAddress)(contentAsString(result)) shouldBe Seq("n/a")
     }
 
+    "show n/a when the website question has been answered no" in new Setup {
+      val submission = aSubmission.hasCompletelyAnsweredWith(Map(ResponsibleIndividualDetails.question6.id -> ActualAnswer.ConditionalTextAnswer(ConditionalText(Some("No"), None))))
+      SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionId)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      summaryLinesFor(ResponsibleIndividualDetails.question6)(contentAsString(result)) shouldBe Seq("n/a")
+    }
+
+    "show the website summary and change link returning to check answers" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(submissionWithWebsiteSummary.withCompletedProgress())
+
+      val result = controller.checkAnswersPage(submissionWithWebsiteSummary.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val content    = contentAsString(result)
+      summaryLinesFor(websiteQuestion)(content) shouldBe Seq(answerInFixtureFor(websiteQuestion))
+      val websiteRow = Jsoup.parse(content).select("div.govuk-summary-list__row").asScala
+        .find(_.select("dt.govuk-summary-list__key").text == "Website URL")
+        .getOrElse(fail("No summary row labelled 'Website URL'"))
+      websiteRow.select("a.govuk-link").text should startWith("Change")
+      websiteRow.select("a.govuk-link").attr("href") shouldBe
+        s"/api-platform-organisation/submission/${submissionWithWebsiteSummary.id.value}/question/${websiteQuestion.id.value}/update?returnTo=check-answers"
+    }
+
     "fall back to n/a without throwing when companyDetails is absent" in new Setup {
       val submission = aSubmission.hasCompletelyAnsweredWith(Map(OrganisationDetails.questionLtdOrgName.id -> ActualAnswer.SingleChoiceAnswer("Yes")))
       SubmissionServiceMock.Fetch.thenReturns(submission.withCompletedProgress())
@@ -358,6 +395,22 @@ class CheckAnswersControllerSpec
   }
 
   "showSectionSummary" should {
+    "show the website summary and change link returning to the section summary" in new Setup {
+      SubmissionServiceMock.Fetch.thenReturns(submissionWithWebsiteSummary.withCompletedProgress())
+
+      val result = controller.showSectionSummary(submissionWithWebsiteSummary.id, ResponsibleIndividualDetails.questionnaire.id)(loggedInRequest.withCSRFToken)
+
+      status(result) shouldBe OK
+      val content    = contentAsString(result)
+      summaryLinesFor(websiteQuestion)(content) shouldBe Seq(answerInFixtureFor(websiteQuestion))
+      val websiteRow = Jsoup.parse(content).select("div.govuk-summary-list__row").asScala
+        .find(_.select("dt.govuk-summary-list__key").text == "Website URL")
+        .getOrElse(fail("No summary row labelled 'Website URL'"))
+      websiteRow.select("a.govuk-link").text should startWith("Change")
+      websiteRow.select("a.govuk-link").attr("href") shouldBe
+        s"/api-platform-organisation/submission/${submissionWithWebsiteSummary.id.value}/question/${websiteQuestion.id.value}/update?returnTo=section-summary"
+    }
+
     "display section summary with only one questionnaire" in new Setup {
       val fullyAnsweredSubmission = Submission.create(
         "bob@example.com",
@@ -432,6 +485,7 @@ class CheckAnswersControllerSpec
     samplePassAnswersToQuestions(question.id) match {
       case ActualAnswer.SingleChoiceAnswer(value)                                              => value
       case ActualAnswer.TextAnswer(value)                                                      => value
+      case answer: ActualAnswer.ConditionalTextAnswer                                          => ActualAnswersAsText(answer)
       case ActualAnswer.CompanyNumberAnswer(value)                                             => value
       case ActualAnswer.NameAnswer(FullName(Some(firstName), Some(lastName)))                  => s"$firstName $lastName"
       case ActualAnswer.ConfirmNameAnswer(ConfirmFullName(_, Some(firstName), Some(lastName))) => s"$firstName $lastName"

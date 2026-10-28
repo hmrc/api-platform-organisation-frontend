@@ -42,6 +42,7 @@ object AnswersViewModel {
         Some(submission.latestInstance.companyDetails.map(CompanyDetailsFormatter.addressLines).filter(_.nonEmpty).getOrElse(Seq(notAvailable)))
       case (_, SingleChoiceAnswer(value))                             => Some(Seq(value))
       case (_, TextAnswer(value))                                     => Some(Seq(value))
+      case (_, ConditionalTextAnswer(_))                              => Some(Seq(ActualAnswersAsText.apply(answer)))
       case (_, DateAnswer(value))                                     => Some(Seq(value.format(dateTimeFormatter)))
       case (_, MultipleChoiceAnswer(values))                          => Some(Seq(values.mkString))
       case (_, AddressAnswer(_))                                      => Some(Seq(ActualAnswersAsText.apply(answer)))

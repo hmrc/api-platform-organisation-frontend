@@ -169,6 +169,10 @@ class QuestionsController @Inject() (
 
     val onFormAnswer = question match {
       case _: Question.TextQuestion                 => answers.headOption.map(ActualAnswer.TextAnswer.apply)
+      case _: Question.ConditionalTextQuestion      => Some(ActualAnswer.ConditionalTextAnswer(ConditionalText(
+          trimmedAnswers.get("isPresent").flatMap(_.headOption),
+          trimmedAnswers.get("text").flatMap(_.headOption)
+        )))
       case _: Question.AddressQuestion              => Some(ActualAnswer.AddressAnswer(RegisteredOfficeAddress(
           trimmedAnswers.get("addressLineOne").flatMap(_.headOption),
           trimmedAnswers.get("addressLineTwo").flatMap(_.headOption),
