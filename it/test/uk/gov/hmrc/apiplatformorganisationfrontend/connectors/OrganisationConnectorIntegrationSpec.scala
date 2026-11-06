@@ -299,7 +299,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
       val result = await(underTest.addCollaboratorToOrganisation(orgId, email, Roles.Member))
 
-      result shouldBe Left(ErrorMessage(s"Failed to add user $email to organisation $orgId"))
+      result shouldBe Left(ErrorMessage(s"Failed to add user $email to organisation"))
     }
   }
 
@@ -325,7 +325,7 @@ class OrganisationConnectorIntegrationSpec extends BaseConnectorIntegrationSpec 
 
       val result = await(underTest.removeCollaboratorFromOrganisation(orgId, userId, email))
 
-      result shouldBe Left(ErrorMessage(s"Failed to remove user $userId from organisation $orgId"))
+      result shouldBe Left(ErrorMessage(s"Failed to remove user from organisation"))
     }
   }
 

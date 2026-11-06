@@ -58,7 +58,7 @@ class OrganisationConnector @Inject() (
           resp.status match {
             case 200 => resp.json.as[ExtendedSubmission].asRight
             case 400 => resp.json.as[ValidationErrors].asLeft
-            case _   => ValidationErrors(ValidationError(message = s"Failed to record answer for submission $submissionId and question ${questionId.value}")).asLeft
+            case _   => ValidationErrors(ValidationError(message = "An error has occurred. Please try again later.")).asLeft
           }
         )
     }
@@ -77,7 +77,7 @@ class OrganisationConnector @Inject() (
           resp.status match {
             case 200 => resp.json.as[ExtendedSubmission].asRight
             case 400 => resp.json.as[ValidationErrors].asLeft
-            case _   => ValidationErrors(ValidationError(message = s"Failed to record ticket for submission $submissionId and ticket ${supportTicketId.getOrElse("")}")).asLeft
+            case _   => ValidationErrors(ValidationError(message = "An error has occurred. Please try again later.")).asLeft
           }
         )
     }
@@ -101,7 +101,7 @@ class OrganisationConnector @Inject() (
 
   def submitSubmission(submissionId: SubmissionId, requestedBy: LaxEmailAddress)(implicit hc: HeaderCarrier): Future[Either[String, Submission]] = {
     import cats.implicits._
-    val failed = (_: UpstreamErrorResponse) => s"Failed to submit submission $submissionId"
+    val failed = (_: UpstreamErrorResponse) => s"Failed to submit submission"
 
     metrics.record(api) {
       http.post(url"${config.serviceBaseUrl}/submission/${submissionId}")
@@ -151,7 +151,7 @@ class OrganisationConnector @Inject() (
           resp.status match {
             case 200 => resp.json.as[Organisation].asRight
             case 400 => resp.json.as[ErrorMessage].asLeft
-            case _   => ErrorMessage(message = s"Failed to add user $email to organisation $id").asLeft
+            case _   => ErrorMessage(message = s"Failed to add user $email to organisation").asLeft
           }
         )
     }
@@ -168,7 +168,7 @@ class OrganisationConnector @Inject() (
           resp.status match {
             case 200 => resp.json.as[Organisation].asRight
             case 400 => resp.json.as[ErrorMessage].asLeft
-            case _   => ErrorMessage(message = s"Failed to remove user $userId from organisation $id").asLeft
+            case _   => ErrorMessage(message = s"Failed to remove user from organisation").asLeft
           }
         )
     }

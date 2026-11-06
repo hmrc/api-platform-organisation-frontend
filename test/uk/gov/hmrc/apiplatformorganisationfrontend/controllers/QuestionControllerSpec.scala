@@ -543,7 +543,7 @@ class QuestionControllerSpec
 
     "fail if invalid answer provided and returns downstream error" in new Setup {
       SubmissionServiceMock.Fetch.thenReturns(aSubmission.withIncompleteProgress())
-      SubmissionServiceMock.RecordAnswer.thenReturnsError("Failed to record answer for submission")
+      SubmissionServiceMock.RecordAnswer.thenReturnsError("An error has occurred. Please try again later.")
       SubmissionServiceMock.InitiateUpscan.thenReturnsNone()
       private val invalidEmailAnswer = "bob"
       private val request            = loggedInRequest.withFormUrlEncodedBody(Question.answerKey -> invalidEmailAnswer, "submit-action" -> "save")
@@ -554,7 +554,7 @@ class QuestionControllerSpec
 
       val body = contentAsString(result)
 
-      body should include("Failed to record answer for submission")
+      body should include("An error has occurred. Please try again later.")
     }
 
     "fail if invalid address answer provided and returns downstream error" in new Setup {
