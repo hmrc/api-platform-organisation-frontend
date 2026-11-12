@@ -35,8 +35,7 @@ case object StaticNavItems {
       ServiceNavigationItem(Text("Getting started"), s"$apiDocumentationFrontendUrl/api-documentation/docs/using-the-hub"),
       ServiceNavigationItem(Text("API documentation"), s"$apiDocumentationFrontendUrl/api-documentation/docs/api"),
       ServiceNavigationItem(Text("Applications"), s"$thirdPartyDeveloperFrontendUrl/developer/applications"),
-      ServiceNavigationItem(Text("Support"), s"$devhubSupportUrl"),
-      ServiceNavigationItem(Text("Service availability"), "https://api-platform-status.production.tax.service.gov.uk/", attributes = Map("target" -> "_blank"))
+      ServiceNavigationItem(Text("Support"), s"$devhubSupportUrl")
     )
   }
 }
