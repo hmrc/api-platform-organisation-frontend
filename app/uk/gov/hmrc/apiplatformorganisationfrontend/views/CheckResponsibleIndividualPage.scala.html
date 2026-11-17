@@ -42,7 +42,7 @@
                 Fieldset(
                     legend = Some(
                         Legend(
-                            content = HtmlContent("<h1 class='govuk-heading-l'><span class='govuk-caption-l'>About you</span>Are you the person responsible for making sure that software products owned by the business you work for comply with our API terms of use?</h1>"),
+                            content = HtmlContent("<h1 class='govuk-heading-l'><span class='govuk-caption-l'>About you</span>Are you the Senior Responsible Individual responsible for your organisation?</h1>"),
                             classes = "govuk-fieldset__legend--l",
                             isPageHeading = true
                        )
@@ -50,7 +50,7 @@
                 )
             ),            
             errorMessage = form.error("confirmResponsibleIndividual").map(e => ErrorMessage(content = Text(messages(e.message)))),
-            hint = Some(Hint(content = HtmlContent("<p class='govuk-body'>Our <a href='/api-documentation/docs/terms-of-use' class='govuk-link govuk-link--no-visited-state' target='_blank'>terms of use (opens in new tab)</a> cover development practices, data protection and software security.</p>"))),
+            hint = Some(Hint(content = HtmlContent("<p class='govuk-body'>For more information, see identifying your <a href='/api-platform-organisation/registration-2' class='govuk-link govuk-link--no-visited-state' target='_blank'>Senior Responsible Individual (opens in new tab)</a>.</p>"))),
             classes = "govuk-radios--inline",
             value = None,
             items = List(

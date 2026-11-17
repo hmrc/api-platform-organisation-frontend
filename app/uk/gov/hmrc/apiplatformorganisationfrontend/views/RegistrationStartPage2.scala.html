@@ -1,0 +1,108 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+
+@this(layout: Layout,
+      govukPagination: GovukPagination
+    )
+
+@(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = "Set up the Developer Hub dashboard",
+    loggedInSession = loggedInSession
+) {
+
+    <h1 class="govuk-heading-l">Register your organisation for the Developer Hub</h1>
+
+    <p class="govuk-body">Contents</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li><a class="govuk-link--no-visited-state" href="/api-platform-organisation/registration-1">What is organisation registration</a></li>
+        <li>Who should register your organisation</li>
+        <li><a class="govuk-link--no-visited-state" href="/api-platform-organisation/registration-3">Register your organisation</a></li>
+    </ul>
+
+    <h1 class="govuk-heading-l">Who should register your organisation</h1>
+
+    <p class="govuk-body">
+        Your organisation's Senior Responsible Individual (SRI) must complete the registration.
+    </p>
+
+
+    <h2 class="govuk-heading-m">What an SRI is</h2>
+
+    <p class="govuk-body">
+        The SRI is the most senior person responsible and accountable for your organisation's software and compliance with 
+        <a href="/api-documentation/docs/terms-of-use" class="govuk-link--no-visited-state" target="_blank">HMRC's Terms of use (opens in a new tab)</a>.
+    </p>
+
+
+    <h2 class="govuk-heading-m">What the SRI is accountable for</h2>
+
+    <p class="govuk-body">
+        If issues arise with your organisation's software or compliance activities, 
+        your SRI is the person accountable for how those activities are managed.
+    </p>
+    <p class="govuk-body">
+        Your SRI does not need to manage these activities day-to-day. However, 
+        they must be the most senior person accountable for them.
+    </p>
+
+
+    <h2 class="govuk-heading-m">Choosing your SRI</h2>
+
+    <p class="govuk-body">When identifying your SRI, you should:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>identify who is responsible and accountable within your organisation</li>
+        <li>choose the person who would be accountable if issues arise</li>
+        <li>make sure your choice reflects how your organisation operates</li>
+   </ul>
+
+    <p class="govuk-body">Your SRI will usually be:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>a board level individual or someone in an equivalent position</li>
+        <li>a person one level below the most senior management team</li>
+   </ul>
+
+
+    <h2 class="govuk-heading-m">HMRC engagement</h2>
+
+    <p class="govuk-body">
+        Your SRI should be the person HMRC contacts if we need to discuss issues 
+        with your organisation's software or compliance activities. You can nominate 
+        other people as operational or day-to-day contacts.
+    </p>
+    <p class="govuk-body">
+        Being named as an SRI does not make someone personally liable for HMRC 
+        sanctions or penalties.
+    </p>
+
+
+    @govukPagination(Pagination(
+        previous = Some(PaginationLink(
+            href = "/api-platform-organisation/registration-1",
+            labelText = Some("What is organisation registration")
+        )),
+        next = Some(PaginationLink(
+            href = "/api-platform-organisation/registration-3",
+            labelText = Some("Register your organisation")
+        ))))
+}
