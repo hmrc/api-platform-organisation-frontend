@@ -50,6 +50,7 @@ class OrganisationRegistrationController @Inject() (
     registrationStartPage1: RegistrationStartPage1,
     registrationStartPage2: RegistrationStartPage2,
     registrationStartPage3: RegistrationStartPage3,
+    registrationSriHelpPage: RegistrationSriHelpPage,
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
@@ -89,6 +90,10 @@ class OrganisationRegistrationController @Inject() (
 
   val registrationPage3View: Action[AnyContent] = loggedInAction { implicit request =>
     Future.successful(Ok(registrationStartPage3(Some(request.userSession))))
+  }
+
+  val registrationSriHelpPageView: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(registrationSriHelpPage(Some(request.userSession))))
   }
 
   def registrationStartAction(): Action[AnyContent] = withAllowList { implicit request =>

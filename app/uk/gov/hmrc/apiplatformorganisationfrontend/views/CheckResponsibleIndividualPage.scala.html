@@ -50,7 +50,7 @@
                 )
             ),            
             errorMessage = form.error("confirmResponsibleIndividual").map(e => ErrorMessage(content = Text(messages(e.message)))),
-            hint = Some(Hint(content = HtmlContent("<p class='govuk-body'>For more information, see identifying your <a href='/api-platform-organisation/registration-2' class='govuk-link govuk-link--no-visited-state' target='_blank'>Senior Responsible Individual (opens in new tab)</a>.</p>"))),
+            hint = Some(Hint(content = HtmlContent("<p class='govuk-body'>For more information, see identifying your <a href='/api-platform-organisation/registration-sri-help' class='govuk-link govuk-link--no-visited-state' target='_blank'>Senior Responsible Individual (opens in new tab)</a>.</p>"))),
             classes = "govuk-radios--inline",
             value = None,
             items = List(

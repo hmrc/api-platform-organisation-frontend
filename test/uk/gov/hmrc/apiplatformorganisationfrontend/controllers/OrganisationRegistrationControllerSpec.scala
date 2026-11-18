@@ -67,6 +67,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
     val registrationStartPage1         = app.injector.instanceOf[RegistrationStartPage1]
     val registrationStartPage2         = app.injector.instanceOf[RegistrationStartPage2]
     val registrationStartPage3         = app.injector.instanceOf[RegistrationStartPage3]
+    val registrationSriHelpPage        = app.injector.instanceOf[RegistrationSriHelpPage]
     val checkResponsibleIndividualPage = app.injector.instanceOf[CheckResponsibleIndividualPage]
     val notResponsibleIndividualPage   = app.injector.instanceOf[NotResponsibleIndividualPage]
     val notAllowListedPage             = app.injector.instanceOf[NotAllowListedPage]
@@ -84,6 +85,7 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
         registrationStartPage1,
         registrationStartPage2,
         registrationStartPage3,
+        registrationSriHelpPage,
         checkResponsibleIndividualPage,
         notResponsibleIndividualPage,
         notAllowListedPage,
@@ -201,6 +203,21 @@ class OrganisationRegistrationControllerSpec extends HmrcSpec with GuiceOneAppPe
       charset(result) shouldBe Some("utf-8")
       contentAsString(result) should include("Register your organisation for the Developer Hub")
       contentAsString(result) should include("Register your organisation")
+    }
+  }
+
+  "GET /registration-sri-help" should {
+    "show registration SRI help page" in new Setup {
+      ThirdPartyDeveloperConnectorMock.FetchSession.succeeds()
+
+      val fakeRequest = CSRFTokenHelper.addCSRFToken(FakeRequest("GET", "/registration-sri-help").withUser(underTest)(sessionId))
+
+      val result = underTest.registrationSriHelpPageView(fakeRequest)
+      status(result) shouldBe Status.OK
+      contentType(result) shouldBe Some("text/html")
+      charset(result) shouldBe Some("utf-8")
+      contentAsString(result) should include("Register your organisation for the Developer Hub")
+      contentAsString(result) should include("Who should register your organisation")
     }
   }
 

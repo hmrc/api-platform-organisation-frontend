@@ -6,6 +6,7 @@ GET         /registration                                                uk.gov.
 GET         /registration-1                                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationPage1View
 GET         /registration-2                                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationPage2View
 GET         /registration-3                                              uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationPage3View
+GET         /registration-sri-help                                       uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationSriHelpPageView
 POST        /registration                                                uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.registrationStartAction()
 GET         /registration/not-allow-listed                               uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.notAllowListedView
 GET         /registration/check-responsible-individual                   uk.gov.hmrc.apiplatformorganisationfrontend.controllers.OrganisationRegistrationController.checkResponsibleIndividualView
