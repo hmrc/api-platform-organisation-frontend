@@ -47,7 +47,10 @@ object OrganisationRegistrationController {
 @Singleton
 class OrganisationRegistrationController @Inject() (
     mcc: MessagesControllerComponents,
-    registrationStartPage: RegistrationStartPage,
+    registrationStartPage1: RegistrationStartPage1,
+    registrationStartPage2: RegistrationStartPage2,
+    registrationStartPage3: RegistrationStartPage3,
+    registrationSriHelpPage: RegistrationSriHelpPage,
     checkResponsibleIndividualPage: CheckResponsibleIndividualPage,
     notResponsibleIndividualPage: NotResponsibleIndividualPage,
     notAllowListedPage: NotAllowListedPage,
@@ -69,25 +72,38 @@ class OrganisationRegistrationController @Inject() (
   val checkResponsibleIndividualForm: Form[CheckResponsibleIndividualForm] = CheckResponsibleIndividualForm.form
 
   def registrationStartView(): Action[AnyContent] = withAllowList { implicit request =>
-    def pageToShow(submission: Submission) = {
-      if (submission.status.isOpenToAnswers) {
-        Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
-      } else {
-        Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(submission.id))
-      }
+    for {
+      maybeSubmission <- submissionService.fetchLatestSubmissionByUserId(request.userId)
+    } yield maybeSubmission match {
+      case Some(submission) => pageToShow(submission)
+      case _                => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.registrationPage1View)
     }
+  }
 
+  val registrationPage1View: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(registrationStartPage1(Some(request.userSession))))
+  }
+
+  val registrationPage2View: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(registrationStartPage2(Some(request.userSession))))
+  }
+
+  val registrationPage3View: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(registrationStartPage3(Some(request.userSession))))
+  }
+
+  val registrationSriHelpPageView: Action[AnyContent] = loggedInAction { implicit request =>
+    Future.successful(Ok(registrationSriHelpPage(Some(request.userSession))))
+  }
+
+  def registrationStartAction(): Action[AnyContent] = withAllowList { implicit request =>
     for {
       _               <- auditService.audit(AuditAction.OrganisationRegistrationStarted)
       maybeSubmission <- submissionService.fetchLatestSubmissionByUserId(request.userId)
     } yield maybeSubmission match {
       case Some(submission) => pageToShow(submission)
-      case _                => Ok(registrationStartPage(Some(request.userSession)))
+      case _                => Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.checkResponsibleIndividualView)
     }
-  }
-
-  def registrationStartAction(): Action[AnyContent] = withAllowList { implicit request =>
-    Future.successful(Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.OrganisationRegistrationController.checkResponsibleIndividualView))
   }
 
   val notAllowListedView: Action[AnyContent] = loggedInAction { implicit request =>
@@ -138,5 +154,13 @@ class OrganisationRegistrationController @Inject() (
   def companyNotActiveUpdateView(sid: SubmissionId, qid: Question.Id, returnTo: String): Action[AnyContent] = loggedInAction { implicit request =>
     val returnUrl = s"${routes.QuestionsController.updateQuestion(sid, qid).url}?returnTo=$returnTo"
     Future.successful(Ok(companyNotActivePage(Some(request.userSession), returnUrl)))
+  }
+
+  private def pageToShow(submission: Submission) = {
+    if (submission.status.isOpenToAnswers) {
+      Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.ChecklistController.checklistPage(submission.id))
+    } else {
+      Redirect(uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes.CheckAnswersController.checkAnswersPage(submission.id))
+    }
   }
 }

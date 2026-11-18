@@ -1,0 +1,82 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.apiplatformorganisationfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import uk.gov.hmrc.apiplatform.modules.tpd.session.domain.models.UserSession
+@import uk.gov.hmrc.apiplatformorganisationfrontend.models.views.Crumb
+
+@this(layout: Layout,
+      govukPagination: GovukPagination
+    )
+
+@(loggedInSession: Option[UserSession])(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
+
+@layout(
+    crumbs = Seq(Crumb.home),
+    pageTitle = "Register your organisation for the Developer Hub",
+    loggedInSession = loggedInSession
+) {
+
+    <h1 class="govuk-heading-l">Register your organisation for the Developer Hub</h1>
+
+    <nav class="gem-c-contents-list govuk-!-margin-bottom-8" aria-label="Pages in this guide" role="navigation">
+          <h2 class="gem-c-contents-list__title">Contents</h2>
+          <ol class="gem-c-contents-list__list">
+            <li class="gem-c-contents-list__list-item gem-c-contents-list__list-item--dashed gem-c-contents-list__list-item--active">
+                <span class="gem-c-contents-list__list-item-dash" aria-hidden="true"></span>
+                What is organisation registration
+            </li>
+            <li class="gem-c-contents-list__list-item gem-c-contents-list__list-item--dashed">
+                <a class="govuk-link--no-visited-state" href="/api-platform-organisation/registration-2">
+                    <span class="gem-c-contents-list__list-item-dash" aria-hidden="true"></span>
+                    Who should register your organisation
+                </a>
+            </li>
+            <li class="gem-c-contents-list__list-item gem-c-contents-list__list-item--dashed">
+                <a class="govuk-link--no-visited-state" href="/api-platform-organisation/registration-3">
+                    <span class="gem-c-contents-list__list-item-dash" aria-hidden="true"></span>
+                    Register your organisation
+                </a>
+            </li>
+        </ol>
+    </nav>
+
+
+    <h1 class="govuk-heading-l">What is organisation registration</h1>
+
+    <p class="govuk-body">
+        Organisation registration allows HMRC to verify your organisation before you can access APIs in the production enviroment.
+    </p>
+    <p class="govuk-body">
+        During registration, your Senior Responsible Individual (SRI) provides information to help HMRC verify your organisation.
+    </p>
+
+    <h2 class="govuk-heading-m">Benefits of organisation registration</h2>
+
+    <p class="govuk-body">Once you have registered, you can:</p>
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li>transfer ownership of applications from individual users to your organisation</li>
+        <li>manage your organisation's applications in one place</li>
+        <li>add users to your organisation and manage their access permissions</li>
+    </ul>
+
+    @govukPagination(Pagination(
+            next = Some(PaginationLink(
+                href = "/api-platform-organisation/registration-2",
+                labelText = Some("Who should register your organisation")
+            ))))
+}
